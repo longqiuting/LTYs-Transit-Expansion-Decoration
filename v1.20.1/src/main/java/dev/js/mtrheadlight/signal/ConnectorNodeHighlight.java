@@ -1,5 +1,6 @@
 package dev.js.mtrheadlight.signal;
 
+import dev.js.mtrheadlight.LteDebug;
 import dev.js.mtrheadlight.LteLog;
 import mtr.client.ClientData;
 import net.fabricmc.api.EnvType;
@@ -271,8 +272,11 @@ public final class ConnectorNodeHighlight {
         return count;
     }
 
-    /** 每 5 秒一行；只在手持时被调到（不手持在前面就 return 了）。 */
+    /** 每 5 秒一行；只在手持时被调到（不手持在前面就 return 了）。默认不打，见 {@link LteDebug}。 */
     private static void diag(final String item, final int nodes, final int drawn, final double range) {
+        if (!LteDebug.collision()) {
+            return;
+        }
         final long now = System.currentTimeMillis();
         if (lastDiagMs != 0L && now - lastDiagMs < DIAG_PERIOD_MS) {
             return;

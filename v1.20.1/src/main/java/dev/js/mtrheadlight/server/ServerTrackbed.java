@@ -1,6 +1,7 @@
 package dev.js.mtrheadlight.server;
 
 import dev.js.mtrheadlight.HeadlightConfig;
+import dev.js.mtrheadlight.LteDebug;
 import dev.js.mtrheadlight.collision.CollisionImpact;
 import dev.js.mtrheadlight.collision.RailBed;
 import net.minecraft.entity.Entity;
@@ -8,13 +9,11 @@ import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.WeakHashMap;
@@ -103,28 +102,30 @@ public final class ServerTrackbed {
     }
 
     /** {@code END_SERVER_TICK}（由 {@code ServerCollision#tick} 每个维度调一次）。 */
-    public static void tick(final ServerWorld world, final HeadlightConfig cfg, final long now) {
+    public static void tick(final ServerWorld world, final HeadlightConfig cfg, final long now,
+                            final double[] px, final double[] pz, final int playerCount) {
         if (world == null || !cfg.trackbedCollision) {
             return;
         }
         if (!cfg.trackbedCollisionItems && !cfg.trackbedCollisionEntities) {
             return;
         }
-        final List<ServerPlayerEntity> players = world.getPlayers();
-        if (players.isEmpty()) {
+        if (playerCount <= 0 || px == null || pz == null) {
             return;
         }
         final Object rails = MtrServerData.rails(world);
         if (rails == null) {
             return;
         }
+        final boolean stats = LteDebug.collision();
         final double thickness = cfg.trackbedThicknessClamped();
+        final double stepUp = cfg.trackbedStepUpClamped();
         int seen = 0;
         for (final Entity entity : world.iterateEntities()) {
             try {
                 if (entity instanceof PlayerEntity) {
                     // 玩家由客户端那条路处理（位置是客户端权威的）。
-                    if (near(entity, players)) {
+                    if (stats && near(entity.getX(), entity.getZ(), px, pz, playerCount)) {
                         seen++;
                     }
                     continue;
@@ -142,7 +143,7 @@ public final class ServerTrackbed {
                         continue;
                     }
                 }
-                if (!near(entity, players)) {
+                if (!near(entity.getX(), entity.getZ(), px, pz, playerCount)) {
                     continue;
                 }
                 if (!chunkLoaded(world, entity)) {
@@ -152,18 +153,22 @@ public final class ServerTrackbed {
                     // 刚被列车撞飞：让它飞完，别在半空吸到轨面上。
                     continue;
                 }
-                if (snap(world, rails, entity, thickness, cfg.trackbedStepUpClamped(), now)) {
-                    if (item) {
-                        diagItems++;
-                    } else {
-                        diagMobs++;
+                if (snap(world, rails, entity, thickness, stepUp, now)) {
+                    if (stats) {
+                        if (item) {
+                            diagItems++;
+                        } else {
+                            diagMobs++;
+                        }
                     }
                 }
             } catch (Throwable ignored) {
                 // 单个实体算错不能影响其它实体，更不能影响服务端 tick。
             }
         }
-        diagPlayers = Math.max(diagPlayers, seen);
+        if (stats) {
+            diagPlayers = Math.max(diagPlayers, seen);
+        }
         // 走过的东西别一直留着：40 tick 没用到的延续状态就丢掉（实体卸载 / 离开轨道 / 飞到别处）。
         if (now % 20L == 0L) {
             synchronized (FOLLOW) {
@@ -245,13 +250,12 @@ public final class ServerTrackbed {
         return true;
     }
 
-    /** 玩家 64 格内（水平）。 */
-    private static boolean near(final Entity entity, final List<ServerPlayerEntity> players) {
-        final double x = entity.getX();
-        final double z = entity.getZ();
-        for (final ServerPlayerEntity player : players) {
-            final double dx = player.getX() - x;
-            final double dz = player.getZ() - z;
+    /** 玩家 {@value #RANGE} 格内（水平）。坐标每 tick 由调用方取一次，这里只做算术。 */
+    private static boolean near(final double x, final double z, final double[] px, final double[] pz,
+                                final int n) {
+        for (int i = 0; i < n; i++) {
+            final double dx = px[i] - x;
+            final double dz = pz[i] - z;
             if (dx * dx + dz * dz <= RANGE * RANGE) {
                 return true;
             }
@@ -306,9 +310,9 @@ public final class ServerTrackbed {
         diagHop = 0;
     }
 
-    /** 诊断：这一窗里被接住的物品 / 生物、附近玩家数（取峰值）、以及延续链的 ok/lost/hop。 */
+    /** 诊断：这一窗里被接住的物品 / 生物、附近玩家数（取峰值）、以及延续链的 ok/lost/hop。<b>默认不打印</b>。 */
     public static String diagLine() {
-        final String line = "trackbed: players=" + diagPlayers
+        final String line = "debug: trackbed players=" + diagPlayers
                 + " items=" + diagItems + " mobs=" + diagMobs
                 + " ok=" + diagOk + " lost=" + diagLost + " hop=" + diagHop;
         diagItems = 0;

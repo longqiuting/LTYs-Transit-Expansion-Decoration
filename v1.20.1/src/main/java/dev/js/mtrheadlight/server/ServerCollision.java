@@ -2,10 +2,10 @@ package dev.js.mtrheadlight.server;
 
 import dev.js.mtrheadlight.HeadlightConfig;
 import dev.js.mtrheadlight.LteLog;
+import dev.js.mtrheadlight.LteDebug;
 import dev.js.mtrheadlight.TrainPose;
 import dev.js.mtrheadlight.net.ServerAuthority;
 import mtr.data.Train;
-import mtr.data.TransportMode;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -14,7 +14,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -72,23 +71,45 @@ public final class ServerCollision {
     /** 玩家被服务端接管的穿透阈值（格）。 */
     private static final double PUSH_PLAYER_MIN_PEN = 0.6D;
 
-    /** 车门放行的门值阈值（与客户端相同）。 */
+    /** 车门放行的门值阈值（与客户端相同；车厢构造在 {@link CarScan}）。 */
     private static final double DOOR_VALUE_EPS = 0.02D;
-
-    /** 诊断周期（server tick）。 */
-    private static final int DIAG_PERIOD = 100;
 
     /** 多少 tick 之内没有任何列车被登记就提示一次（MTR 数据没就绪 / 注入没生效）。 */
     private static final long NO_DATA_WARN_TICK = 400L;
 
     private static long ticks;
-    private static long lastDiagTick = Long.MIN_VALUE / 2L;
+    private static boolean everCaptured;
+    private static boolean warnedNoData;
+
+    // ---- 探针 / 周期统计（默认全关，见 LteDebug）-----------------------------------------
+    // 以前这几行是每 5 秒两行 INFO（trains/cars/hits 一行、道床一行），在 300 列车的服务器上
+    // 把日志刷满。现在只有 -Dlte.debug.collision / -Dlte.debug.probe 才统计、才打印，而且限频 30 s。
+    private static long probeTicks;
+    private static long probeNanos;
+    private static long probeMaxNanos;
     private static int diagTrains;
     private static int diagCars;
     private static int diagHits;
+    private static int diagCulled;
+    private static int diagReused;
+    private static int diagTotalCars;
     private static double diagHp;
-    private static boolean everCaptured;
-    private static boolean warnedNoData;
+
+    /**
+     * 侧线覆盖（车头 / 车尾端部延长）—— 只有真的要重建车厢时才会被问到，所以被距离粗筛跳过的列车
+     * 不会每 tick 造一个 {@code HeadlightConfig.Effective}。
+     */
+    private static final CarScan.Extras EXTRAS = new CarScan.Extras() {
+        @Override
+        public double head(final long sidingId) {
+            return ServerConfig.get().effectiveFor(sidingId).collisionHeadExtra;
+        }
+
+        @Override
+        public double tail(final long sidingId) {
+            return ServerConfig.get().effectiveFor(sidingId).collisionTailExtra;
+        }
+    };
 
     private static final AtomicBoolean WARNED = new AtomicBoolean();
 
@@ -153,35 +174,60 @@ public final class ServerCollision {
         }
         final boolean dedicated = server.isDedicated();
         final long now = server.getTicks();
+        final boolean probe = LteDebug.probe();
+        final boolean collect = probe || LteDebug.collision();
+        final long t0 = probe ? System.nanoTime() : 0L;
+        final double height = cfg.trainCollisionHeightClamped();
+        final double endPad = cfg.trainCollisionEndPadClamped();
         for (final ServerWorld world : server.getWorlds()) {
             try {
-                final List<Train> trains = trainsOn
-                        ? TrainTickCapture.trains(world, world.getTime()) : List.of();
-                if (!trains.isEmpty()) {
-                    everCaptured = true;
-                    final List<CarGeometry.Car> cars = cars(trains, cfg);
-                    if (!cars.isEmpty()) {
-                        diagTrains = Math.max(diagTrains, trains.size());
-                        diagCars = Math.max(diagCars, cars.size());
-                        for (final Entity entity : world.iterateEntities()) {
-                            if (!(entity instanceof LivingEntity living)) {
-                                continue;
-                            }
-                            // 单人：生物由客户端的 MobCollision 结算（同进程、同一套 CollisionImpact），
-                            // 这里只补玩家以外没人管的那半边 —— dedicated server。
-                            if (!dedicated && !(living instanceof PlayerEntity)) {
-                                continue;
-                            }
-                            try {
-                                collide(world, living, trains, cars, cfg, now, dedicated);
-                            } catch (Throwable ignored) {
-                                // 单个实体算错不能影响其它实体。
+                // 玩家坐标每 tick 只取一次：粗筛、道床、探针都用这一份。
+                final List<ServerPlayerEntity> players = world.getPlayers();
+                final int playerCount = players.size();
+                final double[] px = new double[playerCount];
+                final double[] pz = new double[playerCount];
+                for (int i = 0; i < playerCount; i++) {
+                    final ServerPlayerEntity player = players.get(i);
+                    px[i] = player.getX();
+                    pz[i] = player.getZ();
+                }
+                // 没有玩家：这一维度既没有会被撞的玩家，也没有人看得见结果 —— 整段跳过。
+                // （以前这里照样把所有列车的车厢重建一遍，只是没人消费。）
+                if (trainsOn && playerCount > 0) {
+                    final List<Train> trains = TrainTickCapture.trains(world, world.getTime());
+                    if (!trains.isEmpty()) {
+                        everCaptured = true;
+                        // 只保留「玩家 128 格内可能出现」的列车；停稳的车直接复用车厢。
+                        final List<CarGeometry.Car> cars = CarScan.scan(trains, height, endPad,
+                                EXTRAS, px, pz, playerCount, now);
+                        if (collect) {
+                            diagTrains = Math.max(diagTrains, CarScan.lastTrains());
+                            diagCars = Math.max(diagCars, cars.size());
+                            diagCulled = Math.max(diagCulled, CarScan.lastCulled());
+                            diagReused = Math.max(diagReused, CarScan.lastReused());
+                            diagTotalCars = Math.max(diagTotalCars, CarScan.lastTotalCars());
+                        }
+                        if (!cars.isEmpty()) {
+                            for (final Entity entity : world.iterateEntities()) {
+                                if (!(entity instanceof LivingEntity living)) {
+                                    continue;
+                                }
+                                // 单人：生物由客户端的 MobCollision 结算（同进程、同一套 CollisionImpact），
+                                // 这里只补玩家以外没人管的那半边 —— dedicated server。
+                                if (!dedicated && !(living instanceof PlayerEntity)) {
+                                    continue;
+                                }
+                                try {
+                                    collide(world, living, trains, cars, cfg, now, dedicated);
+                                } catch (Throwable ignored) {
+                                    // 单个实体算错不能影响其它实体。
+                                }
                             }
                         }
                     }
                 }
                 // 道床：与列车无关，每 tick 都要跑（没有列车的地方掉落物同样会穿过轨道）。
-                ServerTrackbed.tick(world, cfg, now);
+                ServerTrackbed.tick(world, cfg, now, px, pz, playerCount);
             } catch (Throwable t) {
                 warnOnce(t);
             }
@@ -192,7 +238,15 @@ public final class ServerCollision {
             // 状态清理失败无所谓。
         }
         pruneHits(now);
-        diag(now);
+        if (probe) {
+            final long elapsed = System.nanoTime() - t0;
+            probeTicks++;
+            probeNanos += elapsed;
+            if (elapsed > probeMaxNanos) {
+                probeMaxNanos = elapsed;
+            }
+        }
+        diag(probe);
         noDataHint();
     }
 
@@ -200,6 +254,7 @@ public final class ServerCollision {
     public static void reset() {
         TrainTickCapture.clear();
         CollisionImpact.clear();
+        CarScan.reset();
         ServerTrackbed.reset();
         synchronized (LAST_HIT) {
             LAST_HIT.clear();
@@ -623,98 +678,78 @@ public final class ServerCollision {
     // 车厢
     // ---------------------------------------------------------------------------------------------
 
-    /** 服务端列车 → 车厢（分段 OBB）。 */
-    private static List<CarGeometry.Car> cars(final List<Train> trains, final HeadlightConfig cfg) {
-        final List<CarGeometry.Car> out = new ArrayList<>();
-        final double height = cfg.trainCollisionHeightClamped();
-        final double endPad = cfg.trainCollisionEndPadClamped();
-        for (final Train train : trains) {
-            try {
-                if (train == null || train.path == null || train.path.isEmpty()
-                        || train.trainCars <= 0) {
-                    continue;
-                }
-                // 船 / 缆车 / 飞机的位置语义不同，撞上去只会莫名其妙。
-                if (train.transportMode != TransportMode.TRAIN) {
-                    continue;
-                }
-                final TrainPose pose = TrainPose.of(train, train.isReversed());
-                final int carCount = pose.cars();
-                if (carCount <= 0) {
-                    continue;
-                }
-                final double halfW = CarGeometry.halfWidth(train.width);
-                final double speed = CarGeometry.speedKmh(train.getSpeed());
-                final boolean doorsOpen = train.getDoorValue() > DOOR_VALUE_EPS;
-                final String key = Long.toString(train.id);
-                // 端部延长与伤害都按这列车所在侧线解析（与客户端 CollisionSystem 同一套），
-                // 服务端权威时两边算出来的车体 / 伤害规则才不会打架。
-                final HeadlightConfig.Effective eff = cfg.effectiveFor(train.sidingId);
-                final double noseExtra = Math.max(endPad, eff.collisionHeadExtra);
-                final double rearExtra = Math.max(endPad, eff.collisionTailExtra);
-                for (int i = 0; i < carCount; i++) {
-                    final Vec3d a = pose.carStart(i);
-                    final Vec3d b = pose.carEnd(i);
-                    double ax = b.x - a.x;
-                    double az = b.z - a.z;
-                    double len = Math.sqrt(ax * ax + az * az);
-                    if (len < 1.0E-3D) {
-                        // 竖直 / 退化的车厢：用自身朝向投影到水平面兜底。
-                        final Vec3d fwd = pose.carForward(i);
-                        ax = fwd.x;
-                        az = fwd.z;
-                        len = Math.sqrt(ax * ax + az * az);
-                        if (len < 1.0E-4D) {
-                            continue;
-                        }
-                    }
-                    out.add(new CarGeometry.Car(key, i, a, b, ax / len, az / len, len, halfW,
-                            height, doorsOpen, speed, Double.POSITIVE_INFINITY,
-                            i == 0 ? noseExtra : endPad,
-                            i == carCount - 1 ? rearExtra : endPad,
-                            train.sidingId));
-                }
-            } catch (Throwable t) {
-                // 单列车采样失败：跳过它，其它列车照常。
-            }
-        }
-        return out;
-    }
+    // 车厢的构造搬到了 {@link CarScan}（带缓存 + 距离粗筛）。这里只留一句说明：
+    // 原来每 tick 无条件重建所有列车车厢的那份代码（{@code cars(trains, cfg)}）已经删除，
+    // 它的逐字逻辑现在在 {@code CarScan.build(...)} 里，被跳过的只有「离所有玩家 176 格以上」的列车。
 
     // ---------------------------------------------------------------------------------------------
     // 诊断
     // ---------------------------------------------------------------------------------------------
 
-    private static void diag(final long now) {
-        if (now - lastDiagTick < DIAG_PERIOD) {
+    /**
+     * 周期统计 + 耗时探针。<b>默认一行都不打</b>。
+     *
+     * <p>{@code -Dlte.debug.collision=true} → 一行 {@code [lte] debug: collision ...} 与道床那行；
+     * {@code -Dlte.debug.probe=true} → {@code [lte] perf: ...}（平均值 / 峰值 ms、扫描与被剔除的
+     * 列车数）。两者都限频 30 s，且共用同一条闸门。
+     */
+    private static void diag(final boolean probe) {
+        final boolean stats = LteDebug.collision();
+        final boolean wantPerf = probe && probeTicks > 0L;
+        // 先看有没有内容，再问闸门：空窗口不能把下一个真窗口挤掉。
+        final boolean haveStats = stats && (diagTrains > 0 || diagHits > 0 || diagHp > 0.0D
+                || ServerTrackbed.diagDirty());
+        if (!wantPerf && !haveStats) {
+            if (stats) {
+                resetDiag();
+            }
             return;
         }
-        lastDiagTick = now;
-        final int trains = diagTrains;
-        final int cars = diagCars;
-        final int hits = diagHits;
-        final double hp = diagHp;
-        final String bedLine = ServerTrackbed.diagDirty() ? ServerTrackbed.diagLine() : null;
-        diagTrains = 0;
-        diagCars = 0;
-        diagHits = 0;
-        diagHp = 0.0D;
-        if (trains == 0 && hits == 0 && bedLine == null) {
+        if (!LteDebug.due()) {
             return;
         }
         try {
-            if (trains > 0 || hits > 0) {
-                LteLog.LOGGER.info("[lte] collision(server): trains={} cars={} hits={} damage={} creativeDmg={}",
-                        Integer.valueOf(trains), Integer.valueOf(cars), Integer.valueOf(hits),
-                        String.format(Locale.ROOT, "%.1f", Double.valueOf(hp)),
-                        Boolean.valueOf(ServerConfig.get().damageInCreative));
+            if (wantPerf) {
+                final double avgMs = probeNanos / 1.0E6D / (double) probeTicks;
+                final double maxMs = probeMaxNanos / 1.0E6D;
+                LteLog.LOGGER.info("[lte] perf: collision avg={}ms max={}ms ticks={} trains={}"
+                                + " cars={}/{} culled={} reused={}",
+                        String.format(Locale.ROOT, "%.3f", Double.valueOf(avgMs)),
+                        String.format(Locale.ROOT, "%.3f", Double.valueOf(maxMs)),
+                        Long.valueOf(probeTicks), Integer.valueOf(diagTrains),
+                        Integer.valueOf(diagCars), Integer.valueOf(diagTotalCars),
+                        Integer.valueOf(diagCulled), Integer.valueOf(diagReused));
             }
-            if (bedLine != null) {
-                LteLog.LOGGER.info("[lte] {}", bedLine);
+            if (haveStats) {
+                LteLog.LOGGER.info("[lte] debug: collision trains={} cars={} hits={} damage={}"
+                                + " creativeDmg={}",
+                        Integer.valueOf(diagTrains), Integer.valueOf(diagCars),
+                        Integer.valueOf(diagHits),
+                        String.format(Locale.ROOT, "%.1f", Double.valueOf(diagHp)),
+                        Boolean.valueOf(ServerConfig.get().damageInCreative));
+                final String bedLine = ServerTrackbed.diagDirty()
+                        ? ServerTrackbed.diagLine() : null;
+                if (bedLine != null) {
+                    LteLog.LOGGER.info("[lte] {}", bedLine);
+                }
             }
         } catch (Throwable ignored) {
             // 日志永远不许影响 tick。
         }
+        resetDiag();
+    }
+
+    private static void resetDiag() {
+        probeTicks = 0L;
+        probeNanos = 0L;
+        probeMaxNanos = 0L;
+        diagTrains = 0;
+        diagCars = 0;
+        diagHits = 0;
+        diagHp = 0.0D;
+        diagCulled = 0;
+        diagReused = 0;
+        diagTotalCars = 0;
     }
 
     /** 服务端跑了一段时间还一列车都没登记到：多半是 MTR 注入没生效（版本不匹配）。 */

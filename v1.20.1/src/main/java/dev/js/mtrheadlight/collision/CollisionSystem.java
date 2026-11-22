@@ -2,6 +2,7 @@ package dev.js.mtrheadlight.collision;
 
 import dev.js.mtrheadlight.DepartureState;
 import dev.js.mtrheadlight.HeadlightConfig;
+import dev.js.mtrheadlight.LteDebug;
 import dev.js.mtrheadlight.MtrHeadlightClient;
 import dev.js.mtrheadlight.TrainPose;
 import dev.js.mtrheadlight.net.ServerAuthority;
@@ -695,9 +696,10 @@ public final class CollisionSystem {
         }
         // 道床：这一 tick 的移动都跑完了，把按压状态转成「上一 tick」。
         Trackbed.endTick();
-        // 状态延续的汇总：不看任何开关，每 5 秒一行（rail= seg= s= y= ok= lost= hop=）。
-        // 它是「直道到底还掉不掉」的唯一读法：走一遍出问题的那段，lost 一直是 0 就说明延续链没断。
-        if (ticks % DIAG_PERIOD == 0L) {
+        // 状态延续的汇总：默认不打（每 5 秒一行 INFO 会刷满日志）。
+        // 需要看「直道到底还掉不掉」时用 -Dlte.debug.collision=true 打开：
+        // 走一遍出问题的那段，lost 一直是 0 就说明延续链没断。
+        if (LteDebug.collision() && ticks % DIAG_PERIOD == 0L) {
             MtrHeadlightClient.LOGGER.info(Trackbed.followLine());
         }
         // 取证窗口（{@code /mtr_lte trackbed status}）：每 5 秒一行结论 + 各结论计数。

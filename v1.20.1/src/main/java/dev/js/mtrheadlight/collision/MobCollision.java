@@ -1,18 +1,17 @@
 package dev.js.mtrheadlight.collision;
 
 import dev.js.mtrheadlight.HeadlightConfig;
+import dev.js.mtrheadlight.LteDebug;
 import dev.js.mtrheadlight.MtrHeadlightClient;
-import dev.js.mtrheadlight.TrainPose;
+import dev.js.mtrheadlight.server.CarScan;
 import mtr.data.Train;
-import mtr.data.TransportMode;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -73,14 +72,31 @@ public final class MobCollision {
             return;
         }
         final long now = server.getTicks();
+        final double height = cfg.trainCollisionHeightClamped();
+        final double endPad = cfg.trainCollisionEndPadClamped();
         try {
             for (final ServerWorld world : server.getWorlds()) {
+                final List<ServerPlayerEntity> players = world.getPlayers();
+                final int playerCount = players.size();
+                if (playerCount <= 0) {
+                    continue;
+                }
                 final List<Train> trains = TrainTickCapture.trains(world, world.getTime());
                 if (trains.isEmpty()) {
                     continue;
                 }
-                final List<CarGeometry.Car> cars = cars(trains, cfg);
-                diagTrains = Math.max(diagTrains, trains.size());
+                final double[] px = new double[playerCount];
+                final double[] pz = new double[playerCount];
+                for (int i = 0; i < playerCount; i++) {
+                    px[i] = players.get(i).getX();
+                    pz[i] = players.get(i).getZ();
+                }
+                // 与玩家那条路共用同一个扫描器：停稳的车复用车厢，远处的车直接跳过。
+                final List<CarGeometry.Car> cars = CarScan.scan(trains, height, endPad,
+                        EXTRAS, px, pz, playerCount, now);
+                if (LteDebug.collision()) {
+                    diagTrains = Math.max(diagTrains, CarScan.lastTrains());
+                }
                 if (cars.isEmpty()) {
                     continue;
                 }
@@ -204,66 +220,30 @@ public final class MobCollision {
     // 车厢
     // ---------------------------------------------------------------------------------------------
 
-    /** 服务端列车 → 车厢（分段 OBB）。与 {@code server.ServerCollision} 用的是同一个
-     *  {@link CarGeometry.Car}，所以单人与 dedicated 两条路量出来的车体完全一致。 */
-    private static List<CarGeometry.Car> cars(final List<Train> trains, final HeadlightConfig cfg) {
-        final List<CarGeometry.Car> out = new ArrayList<>();
-        final double height = cfg.trainCollisionHeightClamped();
-        final double endPad = cfg.trainCollisionEndPadClamped();
-        for (final Train train : trains) {
-            try {
-                if (train == null || train.path == null || train.path.isEmpty()
-                        || train.trainCars <= 0) {
-                    continue;
-                }
-                // 船 / 缆车 / 飞机的位置语义不同，撞上去只会莫名其妙。
-                if (train.transportMode != TransportMode.TRAIN) {
-                    continue;
-                }
-                final TrainPose pose = TrainPose.of(train, train.isReversed());
-                final int carCount = pose.cars();
-                if (carCount <= 0) {
-                    continue;
-                }
-                final double halfW = CarGeometry.halfWidth(train.width);
-                final double speed = CarGeometry.speedKmh(train.getSpeed());
-                final boolean doorsOpen = train.getDoorValue() > 0.02D;
-                final String key = Long.toString(train.id);
-                // 端部延长按侧线解析，和玩家那条路（CollisionSystem / ServerCollision）一致。
-                final HeadlightConfig.Effective eff = cfg.effectiveFor(train.sidingId);
-                final double noseExtra = Math.max(endPad, eff.collisionHeadExtra);
-                final double rearExtra = Math.max(endPad, eff.collisionTailExtra);
-                for (int i = 0; i < carCount; i++) {
-                    final Vec3d a = pose.carStart(i);
-                    final Vec3d b = pose.carEnd(i);
-                    double ax = b.x - a.x;
-                    double az = b.z - a.z;
-                    double len = Math.sqrt(ax * ax + az * az);
-                    if (len < 1.0E-3D) {
-                        // 竖直 / 退化的车厢：用自身朝向投影到水平面兜底。
-                        final Vec3d fwd = pose.carForward(i);
-                        ax = fwd.x;
-                        az = fwd.z;
-                        len = Math.sqrt(ax * ax + az * az);
-                        if (len < 1.0E-4D) {
-                            continue;
-                        }
-                    }
-                    out.add(new CarGeometry.Car(key, i, a, b, ax / len, az / len, len, halfW,
-                            height, doorsOpen, speed, Double.POSITIVE_INFINITY,
-                            i == 0 ? noseExtra : endPad,
-                            i == carCount - 1 ? rearExtra : endPad,
-                            train.sidingId));
-                }
-            } catch (Throwable ignored) {
-                // 这一列车数据异常：跳过它，别的车照常。
-            }
+    /** 侧线覆盖（车头 / 车尾端部延长）；只在真的要重建车厢时被问到。 */
+    private static final CarScan.Extras EXTRAS = new CarScan.Extras() {
+        @Override
+        public double head(final long sidingId) {
+            return MtrHeadlightClient.config().effectiveFor(sidingId).collisionHeadExtra;
         }
-        return out;
-    }
 
-    /** 每 5 秒一行：这一窗撞了多少生物、扣了多少血 —— 与玩家那条诊断行分开。 */
+        @Override
+        public double tail(final long sidingId) {
+            return MtrHeadlightClient.config().effectiveFor(sidingId).collisionTailExtra;
+        }
+    };
+
+    // 车厢的构造在 {@code server.CarScan}（与 ServerCollision 共用同一份）：按玩家距离粗筛、
+    // 停稳的车复用车厢。原来这里那份每次每列车重建一遍的 cars() 已经删除。
+
+    /** 每 5 秒一行：这一窗撞了多少生物、扣了多少血 —— 只有 -Dlte.debug.collision=true 才打印。 */
     private static void diag(final long now) {
+        if (!LteDebug.collision()) {
+            diagHits = 0;
+            diagTrains = 0;
+            diagHp = 0.0D;
+            return;
+        }
         if (now - lastDiagTick < DIAG_PERIOD) {
             return;
         }
@@ -276,7 +256,7 @@ public final class MobCollision {
         diagHp = 0.0D;
         try {
             MtrHeadlightClient.LOGGER.info(
-                    "[lte] collision(mobs): trains={} hits={} damage={}",
+                    "[lte] debug: collision(mobs) trains={} hits={} damage={}",
                     Integer.valueOf(trains), Integer.valueOf(hits),
                     String.format(java.util.Locale.ROOT, "%.1f", Double.valueOf(hp)));
         } catch (Throwable ignored) {
