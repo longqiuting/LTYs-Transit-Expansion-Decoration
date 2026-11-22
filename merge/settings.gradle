@@ -1,0 +1,22 @@
+// Forgix 合并用的独立 root project（M4b-1：单 jar 验证）。
+// 只做一件事：把已经构建好的两套产物合并成一个 lted-3.0.0.jar。
+//
+// 为什么是独立 build 而不是把 v1.20.1 / forge 变成子项目：
+//   Fabric 用 Gradle 8.8 + Loom 1.11.8，Forge 用 Gradle 8.1.1 + ForgeGradle 6.0.24，
+//   两个工具链绑在不同的 Gradle 版本上；塞进同一个 build 只会互相牵制。
+//   Forgix 1.2.9 需要能从 rootProject.getAllprojects() 里按名字找到子项目，
+//   再用「子项目 projectDir + jarLocation」定位 jar，所以这里 include 两个
+//   **空壳子项目**，projectDir 指向真实目录，但把 buildFileName 指到一个不存在的
+//   文件——真实构建脚本不会被求值，只提供 projectDir。
+rootProject.name = 'lted-merge'
+
+include ':fabric'
+include ':forge'
+
+project(':fabric').projectDir = file('../v1.20.1')
+project(':forge').projectDir = file('../forge')
+
+// 空壳：这两个目录里真实的 build.gradle 由各自 root project（v1.20.1 / forge）负责，
+// 在合并 build 里不参与求值，避免两套 Gradle/插件版本互相冲突。
+project(':fabric').buildFileName = 'build.merge-stub.gradle'
+project(':forge').buildFileName = 'build.merge-stub.gradle'
