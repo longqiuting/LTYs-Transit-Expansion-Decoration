@@ -27,6 +27,12 @@
 - LTED 图标：`art/LTED-icon.png`（2048×2048）。
 - 后续事项见 `docs/lted-roadmap.md`。
 
+## 3.6 版本与仓库归属（2026-11-22 定）
+
+- LTE 版本从 **3.x** 起（延续原版本线）。
+- 仓库**保留在 longqiuting 账号下**（Yomi 意见），拆分完成后加 Yomi 为协作者，不做 transfer。
+- 仪表板拆分方案见 docs/dashboard-split-plan.md。
+
 ## 4. 未定 / 待评估
 
 - 四版（1.18.2 / 1.19.2 / 1.19.4 / 1.20.1）× MTR3/MTR4 × Fabric/Forge 的目标组合是否全部成立（取决于外部依赖是否有对应版本）。
