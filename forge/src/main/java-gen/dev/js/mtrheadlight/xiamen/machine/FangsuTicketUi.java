@@ -3,7 +3,7 @@ package dev.js.mtrheadlight.xiamen.machine;
 import dev.js.mtrheadlight.LteLog;
 import java.lang.reflect.Method;
 import java.util.function.BiConsumer;
-import net.fabricmc.loader.api.FabricLoader;
+import dev.js.mtrheadlight.forge.platform.Env;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 
@@ -19,7 +19,7 @@ public final class FangsuTicketUi {
 
    public static boolean loaded() {
       try {
-         return FabricLoader.getInstance().isModLoaded("fangsu");
+         return Env.isModLoaded("fangsu");
       } catch (Throwable var1) {
          return false;
       }

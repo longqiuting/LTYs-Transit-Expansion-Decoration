@@ -10,8 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -21,6 +19,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class FangsuPsdBlocks {
    public static final String NAMESPACE = "mtrlte";
@@ -91,14 +90,14 @@ public final class FangsuPsdBlocks {
                Item item;
                if (def.kind() == FangsuPsdDef.Kind.END_DOOR) {
                   FangsuPsdEndDoorBlock endDoor = new FangsuPsdEndDoorBlock(def);
-                  Registry.register(BuiltInRegistries.BLOCK, id, endDoor);
+                  Reg.block(id, endDoor);
                   item = registerItem(id, endDoor);
                   endDoor.setItem(item);
                   manualBlocks.add(endDoor);
                   block = endDoor;
                } else {
                   FangsuPsdDoorBlock autoDoor = new FangsuPsdDoorBlock(def);
-                  Registry.register(BuiltInRegistries.BLOCK, id, autoDoor);
+                  Reg.block(id, autoDoor);
                   item = registerItem(id, autoDoor);
                   autoDoor.setItem(item);
                   autoBlocks.add(autoDoor);
@@ -121,7 +120,7 @@ public final class FangsuPsdBlocks {
             try {
                ResourceLocation id = new ResourceLocation("mtrlte", def.id());
                FangsuPsdGlassBlock block = new FangsuPsdGlassBlock(def);
-               Registry.register(BuiltInRegistries.BLOCK, id, block);
+               Reg.block(id, block);
                Item item = registerItem(id, block);
                block.setItem(item);
                GLASS_BLOCKS.put(id, block);
@@ -137,18 +136,18 @@ public final class FangsuPsdBlocks {
             LteLog.LOGGER.warn("[lte] fangsu psd doors: no variant could be loaded, nothing registered");
          } else {
             if (!autoBlocks.isEmpty()) {
-               entityType = (BlockEntityType)Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, ENTITY_ID, FabricBlockEntityTypeBuilder.create(FangsuPsdDoorBlock.FangsuPsdDoorEntity::new, (Block[])autoBlocks.toArray(new Block[0])).build());
+               entityType = (BlockEntityType)Reg.blockEntityType(ENTITY_ID, FangsuPsdDoorBlock.FangsuPsdDoorEntity::new, (Block[])autoBlocks.toArray(new Block[0]));
             }
 
             if (!manualBlocks.isEmpty()) {
-               endDoorEntityType = (BlockEntityType)Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, END_DOOR_ENTITY_ID, FabricBlockEntityTypeBuilder.create(FangsuPsdEndDoorBlock.FangsuPsdEndDoorEntity::new, (Block[])manualBlocks.toArray(new Block[0])).build());
+               endDoorEntityType = (BlockEntityType)Reg.blockEntityType(END_DOOR_ENTITY_ID, FangsuPsdEndDoorBlock.FangsuPsdEndDoorEntity::new, (Block[])manualBlocks.toArray(new Block[0]));
             }
 
             if (!glassBlocks.isEmpty()) {
-               glassEntityType = (BlockEntityType)Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, GLASS_ENTITY_ID, FabricBlockEntityTypeBuilder.create(FangsuPsdGlassBlock.FangsuPsdGlassEntity::new, (Block[])glassBlocks.toArray(new Block[0])).build());
+               glassEntityType = (BlockEntityType)Reg.blockEntityType(GLASS_ENTITY_ID, FangsuPsdGlassBlock.FangsuPsdGlassEntity::new, (Block[])glassBlocks.toArray(new Block[0]));
             }
 
-            ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, XiamenObjects.CORE_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> {
+            Reg.tabEntries(XiamenObjects.CORE_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> {
                for(FangsuPsdDef def : DEFS) {
                   Item item = item(def);
                   if (item != null) {
@@ -170,7 +169,7 @@ public final class FangsuPsdBlocks {
    }
 
    private static Item registerItem(ResourceLocation id, Block block) {
-      return (Item)Registry.register(BuiltInRegistries.ITEM, id, new BlockItem(block, new Item.Properties()));
+      return (Item)Reg.item(id, new BlockItem(block, new Item.Properties()));
    }
 
    public static Map<String, List<RawMesh>> meshes(FangsuPsdDef def) {

@@ -38,14 +38,14 @@ public class ChargerRenderer implements BlockEntityRenderer<ChargerBlockEntity> 
       BlockState state = world != null ? world.getBlockState(entity.getBlockPos()) : entity.getBlockState();
       Block mesh = state.getBlock();
       if (mesh instanceof ChargerBlock block) {
-         RawMesh mesh = RawModelJson.get(RawModelJson.id(block.rawModel()));
-         if (mesh != null) {
-            VertexConsumer consumer = vertexConsumers.getBuffer(RawModelRenderer.cutoutLayer(mesh));
+         RawMesh meshLted = RawModelJson.get(RawModelJson.id(block.rawModel()));
+         if (meshLted != null) {
+            VertexConsumer consumer = vertexConsumers.getBuffer(RawModelRenderer.cutoutLayer(meshLted));
             matrices.pushPose();
             matrices.translate(0.5D, 0.0D, 0.5D);
             matrices.mulPose(Axis.YP.rotationDegrees(-((Direction)state.getValue(HorizontalDirectionalBlock.FACING)).toYRot()));
             matrices.translate(-0.5D, 0.0D, -0.5D);
-            RawModelRenderer.render(matrices, consumer, mesh, light, overlay);
+            RawModelRenderer.render(matrices, consumer, meshLted, light, overlay);
             matrices.popPose();
          }
       }

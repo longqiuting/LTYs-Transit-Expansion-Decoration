@@ -2,9 +2,6 @@ package dev.js.mtrheadlight.xiamen.charger;
 
 import dev.js.mtrheadlight.LteLog;
 import dev.js.mtrheadlight.xiamen.XiamenObjects;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
-import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -21,6 +18,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.material.MapColor;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class ChargerObjects {
    public static final String NAMESPACE = "mtrlte";
@@ -64,16 +62,16 @@ public final class ChargerObjects {
    public static void register() {
       if (!registered) {
          registered = true;
-         top = (ChargerBlock)Registry.register(BuiltInRegistries.BLOCK, TOP_ID, new ChargerBlock(settings(true), true, "charger_top", "tooltip.mtrlte.charger_top"));
-         topItem = (Item)Registry.register(BuiltInRegistries.ITEM, TOP_ID, new BlockItem(top, new Item.Properties()));
-         bottom = (ChargerBlock)Registry.register(BuiltInRegistries.BLOCK, BOTTOM_ID, new ChargerBlock(settings(false), false, "charger_bottom", "tooltip.mtrlte.charger_bottom"));
-         bottomItem = (Item)Registry.register(BuiltInRegistries.ITEM, BOTTOM_ID, new BlockItem(bottom, new Item.Properties()));
-         blockEntityType = (BlockEntityType)Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, BE_ID, FabricBlockEntityTypeBuilder.create(ChargerBlockEntity::new, new Block[]{top, bottom}).build());
-         powerBank = (PowerBankItem)Registry.register(BuiltInRegistries.ITEM, POWER_BANK_ID, new PowerBankItem((new Item.Properties()).stacksTo(1)));
-         projectileType = (EntityType)Registry.register(BuiltInRegistries.ENTITY_TYPE, PROJECTILE_ID, FabricEntityTypeBuilder.create(MobCategory.MISC, PowerBankProjectileEntity::new).dimensions(EntityDimensions.fixed(0.25F, 0.25F)).trackRangeBlocks(4).trackedUpdateRate(10).build());
+         top = (ChargerBlock)Reg.block(TOP_ID, new ChargerBlock(settings(true), true, "charger_top", "tooltip.mtrlte.charger_top"));
+         topItem = (Item)Reg.item(TOP_ID, new BlockItem(top, new Item.Properties()));
+         bottom = (ChargerBlock)Reg.block(BOTTOM_ID, new ChargerBlock(settings(false), false, "charger_bottom", "tooltip.mtrlte.charger_bottom"));
+         bottomItem = (Item)Reg.item(BOTTOM_ID, new BlockItem(bottom, new Item.Properties()));
+         blockEntityType = (BlockEntityType)Reg.blockEntityType(BE_ID, ChargerBlockEntity::new, new Block[]{top, bottom});
+         powerBank = (PowerBankItem)Reg.item(POWER_BANK_ID, new PowerBankItem((new Item.Properties()).stacksTo(1)));
+         projectileType = (EntityType)Reg.<PowerBankProjectileEntity>entityType(PROJECTILE_ID, (type, level) -> new PowerBankProjectileEntity(type, level), MobCategory.MISC, 0.25F, 0.25F, 4, 10);
 
          try {
-            ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, XiamenObjects.CORE_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> {
+            Reg.tabEntries(XiamenObjects.CORE_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> {
                entries.method_45421(topItem);
                entries.method_45421(bottomItem);
                entries.method_45421(powerBank);

@@ -6,8 +6,8 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import dev.js.mtrheadlight.forge.platform.Net;
+import dev.js.mtrheadlight.forge.platform.Net;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
@@ -33,7 +33,7 @@ public final class LiquidScannerNet {
          registered = true;
 
          try {
-            ServerPlayNetworking.registerGlobalReceiver(ID, (server, player, handler, buf, sender) -> {
+            Net.registerServer(ID, (server, player, buf) -> {
                List<ResourceLocation> ids = new ArrayList();
 
                BlockPos pos;
@@ -65,9 +65,9 @@ public final class LiquidScannerNet {
    }
 
    public static void sendOpen(ServerPlayer player, BlockPos pos, LiquidScannerBlockEntity entity) {
-      if (player != null && ServerPlayNetworking.canSend(player, ID)) {
+      if (player != null && Net.canSend(player, ID)) {
          Set<ResourceLocation> ids = (Set<ResourceLocation>)(entity == null ? new LinkedHashSet() : entity.confiscate());
-         FriendlyByteBuf buf = PacketByteBufs.create();
+         FriendlyByteBuf buf = Net.buf();
          buf.writeByte(0);
          buf.writeBlockPos(pos);
          buf.writeBoolean(entity != null && entity.isConfigured());
@@ -77,7 +77,7 @@ public final class LiquidScannerNet {
             buf.writeUtf(id.toString());
          }
 
-         ServerPlayNetworking.send(player, ID, buf);
+         Net.send(player, ID, buf);
       }
    }
 
@@ -111,9 +111,9 @@ public final class LiquidScannerNet {
                   }
 
                   entity.setConfiscate(valid);
-                  int dropped = ids.size() - valid.size();
-                  if (dropped > 0) {
-                     player.displayClientMessage(Component.translatable("message.mtrlte.liquid_scanner.savedPartial", new Object[]{valid.size(), dropped}), false);
+                  int droppedLted = ids.size() - valid.size();
+                  if (droppedLted > 0) {
+                     player.displayClientMessage(Component.translatable("message.mtrlte.liquid_scanner.savedPartial", new Object[]{valid.size(), droppedLted}), false);
                   } else {
                      player.displayClientMessage(Component.translatable("message.mtrlte.liquid_scanner.saved", new Object[]{valid.size()}), true);
                   }
@@ -125,7 +125,7 @@ public final class LiquidScannerNet {
    }
 
    public static FriendlyByteBuf savePacket(BlockPos pos, Collection<ResourceLocation> ids) {
-      FriendlyByteBuf buf = PacketByteBufs.create();
+      FriendlyByteBuf buf = Net.buf();
       buf.writeByte(1);
       buf.writeBlockPos(pos);
       buf.writeVarInt(ids.size());

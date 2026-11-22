@@ -22,7 +22,7 @@ public final class ClockGlobalState extends SavedData {
       if (server == null) {
          return new ClockGlobalState();
       } else {
-         ServerLevel overworld = server.D();
+         ServerLevel overworld = server.overworld();
          return overworld == null ? new ClockGlobalState() : (ClockGlobalState)overworld.getDataStorage().computeIfAbsent(ClockGlobalState::new, ClockGlobalState::new, "mtrlte_clock_global");
       }
    }

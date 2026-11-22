@@ -14,9 +14,9 @@ import dev.js.mtrheadlight.xiamen.machine.XiamenMachinesClient;
 import dev.js.mtrheadlight.xiamen.pids.PidsXiamenClient;
 import dev.js.mtrheadlight.xiamen.pids.PsdLcdClient;
 import dev.js.mtrheadlight.xiamen.sign.WallSignClient;
-import net.fabricmc.api.ClientModInitializer;
+import dev.js.mtrheadlight.forge.platform.ClientInit;
 
-public final class LtedClient implements ClientModInitializer {
+public final class LtedClient implements ClientInit {
    public void onInitializeClient() {
       DecorConfig.load();
       Commands.register();

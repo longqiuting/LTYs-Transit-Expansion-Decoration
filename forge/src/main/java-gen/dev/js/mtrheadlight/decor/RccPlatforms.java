@@ -1,8 +1,6 @@
 package dev.js.mtrheadlight.decor;
 
 import dev.js.mtrheadlight.LteLog;
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -17,6 +15,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.material.MapColor;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class RccPlatforms {
    public static final String NAMESPACE = "mtrlte";
@@ -60,8 +59,8 @@ public final class RccPlatforms {
          platformItem = registerItem(PLATFORM_ID, platform);
          indentedItem = registerItem(INDENTED_ID, indented);
          quartzItem = registerItem(QUARTZ_ID, quartz);
-         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, TAB_ID, FabricItemGroup.builder().title(Component.translatable("itemGroup.mtrlte.rcc_platform")).icon(() -> new ItemStack(platformItem)).build());
-         ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> {
+         Reg.tab(TAB_ID, Component.translatable("itemGroup.mtrlte.rcc_platform"), () -> new ItemStack(platformItem));
+         Reg.tabEntries(TAB_ID, (Reg.TabEntriesConsumer)(entries) -> {
             entries.method_45421(platformItem);
             entries.method_45421(indentedItem);
             entries.method_45421(quartzItem);
@@ -71,11 +70,11 @@ public final class RccPlatforms {
    }
 
    private static RccPlatformBlock registerBlock(ResourceLocation id, boolean isIndented, MapColor mapColor) {
-      return (RccPlatformBlock)Registry.register(BuiltInRegistries.BLOCK, id, new RccPlatformBlock(Properties.of().mapColor(mapColor).requiresCorrectToolForDrops().strength(2.0F, 6.0F).sound(SoundType.STONE), isIndented));
+      return (RccPlatformBlock)Reg.block(id, new RccPlatformBlock(Properties.of().mapColor(mapColor).requiresCorrectToolForDrops().strength(2.0F, 6.0F).sound(SoundType.STONE), isIndented));
    }
 
    private static Item registerItem(ResourceLocation id, Block block) {
-      return (Item)Registry.register(BuiltInRegistries.ITEM, id, new BlockItem(block, new Item.Properties()));
+      return (Item)Reg.item(id, new BlockItem(block, new Item.Properties()));
    }
 
    public static CreativeModeTab tab() {

@@ -1,14 +1,14 @@
 package dev.js.mtrheadlight.railing;
 
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
+import dev.js.mtrheadlight.forge.platform.ClientInit;
+import dev.js.mtrheadlight.forge.platform.Layers;
 import net.minecraft.client.renderer.RenderType;
 
-public final class RailingGlassClient implements ClientModInitializer {
+public final class RailingGlassClient implements ClientInit {
    public void onInitializeClient() {
       try {
          for(RailingWallBlock block : RailingGlassBlocks.blocks()) {
-            BlockRenderLayerMap.INSTANCE.putBlock(block, RenderType.translucent());
+            Layers.put(block, RenderType.translucent());
          }
       } catch (Throwable var3) {
       }

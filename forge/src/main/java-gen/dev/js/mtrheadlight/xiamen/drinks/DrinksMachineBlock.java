@@ -131,22 +131,22 @@ public class DrinksMachineBlock extends HorizontalDirectionalBlock implements En
       VoxelShape var10000;
       switch (quarterTurns & 3) {
          case 1:
-            var10000 = box(16.0D - z2, y1, x1, 16.0D - z1, y2, x2);
+            var10000 = ltedBox(16.0D - z2, y1, x1, 16.0D - z1, y2, x2);
             break;
          case 2:
-            var10000 = box(16.0D - x2, y1, 16.0D - z2, 16.0D - x1, y2, 16.0D - z1);
+            var10000 = ltedBox(16.0D - x2, y1, 16.0D - z2, 16.0D - x1, y2, 16.0D - z1);
             break;
          case 3:
-            var10000 = box(z1, y1, 16.0D - x2, z2, y2, 16.0D - x1);
+            var10000 = ltedBox(z1, y1, 16.0D - x2, z2, y2, 16.0D - x1);
             break;
          default:
-            var10000 = box(x1, y1, z1, x2, y2, z2);
+            var10000 = ltedBox(x1, y1, z1, x2, y2, z2);
       }
 
       return var10000;
    }
 
-   private static VoxelShape box(double x1, double y1, double z1, double x2, double y2, double z2) {
+   private static VoxelShape ltedBox(double x1, double y1, double z1, double x2, double y2, double z2) {
       return Block.box(x1, y1, z1, x2, y2, z2);
    }
 

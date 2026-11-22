@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.js.mtrheadlight.mixin.mtr",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "lted.refmap.json",
+  "plugin": "dev.js.mtrheadlight.mixin.mtr.MtrMixinPlugin",
+  "mixins": [
+    "BlockPlatformDoorTypeMixin"
+  ],
+  "client": [
+    "RenderPIDSStationMixin",
+    "RenderPidsTianjinStationMixin",
+    "RenderPsdDoorTextureMixin",
+    "RouteAsyncScopeMixin",
+    "RouteMapArtMixin",
+    "RouteMapCacheKeyMixin",
+    "StationNameEntranceLogoMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

@@ -8,7 +8,7 @@ import java.util.Set;
 import mtr.client.IDrawing;
 import mtr.mappings.ScreenMapper;
 import mtr.screen.WidgetBetterCheckbox;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import dev.js.mtrheadlight.forge.platform.Net;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -187,8 +187,8 @@ public final class PidsXiamenAdsScreen extends ScreenMapper {
             }
          }
 
-         if (ClientPlayNetworking.canSend(PidsXiamenNet.ID)) {
-            ClientPlayNetworking.send(PidsXiamenNet.ID, PidsXiamenNet.categories(this.dataPos, ids));
+         if (Net.canSend(PidsXiamenNet.ID)) {
+            Net.sendToServer(PidsXiamenNet.ID, PidsXiamenNet.categories(this.dataPos, ids));
          }
       } catch (Throwable var5) {
          LteLog.LOGGER.warn("[lte] xiamen pids: could not send the advertisement categories", var5);

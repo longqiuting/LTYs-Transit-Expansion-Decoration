@@ -7,7 +7,7 @@ import dev.js.mtrheadlight.xiamen.pids.PidsXiamenSettingsScreen;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import net.fabricmc.loader.api.FabricLoader;
+import dev.js.mtrheadlight.forge.platform.Env;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -51,7 +51,7 @@ public final class LtedDashboardScreen extends Screen {
    public static void open() {
       try {
          Minecraft client = Minecraft.getInstance();
-         client.tell(() -> client.setScreen(new LtedDashboardScreen(client.screen)));
+         client.execute(() -> client.setScreen(new LtedDashboardScreen(client.screen)));
       } catch (Throwable var1) {
          LteLog.LOGGER.warn("[lte] could not open the LTED dashboard", var1);
       }
@@ -243,11 +243,11 @@ public final class LtedDashboardScreen extends Screen {
       String version = "?";
 
       try {
-         version = (String)FabricLoader.getInstance().getModContainer("mtrlte").map((c) -> c.getMetadata().getVersion().getFriendlyString()).orElse("?");
+         version = Env.modVersion("mtrlte");
       } catch (Throwable var3) {
       }
 
-      return tr("screen.mtrlte.lted.version", version, FabricLoader.getInstance().getModContainer("minecraft").map((c) -> c.getMetadata().getVersion().getFriendlyString()).orElse("?"));
+      return tr("screen.mtrlte.lted.version", version, Env.modVersion("minecraft"));
    }
 
    private void drawVanillaBackground(GuiGraphics context) {

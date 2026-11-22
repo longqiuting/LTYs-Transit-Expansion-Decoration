@@ -4,7 +4,7 @@ import mtr.Items;
 import mtr.block.BlockPIDSBaseHorizontal;
 import mtr.block.IBlock;
 import mtr.mappings.BlockEntityMapper;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import dev.js.mtrheadlight.forge.platform.Net;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
@@ -41,6 +41,10 @@ public class PidsXiamenBlock extends BlockPIDSBaseHorizontal {
       return new PidsXiamenBlockEntity(pos, state == null ? this.defaultBlockState() : state);
    }
 
+   public BlockEntityMapper newBlockEntity(BlockPos pos, BlockState state) {
+      return this.createBlockEntity(pos, state);
+   }
+
    public VoxelShape getOcclusionShape(BlockState state, BlockGetter world, BlockPos pos) {
       return Shapes.empty();
    }
@@ -52,7 +56,7 @@ public class PidsXiamenBlock extends BlockPIDSBaseHorizontal {
          } else {
             if (player instanceof ServerPlayer) {
                ServerPlayer serverPlayer = (ServerPlayer)player;
-               if (ServerPlayNetworking.canSend(serverPlayer, PidsXiamenNet.ID)) {
+               if (Net.canSend(serverPlayer, PidsXiamenNet.ID)) {
                   PidsXiamenNet.openScreen(serverPlayer, world, pos);
                   return InteractionResult.SUCCESS;
                }

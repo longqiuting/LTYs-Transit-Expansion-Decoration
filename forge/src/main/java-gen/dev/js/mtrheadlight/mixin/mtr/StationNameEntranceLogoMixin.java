@@ -15,8 +15,8 @@ public abstract class StationNameEntranceLogoMixin {
       method = {"drawResource"},
       at = @At(
    value = "INVOKE",
-   target = "Lnet/minecraft/util/Identifier;<init>(Ljava/lang/String;Ljava/lang/String;)V",
-   remap = true
+   target = "Lnet/minecraft/resources/ResourceLocation;<init>(Ljava/lang/String;Ljava/lang/String;)V",
+   remap = false
 ),
       index = 0,
       remap = false
@@ -30,8 +30,8 @@ public abstract class StationNameEntranceLogoMixin {
       method = {"drawResource"},
       at = @At(
    value = "INVOKE",
-   target = "Lnet/minecraft/util/Identifier;<init>(Ljava/lang/String;Ljava/lang/String;)V",
-   remap = true
+   target = "Lnet/minecraft/resources/ResourceLocation;<init>(Ljava/lang/String;Ljava/lang/String;)V",
+   remap = false
 ),
       index = 1,
       remap = false

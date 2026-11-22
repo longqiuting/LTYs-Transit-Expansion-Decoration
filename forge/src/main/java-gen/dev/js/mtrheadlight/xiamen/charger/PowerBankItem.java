@@ -85,7 +85,7 @@ public class PowerBankItem extends Item {
       stack.getOrCreateTag().putBoolean("expiredFine", true);
    }
 
-   public static boolean isDamaged(ItemStack stack) {
+   public static boolean isDamagedTag(ItemStack stack) {
       return stack != null && !stack.isEmpty() && stack.hasTag() && stack.getTag().getBoolean("damaged");
    }
 
@@ -124,7 +124,7 @@ public class PowerBankItem extends Item {
          tooltip.add(Component.translatable("tooltip.mtrlte.power_bank.held", new Object[]{heldMinutes(stack, System.currentTimeMillis())}).withStyle(ChatFormatting.AQUA));
       }
 
-      if (isDamaged(stack)) {
+      if (isDamagedTag(stack)) {
          tooltip.add(Component.translatable("tooltip.mtrlte.power_bank.damaged").withStyle(ChatFormatting.RED));
       } else if (isOverdueSettled(stack)) {
          tooltip.add(Component.translatable("tooltip.mtrlte.power_bank.owned").withStyle(ChatFormatting.GOLD));

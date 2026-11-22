@@ -12,7 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.Locale;
-import net.fabricmc.loader.api.FabricLoader;
+import dev.js.mtrheadlight.forge.platform.Env;
 
 public final class DepOnWallOrient {
    private static final String FILE_NAME = "mtrlte-dep-orient.json";
@@ -51,7 +51,7 @@ public final class DepOnWallOrient {
    }
 
    private static Path path() {
-      return FabricLoader.getInstance().getConfigDir().resolve("mtrlte-dep-orient.json");
+      return Env.configDir().resolve("mtrlte-dep-orient.json");
    }
 
    private static DepOnWallOrient.Mode read() {

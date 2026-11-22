@@ -38,7 +38,7 @@ public abstract class RouteAsyncScopeMixin {
 
             WallSignLogos.push(signLogo);
 
-            Object var4;
+            U var4;
             try {
                var4 = supplier.get();
             } finally {

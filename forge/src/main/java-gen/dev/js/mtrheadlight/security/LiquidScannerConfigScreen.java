@@ -50,7 +50,7 @@ public final class LiquidScannerConfigScreen extends Screen {
    private static List<ResourceLocation> sortedPotions() {
       List<ResourceLocation> out = new ArrayList(BuiltInRegistries.POTION.keySet());
       out.addAll(LiquidScannerBlock.EXTRA_LIQUIDS);
-      out.sort(Comparator.comparing((id) -> nameOf(id).getString(), String.CASE_INSENSITIVE_ORDER).thenComparing(ResourceLocation::toString));
+      out.sort(Comparator.comparing((ResourceLocation id) -> nameOf(id).getString(), String.CASE_INSENSITIVE_ORDER).thenComparing(ResourceLocation::toString));
       return out;
    }
 

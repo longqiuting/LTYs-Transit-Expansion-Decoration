@@ -1,9 +1,8 @@
 package dev.js.mtrheadlight.clock;
 
 import dev.js.mtrheadlight.LteLog;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
+import dev.js.mtrheadlight.forge.platform.Net;
+import dev.js.mtrheadlight.forge.platform.Renderers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -21,7 +20,7 @@ public final class ClockClient {
 
          try {
             if (ClockObjects.entityType() != null) {
-               BlockEntityRendererRegistry.register(ClockObjects.entityType(), ClockRenderer::new);
+               Renderers.ber(ClockObjects.entityType(), ClockRenderer::new);
                LteLog.LOGGER.info("[lte] clock renderer registered ({}-block render distance)", 384);
             }
          } catch (Throwable var4) {
@@ -29,7 +28,7 @@ public final class ClockClient {
          }
 
          try {
-            ClientPlayNetworking.registerGlobalReceiver(ClockNet.ID, (client, handler, buf, sender) -> {
+            Net.registerClient(ClockNet.ID, (client, buf) -> {
                byte kind;
                BlockPos pos;
                ClockConfig cfg;
@@ -55,7 +54,7 @@ public final class ClockClient {
          }
 
          try {
-            ClientPlayNetworking.registerGlobalReceiver(ClockGlobalNet.ID, (client, handler, buf, sender) -> {
+            Net.registerClient(ClockGlobalNet.ID, (client, buf) -> {
                ClockGlobalConfig cfg;
                try {
                   if (buf.readByte() != 0) {
@@ -74,7 +73,7 @@ public final class ClockClient {
          }
 
          try {
-            ClientPlayConnectionEvents.DISCONNECT.register((ClientPlayConnectionEvents.Disconnect)(handler, client) -> ClockGlobalCache.clear());
+            Net.onDisconnect(() -> ClockGlobalCache.clear());
          } catch (Throwable var1) {
          }
 
@@ -96,11 +95,11 @@ public final class ClockClient {
 
    public static void sendSave(BlockPos pos, ClockConfig cfg) {
       try {
-         if (!ClientPlayNetworking.canSend(ClockNet.ID)) {
+         if (!Net.canSend(ClockNet.ID)) {
             return;
          }
 
-         ClientPlayNetworking.send(ClockNet.ID, ClockNet.savePacket(pos, cfg));
+         Net.sendToServer(ClockNet.ID, ClockNet.savePacket(pos, cfg));
       } catch (Throwable var3) {
       }
 
@@ -108,11 +107,11 @@ public final class ClockClient {
 
    public static void sendPreview(BlockPos pos) {
       try {
-         if (!ClientPlayNetworking.canSend(ClockNet.ID)) {
+         if (!Net.canSend(ClockNet.ID)) {
             return;
          }
 
-         ClientPlayNetworking.send(ClockNet.ID, ClockNet.previewPacket(pos));
+         Net.sendToServer(ClockNet.ID, ClockNet.previewPacket(pos));
       } catch (Throwable var2) {
       }
 
@@ -120,11 +119,11 @@ public final class ClockClient {
 
    public static void sendGlobalSave(ClockGlobalConfig cfg) {
       try {
-         if (!ClientPlayNetworking.canSend(ClockGlobalNet.ID)) {
+         if (!Net.canSend(ClockGlobalNet.ID)) {
             return;
          }
 
-         ClientPlayNetworking.send(ClockGlobalNet.ID, ClockGlobalNet.savePacket(cfg));
+         Net.sendToServer(ClockGlobalNet.ID, ClockGlobalNet.savePacket(cfg));
       } catch (Throwable var2) {
       }
 
@@ -132,11 +131,11 @@ public final class ClockClient {
 
    public static void sendGlobalPreview() {
       try {
-         if (!ClientPlayNetworking.canSend(ClockGlobalNet.ID)) {
+         if (!Net.canSend(ClockGlobalNet.ID)) {
             return;
          }
 
-         ClientPlayNetworking.send(ClockGlobalNet.ID, ClockGlobalNet.previewPacket());
+         Net.sendToServer(ClockGlobalNet.ID, ClockGlobalNet.previewPacket());
       } catch (Throwable var1) {
       }
 

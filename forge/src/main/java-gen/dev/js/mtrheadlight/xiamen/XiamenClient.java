@@ -6,40 +6,40 @@ import dev.js.mtrheadlight.xiamen.eyecandy.EyecandyClient;
 import dev.js.mtrheadlight.xiamen.sign.StationSignObjects;
 import dev.js.mtrheadlight.xiamen.sign.WallSignObjects;
 import dev.js.mtrheadlight.xiamen.ticket.XiamenTicketGateClient;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
-import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
+import dev.js.mtrheadlight.forge.platform.ClientInit;
+import dev.js.mtrheadlight.forge.platform.Layers;
+import dev.js.mtrheadlight.forge.platform.Renderers;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.world.level.block.Block;
 
-public final class XiamenClient implements ClientModInitializer {
+public final class XiamenClient implements ClientInit {
    public void onInitializeClient() {
       try {
-         BlockEntityRendererProvider<XiamenPsdBlocks.TileEntityXiamenPSDDoor> doorRendererFactory = RenderPsdDoor::new;
-         BlockEntityRendererRegistry.register(XiamenObjects.psdDoorEntityType(), doorRendererFactory);
+         BlockEntityRendererProvider<XiamenPsdBlocks.TileEntityXiamenPSDDoor> doorRendererFactory = (BlockEntityRendererProvider) RenderPsdDoor::new;
+         Renderers.ber(XiamenObjects.psdDoorEntityType(), doorRendererFactory);
          LteLog.LOGGER.info("[lte] xiamen door renderer registered: {}", RenderPsdDoor.class.getName());
       } catch (Throwable var9) {
          LteLog.LOGGER.error("[lte] could not register the xiamen door renderer", var9);
       }
 
       try {
-         BlockEntityRendererRegistry.register(XiamenObjects.psdTopEntityType(), (context) -> (BlockEntityRenderer)(new XiamenPsdTopRenderer(context.getBlockEntityRenderDispatcher())));
+         Renderers.ber(XiamenObjects.psdTopEntityType(), (context) -> (BlockEntityRenderer)(new XiamenPsdTopRenderer(context.getBlockEntityRenderDispatcher())));
       } catch (Throwable var8) {
          LteLog.LOGGER.error("[lte] could not register the xiamen psd top renderer", var8);
       }
 
       try {
-         BlockEntityRendererProvider<XiamenPsdBlocks.TileEntityXiamenAPGDoor> apgDoorRendererFactory = RenderPsdApgDoor::new;
-         BlockEntityRendererRegistry.register(XiamenObjects.apgDoorEntityType(), apgDoorRendererFactory);
+         BlockEntityRendererProvider<XiamenPsdBlocks.TileEntityXiamenAPGDoor> apgDoorRendererFactory = (BlockEntityRendererProvider) RenderPsdApgDoor::new;
+         Renderers.ber(XiamenObjects.apgDoorEntityType(), apgDoorRendererFactory);
          LteLog.LOGGER.info("[lte] xiamen apg door renderer registered: {}", RenderPsdApgDoor.class.getName());
       } catch (Throwable var7) {
          LteLog.LOGGER.error("[lte] could not register the xiamen apg door renderer", var7);
       }
 
       try {
-         BlockEntityRendererRegistry.register(XiamenObjects.apgGlassEntityType(), (context) -> (BlockEntityRenderer)(new XiamenApgGlassRenderer(context.getBlockEntityRenderDispatcher())));
+         Renderers.ber(XiamenObjects.apgGlassEntityType(), (context) -> (BlockEntityRenderer)(new XiamenApgGlassRenderer(context.getBlockEntityRenderDispatcher())));
          LteLog.LOGGER.info("[lte] xiamen apg glass route map renderer registered: {}", XiamenApgGlassRenderer.class.getName());
       } catch (Throwable var6) {
          LteLog.LOGGER.error("[lte] could not register the xiamen apg glass renderer", var6);
@@ -73,7 +73,7 @@ public final class XiamenClient implements ClientModInitializer {
 
    private static void put(Block block, String what) {
       try {
-         BlockRenderLayerMap.INSTANCE.putBlock(block, RenderType.cutout());
+         Layers.put(block, RenderType.cutout());
       } catch (Throwable var3) {
          LteLog.LOGGER.warn("[lte] could not set the cutout layer for the xiamen {} block", what, var3);
       }

@@ -4,7 +4,6 @@ import dev.js.mtrheadlight.LteLog;
 import dev.js.mtrheadlight.server.RegistrySelfCheck;
 import java.util.ArrayList;
 import java.util.List;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -16,6 +15,7 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.material.MapColor;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class RailingWallBlocks {
    private static final ResourceLocation CORE_TAB_ID = new ResourceLocation("mtrlte", "core");
@@ -33,15 +33,15 @@ public final class RailingWallBlocks {
          for(RailingWallBlocks.Variant variant : VARIANTS) {
             try {
                ResourceLocation id = new ResourceLocation("mtrlte", variant.id());
-               RailingWallBlock block = (RailingWallBlock)Registry.register(BuiltInRegistries.BLOCK, id, new RailingWallBlock(settings(), variant.boxes()));
-               ITEMS.add((Item)Registry.register(BuiltInRegistries.ITEM, id, new BlockItem(block, new Item.Properties())));
+               RailingWallBlock block = (RailingWallBlock)Reg.block(id, new RailingWallBlock(settings(), variant.boxes()));
+               ITEMS.add((Item)Reg.item(id, new BlockItem(block, new Item.Properties())));
             } catch (Throwable var4) {
                LteLog.LOGGER.error("[lte] railing wall variant {} failed to register - skipping it", variant.id(), var4);
                RegistrySelfCheck.purgePending("railing wall " + variant.id());
             }
          }
 
-         ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, CORE_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> ITEMS.forEach(entries::accept));
+         Reg.tabEntries(CORE_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> ITEMS.forEach(entries::accept));
          LteLog.LOGGER.info("[lte] railing wall: {} variants ({} .. {})", new Object[]{VARIANTS.size(), ((RailingWallBlocks.Variant)VARIANTS.get(0)).id(), ((RailingWallBlocks.Variant)VARIANTS.get(VARIANTS.size() - 1)).id()});
       }
    }

@@ -2,8 +2,8 @@ package dev.js.mtrheadlight.xiamen.pids;
 
 import dev.js.mtrheadlight.LteLog;
 import mtr.block.IBlock;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import dev.js.mtrheadlight.forge.platform.Net;
+import dev.js.mtrheadlight.forge.platform.Net;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
@@ -28,7 +28,7 @@ public final class PidsXiamenNet {
          registeredServer = true;
 
          try {
-            ServerPlayNetworking.registerGlobalReceiver(ID, (server, player, handler, buf, sender) -> {
+            Net.registerServer(ID, (server, player, buf) -> {
                try {
                   byte kind = buf.readByte();
                   if (kind != 1 && kind != 2) {
@@ -158,12 +158,12 @@ public final class PidsXiamenNet {
    }
 
    private static void send(ServerPlayer player, BlockPos dataPos, BlockPos partnerPos) {
-      if (ServerPlayNetworking.canSend(player, ID)) {
-         FriendlyByteBuf buf = PacketByteBufs.create();
+      if (Net.canSend(player, ID)) {
+         FriendlyByteBuf buf = Net.buf();
          buf.writeByte(0);
          buf.writeBlockPos(dataPos);
          buf.writeBlockPos(partnerPos == null ? dataPos : partnerPos);
-         ServerPlayNetworking.send(player, ID, buf);
+         Net.send(player, ID, buf);
       }
    }
 
@@ -182,7 +182,7 @@ public final class PidsXiamenNet {
    }
 
    public static FriendlyByteBuf ad(BlockPos pos, int index) {
-      FriendlyByteBuf buf = PacketByteBufs.create();
+      FriendlyByteBuf buf = Net.buf();
       buf.writeByte(1);
       buf.writeBlockPos(pos);
       buf.writeVarInt(Math.max(0, index));
@@ -190,7 +190,7 @@ public final class PidsXiamenNet {
    }
 
    public static FriendlyByteBuf categories(BlockPos pos, long[] ids) {
-      FriendlyByteBuf buf = PacketByteBufs.create();
+      FriendlyByteBuf buf = Net.buf();
       buf.writeByte(2);
       buf.writeBlockPos(pos);
       int count = ids == null ? 0 : ids.length;

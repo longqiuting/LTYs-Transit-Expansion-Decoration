@@ -34,8 +34,8 @@ public class FangsuPsdRenderer implements BlockEntityRenderer<FangsuPsdDoorBlock
       if (progress instanceof FangsuPsdDoorBlock block) {
          if (!FangsuPsdDraw.isUpperHalf(state)) {
             FangsuPsdSoundsClient.play(entity.getBlockPos(), entity.tickDoorSound(world, entity.getBlockPos(), DecorConfig.get().fangsuDoorSound));
-            float progress = entity.progress(world == null ? 0L : world.getGameTime(), tickDelta);
-            FangsuPsdDraw.draw(block.def(), progress, FangsuPsdDraw.facingOf(state), matrices, vertexConsumers, light, overlay);
+            float progressLted = entity.progress(world == null ? 0L : world.getGameTime(), tickDelta);
+            FangsuPsdDraw.draw(block.def(), progressLted, FangsuPsdDraw.facingOf(state), matrices, vertexConsumers, light, overlay);
          }
       }
    }

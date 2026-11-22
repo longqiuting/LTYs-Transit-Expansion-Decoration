@@ -40,9 +40,9 @@ public class DrinksMachineRenderer implements BlockEntityRenderer<DrinksMachineB
       BlockState state = world != null ? world.getBlockState(entity.getBlockPos()) : entity.getBlockState();
       Block mesh = state.getBlock();
       if (mesh instanceof DrinksMachineBlock block) {
-         RawMesh mesh = RawModelJson.get(RawModelJson.id(DrinksMachineBlock.rawModel(state)));
-         if (mesh != null) {
-            VertexConsumer consumer = vertexConsumers.getBuffer(RawModelRenderer.cutoutLayer(mesh));
+         RawMesh meshLted = RawModelJson.get(RawModelJson.id(DrinksMachineBlock.rawModel(state)));
+         if (meshLted != null) {
+            VertexConsumer consumer = vertexConsumers.getBuffer(RawModelRenderer.cutoutLayer(meshLted));
             matrices.pushPose();
             matrices.translate(0.5D, 0.0D, 0.5D);
             matrices.mulPose(Axis.YP.rotationDegrees(-((Direction)state.getValue(HorizontalDirectionalBlock.FACING)).toYRot()));
@@ -52,7 +52,7 @@ public class DrinksMachineRenderer implements BlockEntityRenderer<DrinksMachineB
                matrices.translate((double)dx / 16.0D, 0.0D, 0.0D);
             }
 
-            RawModelRenderer.render(matrices, consumer, mesh, light, overlay);
+            RawModelRenderer.render(matrices, consumer, meshLted, light, overlay);
             matrices.popPose();
          }
       }

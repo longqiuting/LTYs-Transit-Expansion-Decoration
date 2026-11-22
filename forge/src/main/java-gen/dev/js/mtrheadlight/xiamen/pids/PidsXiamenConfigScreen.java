@@ -68,10 +68,10 @@ public final class PidsXiamenConfigScreen extends ScreenMapper {
             BlockEntity live = client.level.getBlockEntity(this.dataPos);
             if (live instanceof PidsXiamenBlockEntity) {
                PidsXiamenBlockEntity pids = (PidsXiamenBlockEntity)live;
-               Set<Long> live = pids.getPlatformIds();
-               if (live != null) {
-                  this.platformIds.addAll(live);
-                  this.initialPlatforms.addAll(live);
+               Set<Long> liveLted = pids.getPlatformIds();
+               if (liveLted != null) {
+                  this.platformIds.addAll(liveLted);
+                  this.initialPlatforms.addAll(liveLted);
                }
 
                this.displayPage = Math.max(0, pids.getDisplayPage());
@@ -265,19 +265,19 @@ public final class PidsXiamenConfigScreen extends ScreenMapper {
                BlockEntity maxArrivals = client.level.getBlockEntity(this.dataPos);
                if (maxArrivals instanceof PidsXiamenBlockEntity) {
                   PidsXiamenBlockEntity pids = (PidsXiamenBlockEntity)maxArrivals;
-                  int maxArrivals = Math.max(0, pids.getMaxArrivals());
+                  int maxArrivalsLted = Math.max(0, pids.getMaxArrivals());
                   int lines = Math.max(1, pids.getLinesPerArrival());
-                  messages = new String[maxArrivals * lines];
+                  messages = new String[maxArrivalsLted * lines];
 
                   for(int i = 0; i < messages.length; ++i) {
                      messages[i] = readMessage(pids, i);
                   }
 
-                  hideArrival = new boolean[maxArrivals];
+                  hideArrival = new boolean[maxArrivalsLted];
                   int i = 0;
 
                   while(true) {
-                     if (i >= maxArrivals) {
+                     if (i >= maxArrivalsLted) {
                         break label41;
                      }
 

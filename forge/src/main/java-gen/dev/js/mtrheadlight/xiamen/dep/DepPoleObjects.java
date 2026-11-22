@@ -2,8 +2,6 @@ package dev.js.mtrheadlight.xiamen.dep;
 
 import dev.js.mtrheadlight.LteLog;
 import dev.js.mtrheadlight.xiamen.XiamenObjects;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -13,6 +11,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class DepPoleObjects {
    public static final String NAMESPACE = "mtrlte";
@@ -42,12 +41,12 @@ public final class DepPoleObjects {
    public static void register() {
       if (!registered) {
          registered = true;
-         block = (DepPoleBlock)Registry.register(BuiltInRegistries.BLOCK, IDENTIFIER, new DepPoleBlock());
-         item = (Item)Registry.register(BuiltInRegistries.ITEM, IDENTIFIER, new BlockItem(block, new Item.Properties()));
-         entityType = (BlockEntityType)Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, IDENTIFIER, FabricBlockEntityTypeBuilder.create(DepPoleBlockEntity::new, new Block[]{block}).build());
+         block = (DepPoleBlock)Reg.block(IDENTIFIER, new DepPoleBlock());
+         item = (Item)Reg.item(IDENTIFIER, new BlockItem(block, new Item.Properties()));
+         entityType = (BlockEntityType)Reg.blockEntityType(IDENTIFIER, DepPoleBlockEntity::new, new Block[]{block});
 
          try {
-            ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, XiamenObjects.CORE_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> entries.method_45421(item));
+            Reg.tabEntries(XiamenObjects.CORE_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> entries.method_45421(item));
          } catch (Throwable var1) {
             LteLog.LOGGER.warn("[lte] dep pole: could not add the creative tab entry", var1);
          }

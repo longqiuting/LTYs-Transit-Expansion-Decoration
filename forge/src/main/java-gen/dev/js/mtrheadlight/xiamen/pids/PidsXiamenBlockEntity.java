@@ -17,22 +17,19 @@ public class PidsXiamenBlockEntity extends IPIDS.TileEntityPIDS {
    private final PidsXiamenBlock.Kind kind;
 
    public PidsXiamenBlockEntity(BlockPos pos, BlockState state) {
-      PidsXiamenBlock.Kind var10001;
-      label12: {
-         super(PidsXiamenObjects.entityType(), pos, state);
-         if (state != null) {
-            Block var4 = state.getBlock();
-            if (var4 instanceof PidsXiamenBlock) {
-               PidsXiamenBlock block = (PidsXiamenBlock)var4;
-               var10001 = block.kind();
-               break label12;
-            }
-         }
+      super(PidsXiamenObjects.entityType(), pos, state);
+      this.kind = kindOf(state);
+   }
 
-         var10001 = PidsXiamenBlock.Kind.METRO;
+   private static PidsXiamenBlock.Kind kindOf(BlockState state) {
+      if (state != null) {
+         Block block = state.getBlock();
+         if (block instanceof PidsXiamenBlock pidsBlock) {
+            return pidsBlock.kind();
+         }
       }
 
-      this.kind = var10001;
+      return PidsXiamenBlock.Kind.METRO;
    }
 
    protected PidsXiamenBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, PidsXiamenBlock.Kind kind) {

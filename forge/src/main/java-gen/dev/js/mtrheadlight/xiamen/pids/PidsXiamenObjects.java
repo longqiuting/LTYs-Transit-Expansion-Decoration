@@ -2,8 +2,6 @@ package dev.js.mtrheadlight.xiamen.pids;
 
 import dev.js.mtrheadlight.LteLog;
 import dev.js.mtrheadlight.xiamen.XiamenObjects;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -14,6 +12,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class PidsXiamenObjects {
    public static final String NAMESPACE = "mtrlte";
@@ -77,12 +76,12 @@ public final class PidsXiamenObjects {
          metroItem = registerItem(PidsXiamenBlock.Kind.METRO, metro);
          brt = register(PidsXiamenBlock.Kind.BRT);
          brtItem = registerItem(PidsXiamenBlock.Kind.BRT, brt);
-         pole = (PidsXiamenPoleBlock)Registry.register(BuiltInRegistries.BLOCK, new ResourceLocation("mtrlte", "pids_xiamen_pole"), new PidsXiamenPoleBlock(Properties.of().strength(1.0F)));
-         poleItem = (Item)Registry.register(BuiltInRegistries.ITEM, new ResourceLocation("mtrlte", "pids_xiamen_pole"), new BlockItem(pole, new Item.Properties()));
-         entityType = (BlockEntityType)Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, ENTITY_ID, FabricBlockEntityTypeBuilder.create(PidsXiamenBlockEntity::new, new Block[]{metro, brt}).build());
+         pole = (PidsXiamenPoleBlock)Reg.block(new ResourceLocation("mtrlte", "pids_xiamen_pole"), new PidsXiamenPoleBlock(Properties.of().strength(1.0F)));
+         poleItem = (Item)Reg.item(new ResourceLocation("mtrlte", "pids_xiamen_pole"), new BlockItem(pole, new Item.Properties()));
+         entityType = (BlockEntityType)Reg.blockEntityType(ENTITY_ID, PidsXiamenBlockEntity::new, new Block[]{metro, brt});
 
          try {
-            ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, XiamenObjects.CORE_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> {
+            Reg.tabEntries(XiamenObjects.CORE_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> {
                entries.method_45421(metroItem);
                entries.method_45421(brtItem);
                entries.method_45421(poleItem);
@@ -97,11 +96,11 @@ public final class PidsXiamenObjects {
 
    private static PidsXiamenBlock register(PidsXiamenBlock.Kind kind) {
       ResourceLocation id = new ResourceLocation("mtrlte", kind.id());
-      return (PidsXiamenBlock)Registry.register(BuiltInRegistries.BLOCK, id, new PidsXiamenBlock(kind));
+      return (PidsXiamenBlock)Reg.block(id, new PidsXiamenBlock(kind));
    }
 
    private static Item registerItem(PidsXiamenBlock.Kind kind, PidsXiamenBlock block) {
       ResourceLocation id = new ResourceLocation("mtrlte", kind.id());
-      return (Item)Registry.register(BuiltInRegistries.ITEM, id, new BlockItem(block, new Item.Properties()));
+      return (Item)Reg.item(id, new BlockItem(block, new Item.Properties()));
    }
 }

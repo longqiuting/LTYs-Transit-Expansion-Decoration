@@ -20,7 +20,7 @@ public final class PidsAdSetState extends SavedData {
       if (server == null) {
          return new PidsAdSetState();
       } else {
-         ServerLevel overworld = server.D();
+         ServerLevel overworld = server.overworld();
          return overworld == null ? new PidsAdSetState() : (PidsAdSetState)overworld.getDataStorage().computeIfAbsent(PidsAdSetState::new, PidsAdSetState::new, "mtrlte_pids_ad_set");
       }
    }

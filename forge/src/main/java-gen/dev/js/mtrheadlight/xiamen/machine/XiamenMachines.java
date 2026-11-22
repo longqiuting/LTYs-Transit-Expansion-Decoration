@@ -2,8 +2,6 @@ package dev.js.mtrheadlight.xiamen.machine;
 
 import dev.js.mtrheadlight.LteLog;
 import dev.js.mtrheadlight.xiamen.XiamenObjects;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -17,6 +15,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.material.MapColor;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class XiamenMachines {
    public static final String NAMESPACE = "mtrlte";
@@ -48,14 +47,14 @@ public final class XiamenMachines {
    public static void register() {
       if (!registered) {
          registered = true;
-         ticket = (XiamenTicketMachineBlock)Registry.register(BuiltInRegistries.BLOCK, TICKET_ID, new XiamenTicketMachineBlock(settings()));
-         ticketItem = (Item)Registry.register(BuiltInRegistries.ITEM, TICKET_ID, new BlockItem(ticket, new Item.Properties()));
-         balance = (XiamenBalanceMachineBlock)Registry.register(BuiltInRegistries.BLOCK, BALANCE_ID, new XiamenBalanceMachineBlock(settings()));
-         balanceItem = (Item)Registry.register(BuiltInRegistries.ITEM, BALANCE_ID, new BlockItem(balance, new Item.Properties()));
-         balanceEntityType = (BlockEntityType)Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, BALANCE_ENTITY_ID, FabricBlockEntityTypeBuilder.create(XiamenBalanceMachineBlockEntity::new, new Block[]{balance}).build());
+         ticket = (XiamenTicketMachineBlock)Reg.block(TICKET_ID, new XiamenTicketMachineBlock(settings()));
+         ticketItem = (Item)Reg.item(TICKET_ID, new BlockItem(ticket, new Item.Properties()));
+         balance = (XiamenBalanceMachineBlock)Reg.block(BALANCE_ID, new XiamenBalanceMachineBlock(settings()));
+         balanceItem = (Item)Reg.item(BALANCE_ID, new BlockItem(balance, new Item.Properties()));
+         balanceEntityType = (BlockEntityType)Reg.blockEntityType(BALANCE_ENTITY_ID, XiamenBalanceMachineBlockEntity::new, new Block[]{balance});
 
          try {
-            ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, XiamenObjects.CORE_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> {
+            Reg.tabEntries(XiamenObjects.CORE_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> {
                entries.method_45421(ticketItem);
                entries.method_45421(balanceItem);
             });

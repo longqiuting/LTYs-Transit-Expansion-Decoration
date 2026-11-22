@@ -1,10 +1,9 @@
 package dev.js.mtrheadlight.xiamen.pids;
 
 import dev.js.mtrheadlight.LteLog;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import dev.js.mtrheadlight.forge.platform.Net;
+import dev.js.mtrheadlight.forge.platform.Net;
+import dev.js.mtrheadlight.forge.platform.Net;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -26,7 +25,7 @@ public final class PidsAdSetNet {
          registered = true;
 
          try {
-            ServerPlayNetworking.registerGlobalReceiver(ID, (server, player, handler, buf, sender) -> {
+            Net.registerServer(ID, (server, player, buf) -> {
                PidsAdSet set;
                try {
                   byte kind = buf.readByte();
@@ -46,9 +45,9 @@ public final class PidsAdSetNet {
          }
 
          try {
-            ServerPlayConnectionEvents.JOIN.register((ServerPlayConnectionEvents.Join)(handler, sender, server) -> {
+            Net.onJoin((player, server) -> {
                try {
-                  send(handler.player, server);
+                  send(player, server);
                } catch (Throwable var4) {
                }
 
@@ -61,16 +60,16 @@ public final class PidsAdSetNet {
    }
 
    public static FriendlyByteBuf snapshotPacket(PidsAdSet set) {
-      FriendlyByteBuf buf = PacketByteBufs.create();
+      FriendlyByteBuf buf = Net.buf();
       buf.writeByte(0);
       (set == null ? new PidsAdSet() : set).writeBuf(buf);
       return buf;
    }
 
    public static void send(ServerPlayer player, MinecraftServer server) {
-      if (player != null && ServerPlayNetworking.canSend(player, ID)) {
+      if (player != null && Net.canSend(player, ID)) {
          PidsAdSet set = PidsAdSetState.get(server).get();
-         ServerPlayNetworking.send(player, ID, snapshotPacket(set));
+         Net.send(player, ID, snapshotPacket(set));
       }
    }
 
@@ -78,9 +77,9 @@ public final class PidsAdSetNet {
       if (server != null) {
          PidsAdSet copy = set == null ? new PidsAdSet() : set.copy();
 
-         for(ServerPlayer player : PlayerLookup.all(server)) {
-            if (ServerPlayNetworking.canSend(player, ID)) {
-               ServerPlayNetworking.send(player, ID, snapshotPacket(copy));
+         for(ServerPlayer player : Net.allPlayers(server)) {
+            if (Net.canSend(player, ID)) {
+               Net.send(player, ID, snapshotPacket(copy));
             }
          }
 
@@ -88,7 +87,7 @@ public final class PidsAdSetNet {
    }
 
    public static FriendlyByteBuf savePacket(PidsAdSet set) {
-      FriendlyByteBuf buf = PacketByteBufs.create();
+      FriendlyByteBuf buf = Net.buf();
       buf.writeByte(1);
       (set == null ? new PidsAdSet() : set).writeBuf(buf);
       return buf;
@@ -96,7 +95,7 @@ public final class PidsAdSetNet {
 
    private static void applySave(MinecraftServer server, ServerPlayer player, PidsAdSet set) {
       if (server != null && player != null && set != null) {
-         boolean allowed = player.hasPermissions(2) || server != null && !server.l();
+         boolean allowed = player.hasPermissions(2) || server != null && !server.isDedicatedServer();
          if (!allowed) {
             player.displayClientMessage(Component.translatable("screen.mtrlte.pids_ad_set.denied"), false);
             send(player, server);

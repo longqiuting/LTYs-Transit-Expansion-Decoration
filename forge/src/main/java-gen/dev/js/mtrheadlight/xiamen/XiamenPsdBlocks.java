@@ -61,6 +61,10 @@ public final class XiamenPsdBlocks {
          return new XiamenPsdBlocks.TileEntityXiamenAPGDoor(pos, state);
       }
 
+      public BlockEntityMapper newBlockEntity(BlockPos pos, BlockState state) {
+         return this.createBlockEntity(pos, state);
+      }
+
       public Item asItem() {
          return XiamenPsdBlocks.itemOrAir(XiamenObjects.set(this.line).apgDoorItem);
       }
@@ -97,6 +101,10 @@ public final class XiamenPsdBlocks {
          return new XiamenPsdBlocks.TileEntityXiamenAPGGlass(pos, state);
       }
 
+      public BlockEntityMapper newBlockEntity(BlockPos pos, BlockState state) {
+         return this.createBlockEntity(pos, state);
+      }
+
       public Item asItem() {
          return XiamenPsdBlocks.itemOrAir(XiamenObjects.set(this.line).apgGlassItem);
       }
@@ -121,6 +129,10 @@ public final class XiamenPsdBlocks {
 
       public BlockEntityMapper createBlockEntity(BlockPos pos, BlockState state) {
          return new XiamenPsdBlocks.TileEntityXiamenPSDDoor(pos, state);
+      }
+
+      public BlockEntityMapper newBlockEntity(BlockPos pos, BlockState state) {
+         return this.createBlockEntity(pos, state);
       }
 
       public Item asItem() {
@@ -201,6 +213,10 @@ public final class XiamenPsdBlocks {
 
       public BlockEntityMapper createBlockEntity(BlockPos pos, BlockState state) {
          return new XiamenPsdBlocks.TileEntityXiamenPSDTop(pos, state);
+      }
+
+      public BlockEntityMapper newBlockEntity(BlockPos pos, BlockState state) {
+         return this.createBlockEntity(pos, state);
       }
 
       public Item asItem() {

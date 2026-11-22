@@ -4,6 +4,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class TabIcons {
    public static final ResourceLocation CORE_ID = new ResourceLocation("mtrlte", "tab_core");
@@ -18,8 +19,8 @@ public final class TabIcons {
    public static void register() {
       if (!registered) {
          registered = true;
-         core = (Item)Registry.register(BuiltInRegistries.ITEM, CORE_ID, new Item(new Item.Properties()));
-         tools = (Item)Registry.register(BuiltInRegistries.ITEM, TOOLS_ID, new Item(new Item.Properties()));
+         core = (Item)Reg.item(CORE_ID, new Item(new Item.Properties()));
+         tools = (Item)Reg.item(TOOLS_ID, new Item(new Item.Properties()));
       }
    }
 

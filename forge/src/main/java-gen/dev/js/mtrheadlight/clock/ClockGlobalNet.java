@@ -1,10 +1,9 @@
 package dev.js.mtrheadlight.clock;
 
 import dev.js.mtrheadlight.LteLog;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import dev.js.mtrheadlight.forge.platform.Net;
+import dev.js.mtrheadlight.forge.platform.Net;
+import dev.js.mtrheadlight.forge.platform.Net;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -29,7 +28,7 @@ public final class ClockGlobalNet {
          registered = true;
 
          try {
-            ServerPlayNetworking.registerGlobalReceiver(ID, (server, player, handler, buf, sender) -> {
+            Net.registerServer(ID, (server, player, buf) -> {
                byte kind;
                ClockGlobalConfig cfg;
                try {
@@ -53,9 +52,9 @@ public final class ClockGlobalNet {
          }
 
          try {
-            ServerPlayConnectionEvents.JOIN.register((ServerPlayConnectionEvents.Join)(handler, sender, server) -> {
+            Net.onJoin((player, server) -> {
                try {
-                  send(handler.player, server);
+                  send(player, server);
                } catch (Throwable var4) {
                }
 
@@ -68,15 +67,15 @@ public final class ClockGlobalNet {
    }
 
    public static FriendlyByteBuf snapshotPacket(ClockGlobalConfig cfg) {
-      FriendlyByteBuf buf = PacketByteBufs.create();
+      FriendlyByteBuf buf = Net.buf();
       buf.writeByte(0);
       cfg.writeBuf(buf);
       return buf;
    }
 
    public static void send(ServerPlayer player, MinecraftServer server) {
-      if (player != null && ServerPlayNetworking.canSend(player, ID)) {
-         ServerPlayNetworking.send(player, ID, snapshotPacket(ClockGlobalState.get(server).get()));
+      if (player != null && Net.canSend(player, ID)) {
+         Net.send(player, ID, snapshotPacket(ClockGlobalState.get(server).get()));
       }
    }
 
@@ -84,9 +83,9 @@ public final class ClockGlobalNet {
       if (server != null && cfg != null) {
          ClockGlobalConfig copy = cfg.copy();
 
-         for(ServerPlayer player : PlayerLookup.all(server)) {
-            if (ServerPlayNetworking.canSend(player, ID)) {
-               ServerPlayNetworking.send(player, ID, snapshotPacket(copy));
+         for(ServerPlayer player : Net.allPlayers(server)) {
+            if (Net.canSend(player, ID)) {
+               Net.send(player, ID, snapshotPacket(copy));
             }
          }
 
@@ -94,14 +93,14 @@ public final class ClockGlobalNet {
    }
 
    public static FriendlyByteBuf savePacket(ClockGlobalConfig cfg) {
-      FriendlyByteBuf buf = PacketByteBufs.create();
+      FriendlyByteBuf buf = Net.buf();
       buf.writeByte(1);
       cfg.writeBuf(buf);
       return buf;
    }
 
    public static FriendlyByteBuf previewPacket() {
-      FriendlyByteBuf buf = PacketByteBufs.create();
+      FriendlyByteBuf buf = Net.buf();
       buf.writeByte(2);
       return buf;
    }

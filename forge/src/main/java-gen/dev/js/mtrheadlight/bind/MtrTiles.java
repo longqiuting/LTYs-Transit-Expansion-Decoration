@@ -80,7 +80,7 @@ public final class MtrTiles {
    public static Set<Long> projectorPlatformIds(Object tile) {
       try {
          Object value = method(tile, "getPlatformIds").invoke(tile);
-         return (Set<Long>)(value instanceof Set ? new LinkedHashSet((Set)value) : Collections.emptySet());
+         return (Set<Long>)(value instanceof Set ? new LinkedHashSet<Long>((Set)value) : Collections.emptySet());
       } catch (Throwable var2) {
          return Collections.emptySet();
       }
@@ -114,7 +114,7 @@ public final class MtrTiles {
    public static Set<Long> pidsPlatformIds(Object tile) {
       try {
          Object value = method(tile, "getPlatformIds").invoke(tile);
-         return (Set<Long>)(value instanceof Set ? new LinkedHashSet((Set)value) : Collections.emptySet());
+         return (Set<Long>)(value instanceof Set ? new LinkedHashSet<Long>((Set)value) : Collections.emptySet());
       } catch (Throwable var2) {
          return Collections.emptySet();
       }

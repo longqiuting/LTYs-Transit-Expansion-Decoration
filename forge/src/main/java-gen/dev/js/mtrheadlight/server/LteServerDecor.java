@@ -26,9 +26,9 @@ import dev.js.mtrheadlight.xiamen.pids.PsdLcdObjects;
 import dev.js.mtrheadlight.xiamen.sign.StationSignObjects;
 import dev.js.mtrheadlight.xiamen.sign.WallSignObjects;
 import dev.js.mtrheadlight.xiamen.ticket.XiamenTicketGates;
-import net.fabricmc.api.ModInitializer;
+import dev.js.mtrheadlight.forge.platform.CommonInit;
 
-public final class LteServerDecor implements ModInitializer {
+public final class LteServerDecor implements CommonInit {
    public void onInitialize() {
       try {
          DecorConfig.load();

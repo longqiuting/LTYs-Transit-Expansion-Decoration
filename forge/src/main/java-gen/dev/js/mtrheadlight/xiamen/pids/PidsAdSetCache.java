@@ -1,7 +1,7 @@
 package dev.js.mtrheadlight.xiamen.pids;
 
 import java.util.List;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import dev.js.mtrheadlight.forge.platform.Net;
 
 public final class PidsAdSetCache {
    private static volatile PidsAdSet current;
@@ -29,8 +29,8 @@ public final class PidsAdSetCache {
       current = copy;
 
       try {
-         if (ClientPlayNetworking.canSend(PidsAdSetNet.ID)) {
-            ClientPlayNetworking.send(PidsAdSetNet.ID, PidsAdSetNet.savePacket(copy));
+         if (Net.canSend(PidsAdSetNet.ID)) {
+            Net.sendToServer(PidsAdSetNet.ID, PidsAdSetNet.savePacket(copy));
          }
       } catch (Throwable var3) {
       }

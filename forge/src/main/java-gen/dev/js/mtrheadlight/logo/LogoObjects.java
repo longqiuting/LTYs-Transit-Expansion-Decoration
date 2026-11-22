@@ -5,7 +5,6 @@ import dev.js.mtrheadlight.xiamen.XiamenObjects;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -17,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.material.MapColor;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class LogoObjects {
    public static final String NAMESPACE = "mtrlte";
@@ -58,7 +58,7 @@ public final class LogoObjects {
          jiaomeiItem = registerItem(JIAOMEI_ID, jiaomeiLogo);
 
          try {
-            ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, XiamenObjects.CORE_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> {
+            Reg.tabEntries(XiamenObjects.CORE_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> {
                Item xiamenItem = XiamenObjects.logo().asItem();
                List<ItemStack> stacks = entries.getDisplayStacks();
                stacks.removeIf((s) -> s.is(xiamenItem) || s.is(jiaomeiItem) || s.is(lteItem));
@@ -76,7 +76,7 @@ public final class LogoObjects {
 
    public static void pinCoreTabOrder() {
       try {
-         ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, XiamenObjects.CORE_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> {
+         Reg.tabEntries(XiamenObjects.CORE_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> {
             List<ItemStack> stacks = entries.getDisplayStacks();
             List<ItemStack> front = new ArrayList(CORE_TAB_FRONT.size());
 
@@ -123,10 +123,10 @@ public final class LogoObjects {
 
    private static LogoBlock registerBlock(ResourceLocation id) {
       LogoBlock block = new LogoBlock(Properties.of().mapColor(MapColor.METAL).requiresCorrectToolForDrops().destroyTime(2.0F).lightLevel((state) -> 10));
-      return (LogoBlock)Registry.register(BuiltInRegistries.BLOCK, id, block);
+      return (LogoBlock)Reg.block(id, block);
    }
 
    private static Item registerItem(ResourceLocation id, LogoBlock block) {
-      return (Item)Registry.register(BuiltInRegistries.ITEM, id, new BlockItem(block, new Item.Properties()));
+      return (Item)Reg.item(id, new BlockItem(block, new Item.Properties()));
    }
 }

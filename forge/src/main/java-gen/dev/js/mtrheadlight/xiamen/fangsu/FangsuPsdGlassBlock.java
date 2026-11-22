@@ -274,8 +274,8 @@ public class FangsuPsdGlassBlock extends HorizontalDirectionalBlock implements E
       BlockState state = world.getBlockState(pos);
       Block base = state.getBlock();
       if (base instanceof FangsuPsdGlassBlock glass) {
-         BlockState base = forceAuto ? (BlockState)((BlockState)state.setValue(AUTO_LEFT, true)).setValue(AUTO_RIGHT, true) : state;
-         BlockState relinked = glass.relink(base, world, pos);
+         BlockState baseLted = forceAuto ? (BlockState)((BlockState)state.setValue(AUTO_LEFT, true)).setValue(AUTO_RIGHT, true) : state;
+         BlockState relinked = glass.relink(baseLted, world, pos);
          if (relinked == state) {
             return false;
          } else {

@@ -67,6 +67,10 @@ public class FangsuPsdDoorBlock extends BlockPSDAPGDoorBase {
       return new FangsuPsdDoorBlock.FangsuPsdDoorEntity(pos, state);
    }
 
+   public BlockEntityMapper newBlockEntity(BlockPos pos, BlockState state) {
+      return this.createBlockEntity(pos, state);
+   }
+
    public BlockState getStateForPlacement(BlockPlaceContext context) {
       BlockState state = super.getStateForPlacement(context);
       return state == null ? null : (BlockState)state.setValue(FACING, FangsuPsdPlacement.facingOf(context));

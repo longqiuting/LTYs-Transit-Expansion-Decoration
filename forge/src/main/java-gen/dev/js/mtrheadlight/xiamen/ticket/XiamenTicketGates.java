@@ -3,8 +3,6 @@ package dev.js.mtrheadlight.xiamen.ticket;
 import dev.js.mtrheadlight.LteLog;
 import dev.js.mtrheadlight.xiamen.XiamenObjects;
 import java.util.List;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -15,6 +13,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class XiamenTicketGates {
    public static final XiamenTicketGates.Side XIAMEN_SIDE = new XiamenTicketGates.Side("ticket_gate_xiamen_side", "ticket_barrier_side");
@@ -48,21 +47,21 @@ public final class XiamenTicketGates {
          int cursor = 0;
 
          for(XiamenTicketGates.Gate gate : GATES) {
-            gate.block = (XiamenTicketGate)Registry.register(BuiltInRegistries.BLOCK, gate.id, new XiamenTicketGate(gate.entrance, gate.rawModel));
+            gate.block = (XiamenTicketGate)Reg.block(gate.id, new XiamenTicketGate(gate.entrance, gate.rawModel));
             blocks[cursor++] = gate.block;
-            gate.item = (Item)Registry.register(BuiltInRegistries.ITEM, gate.id, new BlockItem(gate.block, new Item.Properties()));
+            gate.item = (Item)Reg.item(gate.id, new BlockItem(gate.block, new Item.Properties()));
          }
 
          for(XiamenTicketGates.Side side : SIDES) {
-            side.block = (XiamenTicketGateSide)Registry.register(BuiltInRegistries.BLOCK, side.id, new XiamenTicketGateSide(Properties.of().strength(2.0F).requiresCorrectToolForDrops().noOcclusion(), side.rawModel));
+            side.block = (XiamenTicketGateSide)Reg.block(side.id, new XiamenTicketGateSide(Properties.of().strength(2.0F).requiresCorrectToolForDrops().noOcclusion(), side.rawModel));
             blocks[cursor++] = side.block;
-            side.item = (Item)Registry.register(BuiltInRegistries.ITEM, side.id, new BlockItem(side.block, new Item.Properties()));
+            side.item = (Item)Reg.item(side.id, new BlockItem(side.block, new Item.Properties()));
          }
 
-         entityType = (BlockEntityType)Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, ENTITY_ID, FabricBlockEntityTypeBuilder.create(XiamenTicketGateBlockEntity::new, blocks).build());
+         entityType = (BlockEntityType)Reg.blockEntityType(ENTITY_ID, XiamenTicketGateBlockEntity::new, blocks);
 
          try {
-            ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, XiamenObjects.CORE_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> {
+            Reg.tabEntries(XiamenObjects.CORE_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> {
                for(XiamenTicketGates.Gate gate : GATES) {
                   entries.method_45421(gate.item);
                }

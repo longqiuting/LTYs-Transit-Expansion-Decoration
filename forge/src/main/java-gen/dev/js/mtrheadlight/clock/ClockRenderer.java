@@ -152,7 +152,8 @@ public final class ClockRenderer implements BlockEntityRenderer<ClockBlockEntity
             double py = -Math.sin(theta);
             double weight = i == 0 ? 1.35D : 1.0D;
             switch (cfg.tickStyle) {
-               case BAR:
+               case BAR: {
+
                   double inner = ring - radius * 0.085D * weight;
                   double outer = ring + radius * 0.045D * weight;
                   double half = Math.max(0.004D, radius * 0.014D * weight);
@@ -161,7 +162,9 @@ public final class ClockRenderer implements BlockEntityRenderer<ClockBlockEntity
                   frame.vertex(vc, matrix, dx * outer - px * half, dy * outer - py * half, color);
                   frame.vertex(vc, matrix, dx * inner - px * half, dy * inner - py * half, color);
                   break;
-               case DOT:
+               }
+               case DOT: {
+
                   double r = Math.max(0.006D, radius * 0.026D * weight);
                   double cx = dx * ring;
                   double cy = dy * ring;
@@ -170,7 +173,9 @@ public final class ClockRenderer implements BlockEntityRenderer<ClockBlockEntity
                   frame.vertex(vc, matrix, cx + dx * r, cy + dy * r, color);
                   frame.vertex(vc, matrix, cx - px * r, cy - py * r, color);
                   break;
-               case SQUARE:
+               }
+               case SQUARE: {
+
                   double h = Math.max(0.006D, radius * 0.028D * weight);
                   double cx = dx * ring;
                   double cy = dy * ring;
@@ -179,7 +184,9 @@ public final class ClockRenderer implements BlockEntityRenderer<ClockBlockEntity
                   frame.vertex(vc, matrix, cx - px * h - dx * h, cy - py * h - dy * h, color);
                   frame.vertex(vc, matrix, cx + px * h - dx * h, cy + py * h - dy * h, color);
                   break;
-               case TRIANGLE:
+               }
+               case TRIANGLE: {
+
                   double apex = ring + radius * 0.05D * weight;
                   double base = ring - radius * 0.045D * weight;
                   double half = Math.max(0.006D, radius * 0.026D * weight);
@@ -188,10 +195,15 @@ public final class ClockRenderer implements BlockEntityRenderer<ClockBlockEntity
                   frame.vertex(vc, matrix, dx * base - px * half, dy * base - py * half, color);
                   frame.vertex(vc, matrix, dx * apex, dy * apex, color);
                   break;
-               case ARABIC:
-               case ROMAN:
+               }
+               case ARABIC: {
+
+               }
+               case ROMAN: {
+
                   String label = cfg.tickStyle == ClockConfig.TickStyle.ARABIC ? Integer.toString(i == 0 ? 12 : i) : ROMAN[i == 0 ? 11 : i - 1];
                   this.numeral(matrices, vertexConsumers, frame, dx * ring, dy * ring, radius, label, color);
+               }
             }
          }
 

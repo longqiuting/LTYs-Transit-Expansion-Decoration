@@ -1,14 +1,14 @@
 package dev.js.mtrheadlight.xiamen.fangsu;
 
 import dev.js.mtrheadlight.LteLog;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
+import dev.js.mtrheadlight.forge.platform.ClientInit;
+import dev.js.mtrheadlight.forge.platform.Renderers;
 
-public final class FangsuPsdClient implements ClientModInitializer {
+public final class FangsuPsdClient implements ClientInit {
    public void onInitializeClient() {
       if (FangsuPsdBlocks.entityType() != null) {
          try {
-            BlockEntityRendererRegistry.register(FangsuPsdBlocks.entityType(), (context) -> new FangsuPsdRenderer(context));
+            Renderers.ber(FangsuPsdBlocks.entityType(), (context) -> new FangsuPsdRenderer(context));
             LteLog.LOGGER.info("[lte] fangsu psd door renderer registered: {}", FangsuPsdRenderer.class.getName());
          } catch (Throwable var4) {
             LteLog.LOGGER.error("[lte] could not register the fangsu psd door renderer", var4);
@@ -19,7 +19,7 @@ public final class FangsuPsdClient implements ClientModInitializer {
 
       if (FangsuPsdBlocks.endDoorEntityType() != null) {
          try {
-            BlockEntityRendererRegistry.register(FangsuPsdBlocks.endDoorEntityType(), (context) -> new FangsuPsdEndDoorRenderer(context));
+            Renderers.ber(FangsuPsdBlocks.endDoorEntityType(), (context) -> new FangsuPsdEndDoorRenderer(context));
             LteLog.LOGGER.info("[lte] fangsu psd end door renderer registered: {}", FangsuPsdEndDoorRenderer.class.getName());
          } catch (Throwable var3) {
             LteLog.LOGGER.error("[lte] could not register the fangsu psd end door renderer", var3);
@@ -30,7 +30,7 @@ public final class FangsuPsdClient implements ClientModInitializer {
 
       if (FangsuPsdBlocks.glassEntityType() != null) {
          try {
-            BlockEntityRendererRegistry.register(FangsuPsdBlocks.glassEntityType(), (context) -> new FangsuPsdGlassRenderer(context));
+            Renderers.ber(FangsuPsdBlocks.glassEntityType(), (context) -> new FangsuPsdGlassRenderer(context));
             LteLog.LOGGER.info("[lte] fangsu psd glass renderer registered: {}", FangsuPsdGlassRenderer.class.getName());
          } catch (Throwable var2) {
             LteLog.LOGGER.error("[lte] could not register the fangsu psd glass renderer", var2);

@@ -37,13 +37,13 @@ public class EyecandyRenderer implements BlockEntityRenderer<EyecandyBlockEntity
       BlockState state = world != null ? world.getBlockState(entity.getBlockPos()) : entity.getBlockState();
       Block entry = state.getBlock();
       if (entry instanceof EyecandyBlock block) {
-         EyecandyEntry entry = block.entry();
-         if (entry.bakedModel() == null) {
+         EyecandyEntry entryLted = block.entry();
+         if (entryLted.bakedModel() == null) {
             boolean warningLight = block.hasWarningLight();
-            RawMesh base = warningLight ? EyecandyBlocks.baseMesh(entry) : EyecandyBlocks.mesh(entry);
+            RawMesh base = warningLight ? EyecandyBlocks.baseMesh(entryLted) : EyecandyBlocks.mesh(entryLted);
             if (base != null) {
                boolean lit = warningLight && entity.isLit();
-               RawMesh lightPart = warningLight ? EyecandyBlocks.lightMesh(entry, lit) : null;
+               RawMesh lightPart = warningLight ? EyecandyBlocks.lightMesh(entryLted, lit) : null;
                RenderType layer = RawModelRenderer.cutoutLayer(base);
                VertexConsumer consumer = vertexConsumers.getBuffer(layer);
                Direction facing = state.hasProperty(EyecandyBlock.FACING) ? (Direction)state.getValue(EyecandyBlock.FACING) : Direction.NORTH;

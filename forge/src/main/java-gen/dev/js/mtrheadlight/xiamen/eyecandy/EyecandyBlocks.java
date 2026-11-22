@@ -15,9 +15,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -35,6 +32,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class EyecandyBlocks {
    public static final String NAMESPACE = "mtrlte";
@@ -313,7 +311,7 @@ public final class EyecandyBlocks {
             for(z1 = z0; z1 + 1 < 16 && sameRuns((List)rows.get(z1 + 1), (List)rows.get(z0)); ++z1) {
             }
 
-            for(int[] run : (List)rows.get(z0)) {
+            for(int[] run : (List<int[]>)rows.get(z0)) {
                out.add(new double[]{(double)run[0], yMin, (double)z0, (double)run[1], yMax, (double)(z1 + 1)});
             }
 
@@ -419,8 +417,8 @@ public final class EyecandyBlocks {
                try {
                   List<double[]> boxes = boxesOf(entry);
                   EyecandyBlock block = new EyecandyBlock(Properties.of().mapColor(MapColor.COLOR_GRAY).strength(0.8F).sound(SoundType.STONE).noOcclusion(), entry, boxes, !hasNoCollision(entry.key()));
-                  Registry.register(BuiltInRegistries.BLOCK, entry.blockId(), block);
-                  Item item = (Item)Registry.register(BuiltInRegistries.ITEM, entry.blockId(), new BlockItem(block, new Item.Properties()));
+                  Reg.block(entry.blockId(), block);
+                  Item item = (Item)Reg.item(entry.blockId(), new BlockItem(block, new Item.Properties()));
                   blocks.add(block);
                   BLOCKS.put(entry.key(), block);
                   ITEMS.put(entry.key(), item);
@@ -430,12 +428,12 @@ public final class EyecandyBlocks {
                }
             }
 
-            entityType = (BlockEntityType)Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, ENTITY_ID, FabricBlockEntityTypeBuilder.create(EyecandyBlockEntity::new, (Block[])blocks.toArray(new Block[0])).build());
-            ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, XiamenObjects.CORE_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> addAll(entries, EyecandyEntry.Pack.XIAMEN));
+            entityType = (BlockEntityType)Reg.blockEntityType(ENTITY_ID, EyecandyBlockEntity::new, (Block[])blocks.toArray(new Block[0]));
+            Reg.tabEntries(XiamenObjects.CORE_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> addAll(entries, EyecandyEntry.Pack.XIAMEN));
             List<EyecandyEntry> nanputuo = entriesOf(EyecandyEntry.Pack.NANPUTUO);
             if (!nanputuo.isEmpty()) {
-               Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, NANPUTUO_TAB_ID, FabricItemGroup.builder().title(Component.translatable("itemGroup.mtrlte.nanputuo_decor")).icon(() -> new ItemStack((ItemLike)ITEMS.get(((EyecandyEntry)nanputuo.get(0)).key()))).build());
-               ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, NANPUTUO_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> addAll(entries, EyecandyEntry.Pack.NANPUTUO));
+               Reg.tab(NANPUTUO_TAB_ID, Component.translatable("itemGroup.mtrlte.nanputuo_decor"), () -> new ItemStack((ItemLike)ITEMS.get(((EyecandyEntry)nanputuo.get(0)).key())));
+               Reg.tabEntries(NANPUTUO_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> addAll(entries, EyecandyEntry.Pack.NANPUTUO));
             }
 
             for(EyecandyEntry entry : ENTRIES) {

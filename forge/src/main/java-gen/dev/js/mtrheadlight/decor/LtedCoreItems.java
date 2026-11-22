@@ -2,8 +2,6 @@ package dev.js.mtrheadlight.decor;
 
 import dev.js.mtrheadlight.LteLog;
 import dev.js.mtrheadlight.TabIcons;
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -13,6 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class LtedCoreItems {
    public static final ResourceLocation LTED_DASHBOARD_ID = new ResourceLocation("mtrlte", "lted_dashboard");
@@ -30,10 +29,10 @@ public final class LtedCoreItems {
    public static void register() {
       if (!registered) {
          registered = true;
-         dashboard = (LtedDashboardItem)Registry.register(BuiltInRegistries.ITEM, LTED_DASHBOARD_ID, new LtedDashboardItem((new Item.Properties()).stacksTo(1)));
+         dashboard = (LtedDashboardItem)Reg.item(LTED_DASHBOARD_ID, new LtedDashboardItem((new Item.Properties()).stacksTo(1)));
          TabIcons.register();
-         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, TOOLS_TAB_ID, FabricItemGroup.builder().title(Component.translatable("itemGroup.mtrlte.tools")).icon(() -> new ItemStack(TabIcons.tools())).build());
-         ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, TOOLS_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> entries.method_45421(dashboard));
+         Reg.tab(TOOLS_TAB_ID, Component.translatable("itemGroup.mtrlte.tools"), () -> new ItemStack(TabIcons.tools()));
+         Reg.tabEntries(TOOLS_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> entries.method_45421(dashboard));
          LteLog.LOGGER.info("[lte] lted dashboard item: {}", LTED_DASHBOARD_ID);
       }
    }
@@ -41,7 +40,7 @@ public final class LtedCoreItems {
    public static void pinToolsTabOrder() {
       if (dashboard != null) {
          try {
-            ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, TOOLS_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> {
+            Reg.tabEntries(TOOLS_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> {
                entries.getDisplayStacks().removeIf((s) -> s.is(dashboard));
                entries.method_45421(dashboard);
             });

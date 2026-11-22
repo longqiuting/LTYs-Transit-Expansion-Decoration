@@ -193,7 +193,7 @@ public class ClockBlockEntity extends BlockEntity {
       String raw = cfg == null ? "minecraft:block.bell.use" : cfg.chimeSound;
       ResourceLocation id = ResourceLocation.tryParse(raw == null ? "minecraft:block.bell.use" : raw);
       if (id != null) {
-         SoundEvent event = (SoundEvent)BuiltInRegistries.SOUND_EVENT.getOptional(id).orElse((Object)null);
+         SoundEvent event = (SoundEvent)BuiltInRegistries.SOUND_EVENT.getOptional(id).orElse((SoundEvent)null);
          if (event != null) {
             return event;
          }

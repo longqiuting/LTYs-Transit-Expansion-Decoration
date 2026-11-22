@@ -2,8 +2,6 @@ package dev.js.mtrheadlight.xiamen.drinks;
 
 import dev.js.mtrheadlight.LteLog;
 import dev.js.mtrheadlight.xiamen.XiamenObjects;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -17,6 +15,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.material.MapColor;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class DrinksMachineObjects {
    public static final String NAMESPACE = "mtrlte";
@@ -76,16 +75,16 @@ public final class DrinksMachineObjects {
    public static void register() {
       if (!registered) {
          registered = true;
-         top = (DrinksMachineBlock)Registry.register(BuiltInRegistries.BLOCK, TOP_ID, new DrinksMachineBlock(settings(10), true, "tooltip.mtrlte.drinks_machine_top", DrinksMachineBlock.Variant.SINGLE));
-         bottom = (DrinksMachineBlock)Registry.register(BuiltInRegistries.BLOCK, BOTTOM_ID, new DrinksMachineBlock(settings(6), false, "tooltip.mtrlte.drinks_machine_bottom", DrinksMachineBlock.Variant.SINGLE));
-         item = (Item)Registry.register(BuiltInRegistries.ITEM, BOTTOM_ID, new BlockItem(bottom, new Item.Properties()));
-         doubleTop = (DrinksMachineBlock)Registry.register(BuiltInRegistries.BLOCK, DOUBLE_TOP_ID, new DrinksMachineBlock(settings(10), true, "tooltip.mtrlte.drinks_machine_top", DrinksMachineBlock.Variant.DOUBLE));
-         doubleBottom = (DrinksMachineBlock)Registry.register(BuiltInRegistries.BLOCK, DOUBLE_BOTTOM_ID, new DrinksMachineBlock(settings(6), false, "tooltip.mtrlte.drinks_machine_bottom", DrinksMachineBlock.Variant.DOUBLE));
-         doubleItem = (Item)Registry.register(BuiltInRegistries.ITEM, DOUBLE_BOTTOM_ID, new BlockItem(doubleBottom, new Item.Properties()));
-         blockEntityType = (BlockEntityType)Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, BE_ID, FabricBlockEntityTypeBuilder.create(DrinksMachineBlockEntity::new, new Block[]{top, bottom, doubleTop, doubleBottom}).build());
+         top = (DrinksMachineBlock)Reg.block(TOP_ID, new DrinksMachineBlock(settings(10), true, "tooltip.mtrlte.drinks_machine_top", DrinksMachineBlock.Variant.SINGLE));
+         bottom = (DrinksMachineBlock)Reg.block(BOTTOM_ID, new DrinksMachineBlock(settings(6), false, "tooltip.mtrlte.drinks_machine_bottom", DrinksMachineBlock.Variant.SINGLE));
+         item = (Item)Reg.item(BOTTOM_ID, new BlockItem(bottom, new Item.Properties()));
+         doubleTop = (DrinksMachineBlock)Reg.block(DOUBLE_TOP_ID, new DrinksMachineBlock(settings(10), true, "tooltip.mtrlte.drinks_machine_top", DrinksMachineBlock.Variant.DOUBLE));
+         doubleBottom = (DrinksMachineBlock)Reg.block(DOUBLE_BOTTOM_ID, new DrinksMachineBlock(settings(6), false, "tooltip.mtrlte.drinks_machine_bottom", DrinksMachineBlock.Variant.DOUBLE));
+         doubleItem = (Item)Reg.item(DOUBLE_BOTTOM_ID, new BlockItem(doubleBottom, new Item.Properties()));
+         blockEntityType = (BlockEntityType)Reg.blockEntityType(BE_ID, DrinksMachineBlockEntity::new, new Block[]{top, bottom, doubleTop, doubleBottom});
 
          try {
-            ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, XiamenObjects.CORE_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> {
+            Reg.tabEntries(XiamenObjects.CORE_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> {
                entries.method_45421(item);
                entries.method_45421(doubleItem);
             });

@@ -226,10 +226,10 @@ public final class LiquidScannerBlock extends HorizontalDirectionalBlock impleme
             this.showLamp(world, pos, state, LiquidScannerBlock.Result.RED);
             return InteractionResult.CONSUME;
          } else {
-            ItemStack scanned = held.copyWithCount(1);
+            ItemStack scannedLted = held.copyWithCount(1);
             held.shrink(1);
-            if (!player.getInventory().add(scanned)) {
-               player.drop(scanned, false);
+            if (!player.getInventory().add(scannedLted)) {
+               player.drop(scannedLted, false);
             }
 
             world.playSound((Player)null, pos, (SoundEvent)SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.BLOCKS, 1.0F, 1.4F);

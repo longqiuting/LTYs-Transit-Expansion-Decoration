@@ -1,11 +1,11 @@
 package dev.js.mtrheadlight.decor;
 
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
+import dev.js.mtrheadlight.forge.platform.ClientInit;
+import dev.js.mtrheadlight.forge.platform.Layers;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.level.block.Block;
 
-public final class DecorClient implements ClientModInitializer {
+public final class DecorClient implements ClientInit {
    public void onInitializeClient() {
       try {
          putCutout(DecorBlocks.marblePlatform());
@@ -24,7 +24,7 @@ public final class DecorClient implements ClientModInitializer {
 
    private static void putCutout(Block block) {
       if (block != null) {
-         BlockRenderLayerMap.INSTANCE.putBlock(block, RenderType.cutout());
+         Layers.put(block, RenderType.cutout());
       }
 
    }

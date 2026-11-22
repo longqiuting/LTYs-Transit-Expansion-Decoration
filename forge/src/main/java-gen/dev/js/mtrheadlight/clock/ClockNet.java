@@ -1,9 +1,9 @@
 package dev.js.mtrheadlight.clock;
 
 import dev.js.mtrheadlight.LteLog;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import dev.js.mtrheadlight.forge.platform.Net;
+import dev.js.mtrheadlight.forge.platform.Net;
+import dev.js.mtrheadlight.forge.platform.Net;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -29,7 +29,7 @@ public final class ClockNet {
          registered = true;
 
          try {
-            ServerPlayNetworking.registerGlobalReceiver(ID, (server, player, handler, buf, sender) -> {
+            Net.registerServer(ID, (server, player, buf) -> {
                byte kind;
                BlockPos pos;
                ClockConfig cfg;
@@ -58,22 +58,22 @@ public final class ClockNet {
    }
 
    public static void sendOpen(ServerPlayer player, BlockPos pos, ClockBlockEntity entity) {
-      if (player != null && ServerPlayNetworking.canSend(player, ID)) {
+      if (player != null && Net.canSend(player, ID)) {
          ClockConfig cfg = entity == null ? new ClockConfig() : entity.config();
-         FriendlyByteBuf buf = PacketByteBufs.create();
+         FriendlyByteBuf buf = Net.buf();
          buf.writeByte(0);
          buf.writeBlockPos(pos);
          cfg.writeBuf(buf);
-         ServerPlayNetworking.send(player, ID, buf);
+         Net.send(player, ID, buf);
       }
    }
 
    public static void sendConfig(Level world, BlockPos pos, ClockConfig cfg) {
       if (world instanceof ServerLevel serverWorld) {
          if (pos != null && cfg != null) {
-            for(ServerPlayer player : PlayerLookup.tracking(serverWorld, pos)) {
-               if (ServerPlayNetworking.canSend(player, ID)) {
-                  ServerPlayNetworking.send(player, ID, syncPacket(pos, cfg));
+            for(ServerPlayer player : Net.tracking(serverWorld, pos)) {
+               if (Net.canSend(player, ID)) {
+                  Net.send(player, ID, syncPacket(pos, cfg));
                }
             }
 
@@ -84,7 +84,7 @@ public final class ClockNet {
    }
 
    public static FriendlyByteBuf syncPacket(BlockPos pos, ClockConfig cfg) {
-      FriendlyByteBuf buf = PacketByteBufs.create();
+      FriendlyByteBuf buf = Net.buf();
       buf.writeByte(3);
       buf.writeBlockPos(pos);
       cfg.writeBuf(buf);
@@ -92,7 +92,7 @@ public final class ClockNet {
    }
 
    public static FriendlyByteBuf savePacket(BlockPos pos, ClockConfig cfg) {
-      FriendlyByteBuf buf = PacketByteBufs.create();
+      FriendlyByteBuf buf = Net.buf();
       buf.writeByte(1);
       buf.writeBlockPos(pos);
       cfg.writeBuf(buf);
@@ -100,7 +100,7 @@ public final class ClockNet {
    }
 
    public static FriendlyByteBuf previewPacket(BlockPos pos) {
-      FriendlyByteBuf buf = PacketByteBufs.create();
+      FriendlyByteBuf buf = Net.buf();
       buf.writeByte(2);
       buf.writeBlockPos(pos);
       return buf;

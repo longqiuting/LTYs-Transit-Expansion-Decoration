@@ -28,9 +28,19 @@ side = "BOTH"
 
 # 运行期由已安装的 MTR Forge 版提供；编译期只用了 mtr.Items.BRUSH，
 # 所以这里不强制依赖，缺 MTR 也不会让模组加载失败。
+# M4b-6：range 必须匹配 MTR 实际的版本字符串。YMTR forge 的 mods.toml 写的是
+# version = "1.20.1-3.6.6.1"，Maven 序比较下 "3.6" 反而比它大（首段 3 > 1），
+# 写成 "[3.6,)" 会被判为「已安装但不受支持」→ Forge 直接拒绝加载（即使 mandatory=false）。
 [[dependencies.mtrlte]]
 modId = "mtr"
 mandatory = false
-versionRange = "[3.6,)"
+versionRange = "[1.20.1-3.6,)"
 ordering = "AFTER"
 side = "BOTH"
+
+# mixin 配置。注意 Forge 1.20.1 实际是读 jar 清单的 MixinConfigs 属性
+# （build.gradle 的 jar.manifest 里已写），这一节是 NeoForge 的写法，
+# 1.20.1 的 ModFileInfo 只按 key 取自己认识的字段，未知段落被忽略 ——
+# 保留它是为了让这份配置在以后迁 NeoForge 时不用再改。
+[[mixins]]
+config = "mtrlte.forge.mixins.json"

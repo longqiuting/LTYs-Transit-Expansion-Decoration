@@ -32,8 +32,8 @@ public class FangsuPsdEndDoorRenderer implements BlockEntityRenderer<FangsuPsdEn
       Block progress = state.getBlock();
       if (progress instanceof FangsuPsdEndDoorBlock block) {
          if (!FangsuPsdDraw.isUpperHalf(state)) {
-            float progress = entity.progress(state, world == null ? 0L : world.getGameTime(), tickDelta);
-            FangsuPsdDraw.draw(block.def(), progress, FangsuPsdDraw.facingOf(state), matrices, vertexConsumers, light, overlay);
+            float progressLted = entity.progress(state, world == null ? 0L : world.getGameTime(), tickDelta);
+            FangsuPsdDraw.draw(block.def(), progressLted, FangsuPsdDraw.facingOf(state), matrices, vertexConsumers, light, overlay);
          }
       }
    }

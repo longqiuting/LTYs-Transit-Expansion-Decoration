@@ -6,9 +6,6 @@ import dev.js.mtrheadlight.server.RegistrySelfCheck;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Function;
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -23,6 +20,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.material.MapColor;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class XiamenObjects {
    public static final String NAMESPACE = "mtrlte";
@@ -155,13 +153,13 @@ public final class XiamenObjects {
          }
 
          logo = registerLogo(LOGO_ID);
-         psdDoorEntityType = (BlockEntityType)Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, PSD_DOOR_BE_ID, FabricBlockEntityTypeBuilder.create(XiamenPsdBlocks.TileEntityXiamenPSDDoor::new, blocksOf((s) -> s.door)).build());
-         psdTopEntityType = (BlockEntityType)Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, PSD_TOP_BE_ID, FabricBlockEntityTypeBuilder.create(XiamenPsdBlocks.TileEntityXiamenPSDTop::new, blocksOf((s) -> s.top)).build());
-         apgDoorEntityType = (BlockEntityType)Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, APG_DOOR_BE_ID, FabricBlockEntityTypeBuilder.create(XiamenPsdBlocks.TileEntityXiamenAPGDoor::new, blocksOf((s) -> s.apgDoor)).build());
-         apgGlassEntityType = (BlockEntityType)Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, APG_GLASS_BE_ID, FabricBlockEntityTypeBuilder.create(XiamenPsdBlocks.TileEntityXiamenAPGGlass::new, blocksOf((s) -> s.apgGlass)).build());
+         psdDoorEntityType = (BlockEntityType)Reg.blockEntityType(PSD_DOOR_BE_ID, XiamenPsdBlocks.TileEntityXiamenPSDDoor::new, blocksOf((s) -> s.door));
+         psdTopEntityType = (BlockEntityType)Reg.blockEntityType(PSD_TOP_BE_ID, XiamenPsdBlocks.TileEntityXiamenPSDTop::new, blocksOf((s) -> s.top));
+         apgDoorEntityType = (BlockEntityType)Reg.blockEntityType(APG_DOOR_BE_ID, XiamenPsdBlocks.TileEntityXiamenAPGDoor::new, blocksOf((s) -> s.apgDoor));
+         apgGlassEntityType = (BlockEntityType)Reg.blockEntityType(APG_GLASS_BE_ID, XiamenPsdBlocks.TileEntityXiamenAPGGlass::new, blocksOf((s) -> s.apgGlass));
          TabIcons.register();
-         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, CORE_TAB_ID, FabricItemGroup.builder().title(Component.translatable("itemGroup.mtrlte.core")).icon(() -> new ItemStack(TabIcons.core())).build());
-         ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, CORE_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> {
+         Reg.tab(CORE_TAB_ID, Component.translatable("itemGroup.mtrlte.core"), () -> new ItemStack(TabIcons.core()));
+         Reg.tabEntries(CORE_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> {
             entries.method_45421(logo);
 
             for(XiamenLine line : XiamenLine.values()) {
@@ -198,31 +196,31 @@ public final class XiamenObjects {
    private static void register(XiamenLine line) {
       XiamenObjects.LineSet set = set(line);
       set.door = new XiamenPsdBlocks.Door(line);
-      Registry.register(BuiltInRegistries.BLOCK, set.doorId, set.door);
-      set.doorItem = (Item)Registry.register(BuiltInRegistries.ITEM, set.doorId, new PsdAPGItem(set.door, PsdAPGItem.Kind.DOOR, new Item.Properties()));
+      Reg.block(set.doorId, set.door);
+      set.doorItem = (Item)Reg.item(set.doorId, new PsdAPGItem(set.door, PsdAPGItem.Kind.DOOR, new Item.Properties()));
       set.glass = new XiamenPsdBlocks.Glass(line);
-      Registry.register(BuiltInRegistries.BLOCK, set.glassId, set.glass);
-      set.glassItem = (Item)Registry.register(BuiltInRegistries.ITEM, set.glassId, new PsdAPGItem(set.glass, PsdAPGItem.Kind.GLASS, new Item.Properties()));
+      Reg.block(set.glassId, set.glass);
+      set.glassItem = (Item)Reg.item(set.glassId, new PsdAPGItem(set.glass, PsdAPGItem.Kind.GLASS, new Item.Properties()));
       set.end = new XiamenPsdBlocks.GlassEnd(line);
-      Registry.register(BuiltInRegistries.BLOCK, set.endId, set.end);
-      set.endItem = (Item)Registry.register(BuiltInRegistries.ITEM, set.endId, new PsdAPGItem(set.end, PsdAPGItem.Kind.END, new Item.Properties()));
+      Reg.block(set.endId, set.end);
+      set.endItem = (Item)Reg.item(set.endId, new PsdAPGItem(set.end, PsdAPGItem.Kind.END, new Item.Properties()));
       set.top = new XiamenPsdBlocks.Top(line);
-      Registry.register(BuiltInRegistries.BLOCK, set.topId, set.top);
+      Reg.block(set.topId, set.top);
       set.apgDoor = new XiamenPsdBlocks.ApgDoor(line);
-      Registry.register(BuiltInRegistries.BLOCK, set.apgDoorId, set.apgDoor);
-      set.apgDoorItem = (Item)Registry.register(BuiltInRegistries.ITEM, set.apgDoorId, new PsdAPGItem(set.apgDoor, PsdAPGItem.Kind.APG_DOOR, new Item.Properties()));
+      Reg.block(set.apgDoorId, set.apgDoor);
+      set.apgDoorItem = (Item)Reg.item(set.apgDoorId, new PsdAPGItem(set.apgDoor, PsdAPGItem.Kind.APG_DOOR, new Item.Properties()));
       set.apgGlass = new XiamenPsdBlocks.ApgGlass(line);
-      Registry.register(BuiltInRegistries.BLOCK, set.apgGlassId, set.apgGlass);
-      set.apgGlassItem = (Item)Registry.register(BuiltInRegistries.ITEM, set.apgGlassId, new PsdAPGItem(set.apgGlass, PsdAPGItem.Kind.APG_GLASS, new Item.Properties()));
+      Reg.block(set.apgGlassId, set.apgGlass);
+      set.apgGlassItem = (Item)Reg.item(set.apgGlassId, new PsdAPGItem(set.apgGlass, PsdAPGItem.Kind.APG_GLASS, new Item.Properties()));
       set.apgEnd = new XiamenPsdBlocks.ApgEnd(line);
-      Registry.register(BuiltInRegistries.BLOCK, set.apgEndId, set.apgEnd);
-      set.apgEndItem = (Item)Registry.register(BuiltInRegistries.ITEM, set.apgEndId, new PsdAPGItem(set.apgEnd, PsdAPGItem.Kind.APG_END, new Item.Properties()));
+      Reg.block(set.apgEndId, set.apgEnd);
+      set.apgEndItem = (Item)Reg.item(set.apgEndId, new PsdAPGItem(set.apgEnd, PsdAPGItem.Kind.APG_END, new Item.Properties()));
    }
 
    private static XiamenLogoBlock registerLogo(ResourceLocation id) {
       XiamenLogoBlock block = new XiamenLogoBlock(Properties.of().mapColor(MapColor.METAL).requiresCorrectToolForDrops().destroyTime(2.0F).lightLevel((state) -> 10));
-      Registry.register(BuiltInRegistries.BLOCK, id, block);
-      Registry.register(BuiltInRegistries.ITEM, id, new BlockItem(block, new Item.Properties()));
+      Reg.block(id, block);
+      Reg.item(id, new BlockItem(block, new Item.Properties()));
       return block;
    }
 

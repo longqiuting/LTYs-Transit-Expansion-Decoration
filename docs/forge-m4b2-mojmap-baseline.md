@@ -272,3 +272,8 @@ D:/MC-MTR-JS/temp/gradle/gradle-8.14/bin/gradle -p v1.20.1 build
    不影响语义；只有要做字节级对齐时才需要关注。
 4. 反编译器只有 forgeflower 一条路（缓存里没有 Vineflower/CFR）；若换 Vineflower，§5 的 B/C 类可能消失，
    管线第 4 步换 jar 即可，其余步骤不变。
+5. **M4b-3 更正本条 §6.6/§6.7**：「把 `createBlockEntity` 统一改名 `newBlockEntity` 即可」实测不成立。
+   MTR Forge 的 `EntityBlockMapper` 用 SRG 名 `m_142194_` 提供 `newBlockEntity` 的默认实现，在 mojmap
+   编译期**不算**实现了 `EntityBlock.newBlockEntity`；而 `createBlockEntity` 仍是该接口的抽象方法。
+   两者都要：保留 `createBlockEntity`，另补一个转发桥 `newBlockEntity`。
+   详见 `docs/forge-m4b3-java-gen-compile.md`（整包接入 + 机械修复 + 剩余错误分类）。

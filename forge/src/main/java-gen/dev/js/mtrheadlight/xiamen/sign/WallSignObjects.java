@@ -4,8 +4,6 @@ import dev.js.mtrheadlight.LteLog;
 import dev.js.mtrheadlight.xiamen.XiamenObjects;
 import java.util.ArrayList;
 import java.util.List;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -16,6 +14,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class WallSignObjects {
    public static final String NAMESPACE = "mtrlte";
@@ -52,13 +51,13 @@ public final class WallSignObjects {
          WallSignObjects.Entry lte = add("wall_sign_lte", "lte_logo");
 
          try {
-            entityType = (BlockEntityType)Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, new ResourceLocation("mtrlte", "wall_sign_xiamen"), FabricBlockEntityTypeBuilder.create(WallSignBlockEntity::new, new Block[]{xiamen.block(), jiaomei.block(), lte.block()}).build());
+            entityType = (BlockEntityType)Reg.blockEntityType(new ResourceLocation("mtrlte", "wall_sign_xiamen"), WallSignBlockEntity::new, new Block[]{xiamen.block(), jiaomei.block(), lte.block()});
          } catch (Throwable var6) {
             LteLog.LOGGER.error("[lte] wall sign: could not register the block entity type", var6);
          }
 
          try {
-            ItemGroupEvents.modifyEntriesEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, XiamenObjects.CORE_TAB_ID)).register((ItemGroupEvents.ModifyEntries)(entries) -> {
+            Reg.tabEntries(XiamenObjects.CORE_TAB_ID, (Reg.TabEntriesConsumer)(entries) -> {
                entries.method_45421(xiamen.item());
                entries.method_45421(jiaomei.item());
                entries.method_45421(lte.item());
@@ -77,8 +76,8 @@ public final class WallSignObjects {
    private static WallSignObjects.Entry add(String id, String logo) {
       ResourceLocation identifier = new ResourceLocation("mtrlte", id);
       WallSignBlock block = new WallSignBlock(Properties.of().requiresCorrectToolForDrops().strength(2.0F).noOcclusion(), logo);
-      Registry.register(BuiltInRegistries.BLOCK, identifier, block);
-      Item item = (Item)Registry.register(BuiltInRegistries.ITEM, identifier, new BlockItem(block, new Item.Properties()));
+      Reg.block(identifier, block);
+      Item item = (Item)Reg.item(identifier, new BlockItem(block, new Item.Properties()));
       WallSignObjects.Entry entry = new WallSignObjects.Entry(id, logo, block, item);
       ENTRIES.add(entry);
       return entry;

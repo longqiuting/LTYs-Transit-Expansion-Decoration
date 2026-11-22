@@ -12,7 +12,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import net.fabricmc.loader.api.FabricLoader;
+import dev.js.mtrheadlight.forge.platform.Env;
 
 public final class PidsXiamenSettings {
    private static final String FILE_NAME = "lte_xiamen_pids.json";
@@ -28,7 +28,7 @@ public final class PidsXiamenSettings {
    }
 
    private static Path file() {
-      return FabricLoader.getInstance().getConfigDir().resolve("lte_xiamen_pids.json");
+      return Env.configDir().resolve("lte_xiamen_pids.json");
    }
 
    public static boolean localTime() {

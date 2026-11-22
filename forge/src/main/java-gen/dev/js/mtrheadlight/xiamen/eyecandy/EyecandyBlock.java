@@ -54,7 +54,7 @@ public class EyecandyBlock extends Block implements EntityBlock {
    }
 
    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState state, BlockEntityType<T> type) {
-      return this.hasWarningLight() && (EyecandyBlocks.entityType() == null || type == EyecandyBlocks.entityType()) ? EyecandyBlockEntity::tick : null;
+      return this.hasWarningLight() && (EyecandyBlocks.entityType() == null || type == EyecandyBlocks.entityType()) ? (BlockEntityTicker<T>)(BlockEntityTicker<EyecandyBlockEntity>)EyecandyBlockEntity::tick : null;
    }
 
    public VoxelShape shape() {

@@ -64,7 +64,7 @@ public class ChargerBlock extends HorizontalDirectionalBlock implements EntityBl
       return this.top;
    }
 
-   private static VoxelShape box(double x1, double x2, double y1, double y2, double z1, double z2) {
+   private static VoxelShape ltedBox(double x1, double x2, double y1, double y2, double z1, double z2) {
       return Block.box(x1, y1, z1, x2, y2, z2);
    }
 
@@ -78,16 +78,16 @@ public class ChargerBlock extends HorizontalDirectionalBlock implements EntityBl
       VoxelShape var10000;
       switch (quarterTurns & 3) {
          case 1:
-            var10000 = box(16.0D - z2, 16.0D - z1, y1, y2, x1, x2);
+            var10000 = ltedBox(16.0D - z2, 16.0D - z1, y1, y2, x1, x2);
             break;
          case 2:
-            var10000 = box(16.0D - x2, 16.0D - x1, y1, y2, 16.0D - z2, 16.0D - z1);
+            var10000 = ltedBox(16.0D - x2, 16.0D - x1, y1, y2, 16.0D - z2, 16.0D - z1);
             break;
          case 3:
-            var10000 = box(z1, z2, y1, y2, 16.0D - x2, 16.0D - x1);
+            var10000 = ltedBox(z1, z2, y1, y2, 16.0D - x2, 16.0D - x1);
             break;
          default:
-            var10000 = box(x1, x2, y1, y2, z1, z2);
+            var10000 = ltedBox(x1, x2, y1, y2, z1, z2);
       }
 
       return var10000;
@@ -164,7 +164,7 @@ public class ChargerBlock extends HorizontalDirectionalBlock implements EntityBl
    }
 
    private static void forceBuyout(Level world, BlockPos pos, Player player, ItemStack held) {
-      if (PowerBankItem.isDamaged(held)) {
+      if (PowerBankItem.isDamagedTag(held)) {
          player.displayClientMessage(Component.translatable("message.mtrlte.charger.damaged_not_returnable").withStyle(ChatFormatting.RED), true);
       } else if (!PowerBankItem.isRented(held)) {
          player.displayClientMessage(Component.translatable("message.mtrlte.charger.returned_free", new Object[]{MtrBalance.get(world, player)}), true);
@@ -209,7 +209,7 @@ public class ChargerBlock extends HorizontalDirectionalBlock implements EntityBl
    }
 
    private static void returnPowerBank(Level world, BlockPos pos, Player player, ItemStack held) {
-      if (PowerBankItem.isDamaged(held)) {
+      if (PowerBankItem.isDamagedTag(held)) {
          player.displayClientMessage(Component.translatable("message.mtrlte.charger.damaged_not_returnable").withStyle(ChatFormatting.RED), true);
       } else if (!PowerBankItem.isRented(held)) {
          held.shrink(1);
@@ -269,7 +269,7 @@ public class ChargerBlock extends HorizontalDirectionalBlock implements EntityBl
    }
 
    private static boolean isOwing(ItemStack stack) {
-      return stack.getItem() instanceof PowerBankItem && PowerBankItem.isRented(stack) && !PowerBankItem.isOverdueSettled(stack) && !PowerBankItem.isDamaged(stack);
+      return stack.getItem() instanceof PowerBankItem && PowerBankItem.isRented(stack) && !PowerBankItem.isOverdueSettled(stack) && !PowerBankItem.isDamagedTag(stack);
    }
 
    public void appendHoverText(ItemStack stack, BlockGetter world, List<Component> tooltip, TooltipFlag context) {

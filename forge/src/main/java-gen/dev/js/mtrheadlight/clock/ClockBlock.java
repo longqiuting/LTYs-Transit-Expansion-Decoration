@@ -110,7 +110,7 @@ public final class ClockBlock extends Block implements EntityBlock {
    }
 
    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState state, BlockEntityType<T> type) {
-      return ClockObjects.entityType() != null && type != ClockObjects.entityType() ? null : ClockBlockEntity::tick;
+      return ClockObjects.entityType() != null && type != ClockObjects.entityType() ? null : (BlockEntityTicker<T>)(BlockEntityTicker<ClockBlockEntity>)ClockBlockEntity::tick;
    }
 
    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {

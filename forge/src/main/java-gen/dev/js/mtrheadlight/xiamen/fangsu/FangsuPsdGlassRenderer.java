@@ -36,10 +36,10 @@ public class FangsuPsdGlassRenderer implements BlockEntityRenderer<FangsuPsdGlas
       BlockState state = world != null ? world.getBlockState(entity.getBlockPos()) : entity.getBlockState();
       Block def = state.getBlock();
       if (def instanceof FangsuPsdGlassBlock block) {
-         FangsuPsdGlassDef def = block.def();
-         Map<String, List<RawMesh>> meshes = FangsuPsdBlocks.meshes(def);
-         List left = (List)meshes.get(def.leftForm(block.leftFormOf(state)).group());
-         List right = (List)meshes.get(def.rightForm(block.rightFormOf(state)).group());
+         FangsuPsdGlassDef defLted = block.def();
+         Map<String, List<RawMesh>> meshes = FangsuPsdBlocks.meshes(defLted);
+         List left = (List)meshes.get(defLted.leftForm(block.leftFormOf(state)).group());
+         List right = (List)meshes.get(defLted.rightForm(block.rightFormOf(state)).group());
          if (left != null || right != null) {
             Direction facing = FangsuPsdDraw.facingOf(state);
             matrices.pushPose();

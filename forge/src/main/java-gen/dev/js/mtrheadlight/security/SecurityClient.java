@@ -3,25 +3,25 @@ package dev.js.mtrheadlight.security;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import dev.js.mtrheadlight.forge.platform.ClientInit;
+import dev.js.mtrheadlight.forge.platform.Layers;
+import dev.js.mtrheadlight.forge.platform.Net;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 
-public final class SecurityClient implements ClientModInitializer {
+public final class SecurityClient implements ClientInit {
    public void onInitializeClient() {
       try {
          LiquidScannerBlock block = SecurityObjects.liquidScanner();
          if (block != null) {
-            BlockRenderLayerMap.INSTANCE.putBlock(block, RenderType.cutout());
+            Layers.put(block, RenderType.cutout());
          }
       } catch (Throwable var3) {
       }
 
       try {
-         ClientPlayNetworking.registerGlobalReceiver(LiquidScannerNet.ID, (client, handler, buf, sender) -> {
+         Net.registerClient(LiquidScannerNet.ID, (client, buf) -> {
             Set<ResourceLocation> ids = new LinkedHashSet();
 
             BlockPos pos;
@@ -54,11 +54,11 @@ public final class SecurityClient implements ClientModInitializer {
 
    public static void sendSave(BlockPos pos, Collection<ResourceLocation> ids) {
       try {
-         if (!ClientPlayNetworking.canSend(LiquidScannerNet.ID)) {
+         if (!Net.canSend(LiquidScannerNet.ID)) {
             return;
          }
 
-         ClientPlayNetworking.send(LiquidScannerNet.ID, LiquidScannerNet.savePacket(pos, ids));
+         Net.sendToServer(LiquidScannerNet.ID, LiquidScannerNet.savePacket(pos, ids));
       } catch (Throwable var3) {
       }
 

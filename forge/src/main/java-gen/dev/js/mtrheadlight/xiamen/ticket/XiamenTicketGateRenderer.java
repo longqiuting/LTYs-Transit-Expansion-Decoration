@@ -59,7 +59,7 @@ public class XiamenTicketGateRenderer implements BlockEntityRenderer<XiamenTicke
 
       RawMesh mesh = RawModelJson.get(RawModelJson.id(modelName));
       if (mesh != null) {
-         VertexConsumer consumer = vertexConsumers.getBuffer(RawModelRenderer.cutoutLayer(mesh));
+         VertexConsumer consumerLted = vertexConsumers.getBuffer(RawModelRenderer.cutoutLayer(mesh));
          matrices.pushPose();
          matrices.translate(0.5D, 0.0D, 0.5D);
          matrices.mulPose(Axis.YP.rotationDegrees((float)(-rotationOf(state))));
@@ -68,7 +68,7 @@ public class XiamenTicketGateRenderer implements BlockEntityRenderer<XiamenTicke
             matrices.translate(1.0D, 0.0D, 0.0D);
          }
 
-         RawModelRenderer.render(matrices, consumer, mesh, light, overlay);
+         RawModelRenderer.render(matrices, consumerLted, mesh, light, overlay);
          matrices.popPose();
       }
    }

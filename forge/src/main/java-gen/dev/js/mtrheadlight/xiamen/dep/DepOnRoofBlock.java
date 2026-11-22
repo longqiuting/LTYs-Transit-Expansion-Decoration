@@ -88,7 +88,8 @@ public class DepOnRoofBlock extends HorizontalDirectionalBlock implements Entity
          double z1 = b[2];
          double z2 = b[5];
          switch ((yRotation % 360 + 360) % 360) {
-            case 90:
+            case 90: {
+
                double nx1 = 16.0D - z2;
                double nx2 = 16.0D - z1;
                z1 = x1;
@@ -96,7 +97,9 @@ public class DepOnRoofBlock extends HorizontalDirectionalBlock implements Entity
                x1 = nx1;
                x2 = nx2;
                break;
-            case 180:
+            }
+            case 180: {
+
                double nx1 = 16.0D - x2;
                double nx2 = 16.0D - x1;
                double nz1 = 16.0D - z2;
@@ -106,13 +109,16 @@ public class DepOnRoofBlock extends HorizontalDirectionalBlock implements Entity
                z1 = nz1;
                z2 = nz2;
                break;
-            case 270:
+            }
+            case 270: {
+
                double nx1 = z1;
                double nx2 = z2;
                z1 = 16.0D - x2;
                z2 = 16.0D - x1;
                x1 = nx1;
                x2 = nx2;
+            }
          }
 
          parts.add(Block.box(x1, b[1], z1, x2, b[4], z2));

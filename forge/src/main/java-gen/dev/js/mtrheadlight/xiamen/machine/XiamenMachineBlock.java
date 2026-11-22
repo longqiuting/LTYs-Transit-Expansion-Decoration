@@ -55,7 +55,7 @@ public abstract class XiamenMachineBlock extends HorizontalDirectionalBlock {
       this.tooltipKey = tooltipKey;
    }
 
-   private static VoxelShape box(double x1, double x2, double y1, double y2, double z1, double z2) {
+   private static VoxelShape ltedBox(double x1, double x2, double y1, double y2, double z1, double z2) {
       return Block.box(x1, y1, z1, x2, y2, z2);
    }
 
@@ -67,16 +67,16 @@ public abstract class XiamenMachineBlock extends HorizontalDirectionalBlock {
       VoxelShape var10000;
       switch ((yRotation % 360 + 360) % 360) {
          case 90:
-            var10000 = box(16.0D - maxZ, 16.0D - minZ, 0.0D, 16.0D, minX, maxX);
+            var10000 = ltedBox(16.0D - maxZ, 16.0D - minZ, 0.0D, 16.0D, minX, maxX);
             break;
          case 180:
-            var10000 = box(16.0D - maxX, 16.0D - minX, 0.0D, 16.0D, 16.0D - maxZ, 16.0D - minZ);
+            var10000 = ltedBox(16.0D - maxX, 16.0D - minX, 0.0D, 16.0D, 16.0D - maxZ, 16.0D - minZ);
             break;
          case 270:
-            var10000 = box(minZ, maxZ, 0.0D, 16.0D, 16.0D - maxX, 16.0D - minX);
+            var10000 = ltedBox(minZ, maxZ, 0.0D, 16.0D, 16.0D - maxX, 16.0D - minX);
             break;
          default:
-            var10000 = box(minX, maxX, 0.0D, 16.0D, minZ, maxZ);
+            var10000 = ltedBox(minX, maxX, 0.0D, 16.0D, minZ, maxZ);
       }
 
       return var10000;

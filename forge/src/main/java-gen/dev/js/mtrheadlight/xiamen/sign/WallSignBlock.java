@@ -34,4 +34,8 @@ public class WallSignBlock extends BlockStationNameEntrance {
    public BlockEntityMapper createBlockEntity(BlockPos pos, BlockState state) {
       return new WallSignBlockEntity(pos, state);
    }
+
+   public BlockEntityMapper newBlockEntity(BlockPos pos, BlockState state) {
+      return this.createBlockEntity(pos, state);
+   }
 }

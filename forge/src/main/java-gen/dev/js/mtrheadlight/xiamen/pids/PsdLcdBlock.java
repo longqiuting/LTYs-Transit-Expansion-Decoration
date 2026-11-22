@@ -4,7 +4,7 @@ import java.util.List;
 import mtr.Items;
 import mtr.block.IBlock;
 import mtr.mappings.BlockEntityMapper;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import dev.js.mtrheadlight.forge.platform.Net;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
@@ -102,6 +102,10 @@ public class PsdLcdBlock extends HorizontalDirectionalBlock implements EntityBlo
       return new PsdLcdBlockEntity(pos, state);
    }
 
+   public BlockEntityMapper newBlockEntity(BlockPos pos, BlockState state) {
+      return this.createBlockEntity(pos, state);
+   }
+
    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
       if (player.isHolding((Item)Items.BRUSH.get())) {
          if (world.isClientSide) {
@@ -109,7 +113,7 @@ public class PsdLcdBlock extends HorizontalDirectionalBlock implements EntityBlo
          } else {
             if (player instanceof ServerPlayer) {
                ServerPlayer serverPlayer = (ServerPlayer)player;
-               if (ServerPlayNetworking.canSend(serverPlayer, PidsXiamenNet.ID)) {
+               if (Net.canSend(serverPlayer, PidsXiamenNet.ID)) {
                   PidsXiamenNet.openScreenAt(serverPlayer, world, anchorOf(world, pos), partnerOf(world, anchorOf(world, pos)));
                   return InteractionResult.SUCCESS;
                }

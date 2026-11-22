@@ -13,7 +13,7 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
-import net.fabricmc.loader.api.FabricLoader;
+import dev.js.mtrheadlight.forge.platform.Env;
 
 public final class DecorConfig {
    private static final Gson GSON = (new GsonBuilder()).setPrettyPrinting().create();
@@ -46,11 +46,11 @@ public final class DecorConfig {
    }
 
    public static Path path() {
-      return FabricLoader.getInstance().getConfigDir().resolve("mtrlte_decor.json");
+      return Env.configDir().resolve("mtrlte_decor.json");
    }
 
    public static DecorConfig load() {
-      return load(FabricLoader.getInstance().getConfigDir());
+      return load(Env.configDir());
    }
 
    public static DecorConfig load(Path configDir) {
@@ -162,7 +162,7 @@ public final class DecorConfig {
    }
 
    public void save() {
-      this.save(FabricLoader.getInstance().getConfigDir());
+      this.save(Env.configDir());
    }
 
    public void save(Path configDir) {

@@ -51,13 +51,50 @@ dependencies {
     compileOnly files("libs/MTR-forge-1.20.1-3.6.6.1.jar")
 }
 
+// M4b-3：把 remap-to-mojmap.sh 产出的 200 个 mojmap 反编译源码当「一个源集」整体编。
+// java-gen 是生成物（脚本可重跑覆盖），所以修复也走脚本（tools/fix-java-gen.sh），
+// 不在 java-gen 里手工修改单文件——重跑管线会覆盖。
+// M4b-5：资源不再手工复制。Fabric 树是资源真身（assets 1247 / data 199 条目），
+// 这里把 v1.20.1/src/main/resources 直接并进 Forge 的资源源集，与 forge 自己的
+// META-INF/mods.toml（以及 Forge 独有的 lte_tool 模型、mixin 配置）合并成一个 jar。
+// forge/src/main/resources 里只留「Forge 独有」文件，重复的占位资源已删除，
+// 避免同路径两份。
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java-gen'
+        }
+        resources {
+            srcDirs = ['src/main/resources', '../v1.20.1/src/main/resources']
+            // Fabric 专属元数据不能进 Forge jar：
+            //   fabric.mod.json        —— Forge 不认，装了也不会读
+            //   mtrlte.mtrdecor.mixins.json —— 目标是 yarn 名，Forge 侧用 mtrlte.forge.mixins.json
+            exclude 'fabric.mod.json'
+            exclude 'mtrlte.mtrdecor.mixins.json'
+        }
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.release = 17
+    // 全量 200 文件一起编，默认 100 条错误上限不够做分类统计。
+    options.compilerArgs += ['-Xmaxerrs', '5000']
+}
+
+// 诊断用：导出 compileJava 的完整 classpath（M4b-3 全量 javac 分类统计要用）
+tasks.register('printCompileCp') {
+    doLast {
+        println "CP_BEGIN"
+        println sourceSets.main.compileClasspath.asPath
+        println "CP_END"
+    }
 }
 
 processResources {
     inputs.property 'version', project.version
+    // 两个源集理论上没有同路径文件；万一以后又加了，显式取先出现的（forge 自己的）而不是让构建失败。
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     // mods.toml 里有中文；Groovy 的 expand 默认按平台编码读（本机 GBK），必须显式 UTF-8，
     // 否则 jar 里的描述会变成乱码。
     filteringCharset = 'UTF-8'
@@ -69,6 +106,36 @@ processResources {
     // 许可 / 来源声明随分发物走，与 Fabric 侧一致。
     from(file('../LICENSE')) { into 'META-INF' rename { 'LICENSE-mtrlte' } }
     from(file('../NOTICE.md')) { into 'META-INF' rename { 'NOTICE-mtrlte.md' } }
+
+    // 语言文件：Fabric 树里的 en_us/zh_cn 是全量（各约 49 KB），Forge 侧只有
+    // lte_tool 等 Forge 独有条目（src/forge-lang/）。这里把后者键值并进前者，
+    // 已存在的键不覆盖 —— 既不丢 Forge 条目，也不用手工维护两份大 JSON。
+    def langOutDir = layout.buildDirectory.dir('resources/main/assets/mtrlte/lang')
+    doLast {
+        File extraDir = file('src/forge-lang')
+        if (!extraDir.isDirectory()) {
+            return
+        }
+        File langOut = langOutDir.get().asFile
+        extraDir.listFiles({ File f -> f.name.endsWith('.json') } as FileFilter)?.each { File extra ->
+            File target = new File(langOut, extra.name)
+            if (!target.isFile()) {
+                logger.warn("[lte] forge-lang/${extra.name} 没有对应的基础语言文件，跳过")
+                return
+            }
+            Map base = new groovy.json.JsonSlurper().parseText(target.getText('UTF-8')) as Map
+            Map add = new groovy.json.JsonSlurper().parseText(extra.getText('UTF-8')) as Map
+            int added = 0
+            add.each { k, v ->
+                if (!base.containsKey(k)) {
+                    base[k] = v
+                    added++
+                }
+            }
+            target.setText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(base)), 'UTF-8')
+            logger.lifecycle("[lte] lang ${extra.name}: +${added} Forge-only key(s) (${base.size()} total)")
+        }
+    }
 }
 
 jar {
@@ -79,7 +146,10 @@ jar {
                 'Specification-Version'   : '1',
                 'Implementation-Title'    : project.name,
                 'Implementation-Version'  : project.version,
-                'Implementation-Vendor'   : 'LTE'
+                'Implementation-Vendor'   : 'LTE',
+                // Forge 1.20.1 靠 jar 清单里的 MixinConfigs 发现 mixin（ModFileParser 不读 mods.toml 的 [[mixins]]，
+                // 那是 NeoForge 才有的段落；见 net.minecraftforge.fml loading 的 MixinPlatformAgentDefault）。
+                'MixinConfigs'            : 'mtrlte.forge.mixins.json'
         ])
     }
 }

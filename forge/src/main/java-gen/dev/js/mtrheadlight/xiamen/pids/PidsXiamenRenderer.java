@@ -87,8 +87,8 @@ public class PidsXiamenRenderer extends BlockEntityRendererMapper<PidsXiamenBloc
          if (facing instanceof PidsXiamenBlock) {
             PidsXiamenBlock block = (PidsXiamenBlock)facing;
             if (PidsXiamenBlock.canStoreData(world, pos)) {
-               Direction facing = PidsXiamenRenderer.IBlockFacing.of(world, pos);
-               if (facing != null) {
+               Direction facingLted = PidsXiamenRenderer.IBlockFacing.of(world, pos);
+               if (facingLted != null) {
                   Minecraft client = Minecraft.getInstance();
                   if (client != null && client.font != null) {
                      MultiBufferSource.BufferSource textConsumers;
@@ -103,19 +103,19 @@ public class PidsXiamenRenderer extends BlockEntityRendererMapper<PidsXiamenBloc
                      }
 
                      PidsXiamenBlock.Kind kind = block.kind();
-                     boolean partner = world.getBlockState(pos.relative(facing)).getBlock() instanceof PidsXiamenBlock;
+                     boolean partner = world.getBlockState(pos.relative(facingLted)).getBlock() instanceof PidsXiamenBlock;
                      List<ScheduleEntry> schedules = schedulesFor(entity, pos);
                      long gameTick = (long)MTRClient.getGameTick();
                      List<PidsXiamenAds.Ad> ads = PidsXiamenSettings.applyAdOverride(entity.getAds());
                      int cars = kind == PidsXiamenBlock.Kind.METRO ? consistOf(resolveStation(pos), schedules.isEmpty() ? 0L : ((ScheduleEntry)schedules.get(0)).routeId) : 0;
                      PidsXiamenRenderer.Screen screen = new PidsXiamenRenderer.Screen(kind, schedules, entity.getDisplayPage(), slideOf(client.font, kind, gameTick, entity.getAdvertisementIndex(), ads), gameTick, formatTime(world), formatIsoDate(world), formatBrtDate(world), cars);
-                     countDraw(pos, kind, facing, partner);
+                     countDraw(pos, kind, facingLted, partner);
                      PidsXiamenConsistTextures.sweep();
 
                      try {
-                        this.renderFace(matrices, vertexConsumers, textConsumers, kind, client.font, facing, 0.0F, 0.0F, screen);
+                        this.renderFace(matrices, vertexConsumers, textConsumers, kind, client.font, facingLted, 0.0F, 0.0F, screen);
                         if (partner) {
-                           this.renderFace(matrices, vertexConsumers, textConsumers, kind, client.font, facing.getOpposite(), (float)facing.getStepX(), (float)facing.getStepZ(), screen);
+                           this.renderFace(matrices, vertexConsumers, textConsumers, kind, client.font, facingLted.getOpposite(), (float)facingLted.getStepX(), (float)facingLted.getStepZ(), screen);
                         }
                      } finally {
                         if (flushText) {

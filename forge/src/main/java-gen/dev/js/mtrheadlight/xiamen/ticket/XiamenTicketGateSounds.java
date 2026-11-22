@@ -5,6 +5,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
+import dev.js.mtrheadlight.forge.platform.Reg;
 
 public final class XiamenTicketGateSounds {
    public static final ResourceLocation CRT_TICKET_ID = new ResourceLocation("mtrlte", "crt_ticket");
@@ -19,8 +20,8 @@ public final class XiamenTicketGateSounds {
    public static void register() {
       if (!registered) {
          registered = true;
-         CRT_TICKET = (SoundEvent)Registry.register(BuiltInRegistries.SOUND_EVENT, CRT_TICKET_ID, SoundEvent.createVariableRangeEvent(CRT_TICKET_ID));
-         CRT_TICKET_ERROR = (SoundEvent)Registry.register(BuiltInRegistries.SOUND_EVENT, CRT_TICKET_ERROR_ID, SoundEvent.createVariableRangeEvent(CRT_TICKET_ERROR_ID));
+         CRT_TICKET = (SoundEvent)Reg.sound(CRT_TICKET_ID);
+         CRT_TICKET_ERROR = (SoundEvent)Reg.sound(CRT_TICKET_ERROR_ID);
          LteLog.LOGGER.info("[lte] ticket gate sounds: {} / {}", CRT_TICKET_ID, CRT_TICKET_ERROR_ID);
       }
    }
