@@ -36,7 +36,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  *   <li>{@code paint} 返回 null（纵向线路图 / 环线 / 数据没到 / 配置关掉 / 内部异常）→ <b>不取消</b>
  *       → MTR 照原样画它自己那张，绝不会出现紫黑格；</li>
  *   <li>{@code remap = false}：MTR 未 remap，方法名在开发环境和生产环境一致；</li>
- *   <li>配置项 {@code mtrlte.json → xiamenRouteStrip = false} 可一键回到原版画法。</li>
+ *   <li>配置项 {@code mtrlte_decor.json → xiamenRouteStrip = false} 可一键回到原版画法。</li>
  * </ul>
  *
  * <p>注入用 {@code defaultRequire: 0} + {@code required: false} 兜底：MTR 换版本改了方法名时本条

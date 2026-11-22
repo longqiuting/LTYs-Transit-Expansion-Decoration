@@ -4,7 +4,7 @@ package dev.js.mtrheadlight.xiamen;
 import java.awt.Color;
 import java.util.Locale;
 
-import dev.js.mtrheadlight.HeadlightConfig;
+import dev.js.mtrheadlight.decor.DecorConfig;
 import mtr.client.ClientData;
 import mtr.data.Route;
 
@@ -13,7 +13,7 @@ import mtr.data.Route;
  *
  * <h2>颜色从哪来</h2>
  * <ol>
- *   <li>{@link HeadlightConfig#lineColors} 里有这条线路的手工覆盖 → 用覆盖色
+ *   <li>{@link DecorConfig#lineColors} 里有这条线路的手工覆盖 → 用覆盖色
  *       （键匹配顺序：线路 id → 线路全名 → 线路号 {@code 1}）；</li>
  *   <li>否则用 MTR 里这条线路自己的 {@code Route#color}（厦门 1 号线是绿的、4 号线是红的，
  *       <b>自动跟随</b>，本模组不预设任何线路色）；</li>
@@ -129,7 +129,7 @@ public final class XiamenRouteStyle {
     }
 
     /** 线路色（见类注释的优先级）。返回 {@code 0xRRGGBB}。 */
-    public static int lineColor(final HeadlightConfig cfg, final Route route, final String routeName) {
+    public static int lineColor(final DecorConfig cfg, final Route route, final String routeName) {
         final Integer override = overrideColor(cfg, route, routeName);
         if (override != null) {
             return override.intValue();
@@ -141,7 +141,7 @@ public final class XiamenRouteStyle {
     }
 
     /** {@code lineColors} 里这条线路的手工覆盖，没有就 null。 */
-    public static Integer overrideColor(final HeadlightConfig cfg, final Route route, final String routeName) {
+    public static Integer overrideColor(final DecorConfig cfg, final Route route, final String routeName) {
         if (cfg == null || cfg.lineColors == null || cfg.lineColors.isEmpty()) {
             return null;
         }
@@ -171,7 +171,7 @@ public final class XiamenRouteStyle {
         return null;
     }
 
-    private static Integer lookup(final HeadlightConfig cfg, final String key) {
+    private static Integer lookup(final DecorConfig cfg, final String key) {
         if (key == null || key.isEmpty()) {
             return null;
         }
@@ -179,7 +179,7 @@ public final class XiamenRouteStyle {
         if (value == null) {
             return null;
         }
-        final int rgb = HeadlightConfig.parseColor(value, -1);
+        final int rgb = DecorConfig.parseColor(value, -1);
         return rgb >= 0 ? Integer.valueOf(rgb) : null;
     }
 
@@ -212,12 +212,12 @@ public final class XiamenRouteStyle {
     }
 
     /**
-     * 门灯颜色：先查 {@link HeadlightConfig#doorLightByLine}（键 = 线路号，{@code 4} / {@code 4号线}），
-     * 再退回 {@link HeadlightConfig#doorLightColor}。
+     * 门灯颜色：先查 {@link DecorConfig#doorLightByLine}（键 = 线路号，{@code 4} / {@code 4号线}），
+     * 再退回 {@link DecorConfig#doorLightColor}。
      */
-    public static String doorLightColor(final HeadlightConfig cfg, final String lineNumber) {
+    public static String doorLightColor(final DecorConfig cfg, final String lineNumber) {
         if (cfg == null) {
-            return HeadlightConfig.DOOR_LIGHT_ORANGE;
+            return DecorConfig.DOOR_LIGHT_ORANGE;
         }
         if (lineNumber != null && cfg.doorLightByLine != null && !cfg.doorLightByLine.isEmpty()) {
             final String key = lineNumber.trim();
@@ -226,14 +226,14 @@ public final class XiamenRouteStyle {
                 value = cfg.doorLightByLine.get(key + "号线");
             }
             if (value != null) {
-                return HeadlightConfig.normalizeDoorLightColor(value);
+                return DecorConfig.normalizeDoorLightColor(value);
             }
             final String lower = key.toLowerCase(Locale.ROOT);
             if (cfg.doorLightByLine.containsKey(lower)) {
-                return HeadlightConfig.normalizeDoorLightColor(cfg.doorLightByLine.get(lower));
+                return DecorConfig.normalizeDoorLightColor(cfg.doorLightByLine.get(lower));
             }
         }
-        return HeadlightConfig.normalizeDoorLightColor(cfg.doorLightColor);
+        return DecorConfig.normalizeDoorLightColor(cfg.doorLightColor);
     }
 
     /** {@code 0xRRGGBB} 的 {@link Color}（AWT 用）。 */

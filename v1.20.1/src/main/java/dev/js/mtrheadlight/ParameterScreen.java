@@ -406,7 +406,7 @@ public final class ParameterScreen extends Screen {
      *   碰撞  车体碰撞 · 碰撞高度 · 道床碰撞 · 车头延长 · 车尾延长 · 车顶掉落速度 · 车顶弯道半径
      *   粒子  雨天水雾|水雾起始速度 · 挡雨
      *   伤害  伤害开关 · 创造模式也受伤 · 伤害起点速度 · 伤害上限 · 4 个速度档 · 4 个伤害系数 · 撞飞距离 · 2 个竖直初速 · 冲量冷却 · 生物受伤
-     *   其他  内置车型屏蔽 · 门音响 · 重载内置车型 · 厦门 PIDS
+     *   其他  内置车型屏蔽 · 门音响 · 重载内置车型
      * </pre>
      * 「车灯模式」放在光源分区第二行（用户要求：它决定灯什么时候亮，属于光源，不属于其他），
      * 并且只在全局页出现 —— 它没有侧线覆盖。
@@ -543,17 +543,9 @@ public final class ParameterScreen extends Screen {
                     this.rows.add(Row.toggleWide(ConfigWriteTarget.FANGSU_DOOR_SOUND));
                     // ---- 动作 ----
                     this.rows.add(Row.action(tr("btn.reloadTrains"), this::reloadTrains));
-                    // 厦门 PIDS 的三个全局显示开关（本地时间 / 即将进站 / 广告）。
-                    // 从主界面搬到这里：主界面只留「进哪个流程」这一层，具体开关归「全局 → 其他」。
-                    this.rows.add(Row.action(tr("screen.mtrlte.pids_xiamen"), this::openXiamenPids));
-                    // 全局广告集：一整套图片（0~N 张、有序），开着就盖掉所有厦门屏的单张覆盖。
-                    // 值存在服务端 PersistentState，改一次广播给所有人（见 PidsAdSetNet）。
-                    this.rows.add(Row.action(tr("screen.mtrlte.pids_ad_set"), this::openXiamenAdSet));
-                    // 时钟全局配置：界面和单块钟一模一样（ClockConfigScreen 的「全局模式」），
-                    // 但改的是所有时钟 —— 存在服务端 PersistentState 里，改一次广播给所有人。
-                    // 只有权限等级 ≥ 2 能改（服务端校验），普通玩家点开只是只读看看。
-                    this.rows.add(Row.action(tr("screen.mtrlte.clock.global"),
-                            this::openClockGlobal));
+                    // 厦门 PIDS 设置 / 全局广告集 / 时钟全局配置已经<b>搬走</b>了：它们是 LTED（装饰侧）
+                    // 的入口，现在挂在独立的 {@code mtrlte:lted_dashboard}（LtedDashboardScreen）上。
+                    // 本页只留 LTE 自己的开关与动作。
                 }
                 break;
         }
@@ -743,45 +735,6 @@ public final class ParameterScreen extends Screen {
             return;
         }
         this.client.setScreen(new BeamVehicleScreen(this, this.root, BeamSession.presetOf(this.siding)));
-    }
-
-    /**
-     * 「厦门 PIDS」：三个全局显示开关（本地时间 / 即将进站 / 广告）。
-     *
-     * <p>退回时回这一页（{@code this}），于是「返回分区」还能继续改别的项；
-     * 开关本身一点就落盘，不进主界面的完成 / 取消快照（它改的是显示偏好）。
-     */
-    private void openXiamenPids() {
-        if (this.client == null) {
-            return;
-        }
-        this.client.setScreen(new dev.js.mtrheadlight.xiamen.pids.PidsXiamenSettingsScreen(this));
-    }
-
-    /**
-     * 「全局广告集」：所有厦门 PIDS / PSD-LCD 共用的一整套广告（有序，0~N 张）。
-     *
-     * <p>和上面那一页一样，改一下立刻生效（值在服务端，本机只是先乐观写一份镜像），
-     * 不进主界面的完成 / 取消快照 —— 它改的是「屏上播什么」，不是世界数据。
-     */
-    private void openXiamenAdSet() {
-        if (this.client == null) {
-            return;
-        }
-        this.client.setScreen(new dev.js.mtrheadlight.xiamen.pids.PidsXiamenAdSetScreen(this));
-    }
-
-    /**
-     * 「时钟全局设置…」：开 {@code ClockConfigScreen} 的全局模式（无 pos）。
-     *
-     * <p>配置从 {@code ClockGlobalCache} 取 —— 就是服务端在进服 / 上一个人保存后推下来的那一份
-     * 镜像，所以界面里看到的是服务端真正在用的全局值，不是客户端瞎猜的。
-     */
-    private void openClockGlobal() {
-        if (this.client == null) {
-            return;
-        }
-        dev.js.mtrheadlight.clock.ClockClient.openGlobalScreen(this.client);
     }
 
     /**

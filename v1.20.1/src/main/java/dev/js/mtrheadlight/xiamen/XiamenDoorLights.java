@@ -5,8 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import dev.js.mtrheadlight.HeadlightConfig;
-import dev.js.mtrheadlight.MtrHeadlightClient;
+import dev.js.mtrheadlight.decor.DecorConfig;
 import mtr.client.ClientCache;
 import mtr.client.ClientData;
 import mtr.data.RailwayData;
@@ -31,8 +30,8 @@ import net.minecraft.util.math.BlockPos;
  *
  * <h2>优先级</h2>
  * <ol>
- *   <li>{@link HeadlightConfig#doorLightByLine}（键 = {@code 4} / {@code 4号线}）—— 逐线手工覆盖；</li>
- *   <li>{@link HeadlightConfig#doorLightColor} <b>不是默认的 {@code orange} 时</b> —— 全局手工覆盖；</li>
+ *   <li>{@link DecorConfig#doorLightByLine}（键 = {@code 4} / {@code 4号线}）—— 逐线手工覆盖；</li>
+ *   <li>{@link DecorConfig#doorLightColor} <b>不是默认的 {@code orange} 时</b> —— 全局手工覆盖；</li>
  *   <li>{@link XiamenLine#doorLight()} —— 内置线路色（1/2/3 橙、4/6 绿）。</li>
  * </ol>
  *
@@ -57,25 +56,25 @@ public final class XiamenDoorLights {
     public static String colorFor(final Block block, final BlockPos pos) {
         try {
             final XiamenLine line = XiamenObjects.lineOf(block);
-            final HeadlightConfig cfg = MtrHeadlightClient.config();
+            final DecorConfig cfg = DecorConfig.get();
             if (cfg == null) {
                 return line.doorLight();
             }
             // ① 逐线手工覆盖（最具体）。
             final String byLine = lookup(cfg.doorLightByLine, line.number);
             if (byLine != null) {
-                return HeadlightConfig.normalizeDoorLightColor(byLine);
+                return DecorConfig.normalizeDoorLightColor(byLine);
             }
             // ② 全局手工覆盖：只有“不是默认橙”才算数（默认值不算手工设置，
             //    否则 4/6 号线永远被默认值压回橙色）。
-            final String global = HeadlightConfig.normalizeDoorLightColor(cfg.doorLightColor);
-            if (!HeadlightConfig.DOOR_LIGHT_ORANGE.equals(global)) {
+            final String global = DecorConfig.normalizeDoorLightColor(cfg.doorLightColor);
+            if (!DecorConfig.DOOR_LIGHT_ORANGE.equals(global)) {
                 return global;
             }
             // ③ 内置线路色。
             return line.doorLight();
         } catch (Throwable t) {
-            return HeadlightConfig.DOOR_LIGHT_ORANGE;
+            return DecorConfig.DOOR_LIGHT_ORANGE;
         }
     }
 
@@ -86,17 +85,17 @@ public final class XiamenDoorLights {
      */
     public static String colorFor(final BlockPos pos) {
         try {
-            final HeadlightConfig cfg = MtrHeadlightClient.config();
+            final DecorConfig cfg = DecorConfig.get();
             if (cfg == null) {
-                return HeadlightConfig.DOOR_LIGHT_ORANGE;
+                return DecorConfig.DOOR_LIGHT_ORANGE;
             }
             // 没有按线路的配置时不必去查线路（绝大多数情况，零开销）。
             if (cfg.doorLightByLine == null || cfg.doorLightByLine.isEmpty()) {
-                return HeadlightConfig.normalizeDoorLightColor(cfg.doorLightColor);
+                return DecorConfig.normalizeDoorLightColor(cfg.doorLightColor);
             }
             return XiamenRouteStyle.doorLightColor(cfg, lineNumberAt(pos));
         } catch (Throwable t) {
-            return HeadlightConfig.DOOR_LIGHT_ORANGE;
+            return DecorConfig.DOOR_LIGHT_ORANGE;
         }
     }
 

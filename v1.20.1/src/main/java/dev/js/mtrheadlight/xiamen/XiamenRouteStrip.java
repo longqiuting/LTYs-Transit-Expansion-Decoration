@@ -6,9 +6,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import dev.js.mtrheadlight.HeadlightConfig;
+import dev.js.mtrheadlight.decor.DecorConfig;
 import dev.js.mtrheadlight.LteLog;
-import dev.js.mtrheadlight.MtrHeadlightClient;
 import mtr.client.ClientCache;
 import mtr.client.ClientData;
 import mtr.data.Route;
@@ -75,7 +74,7 @@ public final class XiamenRouteStrip {
             if (!XiamenRouteScope.active()) {
                 return null;
             }
-            final HeadlightConfig cfg = MtrHeadlightClient.config();
+            final DecorConfig cfg = DecorConfig.get();
             if (cfg == null || !cfg.xiamenRouteStrip || vertical || !(aspectRatio > 0.05f)) {
                 return null;
             }
@@ -179,7 +178,7 @@ public final class XiamenRouteStrip {
      * 顺序 = 线路色升序（同一存档每次一致，尾部截断时丢的永远是最后那条）。</p>
      */
     private static XiamenStripPainter.Interchange[] interchanges(
-            final HeadlightConfig cfg,
+            final DecorConfig cfg,
             final List<ClientCache.PlatformRouteDetails> allDetails,
             final List<ClientCache.PlatformRouteDetails.StationDetails> stations,
             final String routeName,
@@ -313,7 +312,7 @@ public final class XiamenRouteStrip {
     }
 
     /**
-     * 面板下沿那条 1px 色带的替代品：<b>只在 {@link HeadlightConfig#lineColors} 手工覆盖了颜色时</b>
+     * 面板下沿那条 1px 色带的替代品：<b>只在 {@link DecorConfig#lineColors} 手工覆盖了颜色时</b>
      * 才接管（没有覆盖就返回 null → MTR 原样画）。
      *
      * <p>MTR 的 {@code generateColorStrip} 是对每个“本站台所属线路”写 1xN 像素，颜色是
@@ -326,7 +325,7 @@ public final class XiamenRouteStrip {
             if (!XiamenRouteScope.active()) {
                 return null;
             }
-            final HeadlightConfig cfg = MtrHeadlightClient.config();
+            final DecorConfig cfg = DecorConfig.get();
             if (cfg == null || cfg.lineColors == null || cfg.lineColors.isEmpty()) {
                 return null;
             }
@@ -382,7 +381,7 @@ public final class XiamenRouteStrip {
             if (!XiamenRouteScope.active()) {
                 return null;
             }
-            final HeadlightConfig cfg = MtrHeadlightClient.config();
+            final DecorConfig cfg = DecorConfig.get();
             if (cfg == null || !cfg.xiamenRouteStrip || !(aspectRatio > 0.05f)) {
                 return null;
             }

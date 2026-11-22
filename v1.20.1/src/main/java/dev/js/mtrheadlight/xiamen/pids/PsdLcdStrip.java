@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import dev.js.mtrheadlight.LteLog;
-import dev.js.mtrheadlight.MtrHeadlightClient;
+import dev.js.mtrheadlight.decor.DecorConfig;
 import dev.js.mtrheadlight.xiamen.XiamenRouteStyle;
 import mtr.client.ClientData;
 import mtr.data.Route;
@@ -140,7 +140,7 @@ public final class PsdLcdStrip {
     private static int rgbOf(final Route route) {
         final int rgb;
         try {
-            rgb = XiamenRouteStyle.lineColor(MtrHeadlightClient.config(), route, route.name) & 0xFFFFFF;
+            rgb = XiamenRouteStyle.lineColor(DecorConfig.get(), route, route.name) & 0xFFFFFF;
         } catch (final Throwable t) {
             return (route.color & 0xFFFFFF) == 0 ? 0 : 0xFF000000 | (route.color & 0xFFFFFF);
         }

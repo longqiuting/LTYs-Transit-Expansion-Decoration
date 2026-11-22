@@ -28,14 +28,16 @@
   "icon": "icon.png",
   "environment": "*",
   "mixins": [
+    "mtrlte.beamlight.mixins.json",
     "mtrlte.collision.mixins.json",
-    "mtrlte.fangsu.mixins.json",
     "mtrlte.rain.mixins.json",
     "mtrlte.scatter.mixins.json",
+    "mtrlte.registry.mixins.json",
+    "mtrlte.fangsu.mixins.json",
     "mtrlte.mtr.mixins.json",
     "mtrlte.mtrserver.mixins.json",
-    "mtrlte.registry.mixins.json",
-    "mtrlte.beamlight.mixins.json"
+    "mtrlte.mtrdecor.mixins.json",
+    "mtrlte.mtrserverdecor.mixins.json"
   ],
   "entrypoints": {
     "main": [
@@ -43,24 +45,8 @@
       "dev.js.mtrheadlight.VehicleLightsJsonServer"
     ],
     "client": [
-      "dev.js.mtrheadlight.MtrHeadlightClient",
-      "dev.js.mtrheadlight.collision.CollisionBootstrap",
-      "dev.js.mtrheadlight.mtr.BuiltInTrainsInit",
-      "dev.js.mtrheadlight.VehicleLightsJsonClient",
-      "dev.js.mtrheadlight.signal.SignalLinkClient",
-      "dev.js.mtrheadlight.xiamen.XiamenClient",
-      "dev.js.mtrheadlight.xiamen.sign.WallSignClient",
-      "dev.js.mtrheadlight.railing.RailingGlassClient",
-      "dev.js.mtrheadlight.decor.DecorClient",
-      "dev.js.mtrheadlight.xiamen.pids.PidsXiamenClient",
-      "dev.js.mtrheadlight.xiamen.pids.PsdLcdClient",
-      "dev.js.mtrheadlight.xiamen.dep.DepOnWallClient",
-      "dev.js.mtrheadlight.logo.LogoClient",
-      "dev.js.mtrheadlight.xiamen.machine.XiamenMachinesClient",
-      "dev.js.mtrheadlight.xiamen.charger.ChargerClient",
-      "dev.js.mtrheadlight.xiamen.drinks.DrinksMachineClient",
-      "dev.js.mtrheadlight.security.SecurityClient",
-      "dev.js.mtrheadlight.xiamen.fangsu.FangsuPsdClient"
+      "dev.js.mtrheadlight.LtedClient",
+      "dev.js.mtrheadlight.LteClient"
     ],
     "modmenu": [
       "dev.js.mtrheadlight.ModMenuIntegration"
