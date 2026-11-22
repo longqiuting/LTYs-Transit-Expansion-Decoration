@@ -34,7 +34,7 @@ public abstract class RouteMapCacheKeyMixin {
             method = {"getRouteMap", "getDirectionArrow", "getStationNameEntrance"},
             at = @At(value = "INVOKE", target = "Ljava/lang/String;format", remap = false),
             remap = false)
-    private static String lte$scopedKey(final String format, final Object[] args) {
+    private String lte$scopedKey(final String format, final Object[] args) {
         final String key = String.format(format, args);
         final String suffix = XiamenRouteScope.cacheKeySuffix() + WallSignLogos.cacheKeySuffix();
         return suffix.isEmpty() ? key : key + suffix;

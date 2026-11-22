@@ -43,7 +43,7 @@ public abstract class RenderPidsTianjinStationMixin {
             method = "getSchedules",
             at = @At(value = "INVOKE", target = "Lmtr/data/RailwayData;getStation"),
             remap = false)
-    private static Station lte$stationOfThisScreen(final Set<Station> stations,
+    private Station lte$stationOfThisScreen(final Set<Station> stations,
                                                    final DataCache dataCache,
                                                    final BlockPos pos) {
         try {

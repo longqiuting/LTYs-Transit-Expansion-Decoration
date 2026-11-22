@@ -20,7 +20,7 @@ public abstract class RenderPsdDoorTextureMixin {
 ),
       remap = false
    )
-   private static String lte$rewriteTextureId(String format, Object[] args) {
+   private String lte$rewriteTextureId(String format, Object[] args) {
       return XiamenTextures.resolveActive(String.format(format, args));
    }
 }

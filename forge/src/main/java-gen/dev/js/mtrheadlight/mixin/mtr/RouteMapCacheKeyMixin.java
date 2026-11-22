@@ -21,7 +21,7 @@ public abstract class RouteMapCacheKeyMixin {
 ),
       remap = false
    )
-   private static String lte$scopedKey(String format, Object[] args) {
+   private String lte$scopedKey(String format, Object[] args) {
       String key = String.format(format, args);
       String suffix = XiamenRouteScope.cacheKeySuffix() + WallSignLogos.cacheKeySuffix();
       return suffix.isEmpty() ? key : key + suffix;

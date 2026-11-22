@@ -24,7 +24,7 @@ public abstract class RenderPIDSStationMixin {
 ),
       remap = false
    )
-   private static Station lte$stationOfThisScreen(Set<Station> stations, DataCache dataCache, BlockPos pos) {
+   private Station lte$stationOfThisScreen(Set<Station> stations, DataCache dataCache, BlockPos pos) {
       try {
          PidsStationResolver.Result result = PidsStationResolver.resolve(stations, dataCache, pos);
          PidsStationResolver.log("mtr", pos, result);

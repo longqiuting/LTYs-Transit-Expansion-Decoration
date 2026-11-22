@@ -23,7 +23,7 @@ public abstract class RouteAsyncScopeMixin {
 ),
       remap = false
    )
-   private static <U> CompletableFuture<U> lte$carryScope(Supplier<U> supplier) {
+   private <U> CompletableFuture<U> lte$carryScope(Supplier<U> supplier) {
       String signLogo = WallSignLogos.brand();
       boolean routeActive = XiamenRouteScope.active();
       if (!routeActive && signLogo == null) {

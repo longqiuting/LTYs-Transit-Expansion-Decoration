@@ -41,7 +41,7 @@ public abstract class RouteAsyncScopeMixin {
                     target = "Ljava/util/concurrent/CompletableFuture;supplyAsync",
                     remap = false),
             remap = false)
-    private static <U> CompletableFuture<U> lte$carryScope(final Supplier<U> supplier) {
+    private <U> CompletableFuture<U> lte$carryScope(final Supplier<U> supplier) {
         // 贴墙标识的品牌（MTR 把 logo 画进站名贴图里，取图时要靠它，见 StationNameEntranceLogoMixin）。
         final String signLogo = dev.js.mtrheadlight.xiamen.sign.WallSignLogos.brand();
         final boolean routeActive = XiamenRouteScope.active();

@@ -50,7 +50,7 @@ public abstract class RenderPsdDoorTextureMixin {
                     target = "Ljava/lang/String;format",
                     remap = false),
             remap = false)
-    private static String lte$rewriteTextureId(final String format, final Object[] args) {
+    private String lte$rewriteTextureId(final String format, final Object[] args) {
         return XiamenTextures.resolveActive(String.format(format, args));
     }
 }
