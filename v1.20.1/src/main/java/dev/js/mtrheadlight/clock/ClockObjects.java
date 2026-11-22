@@ -30,7 +30,7 @@ import net.minecraft.util.Identifier;
  * <p>进 {@code mtrlte:core}（「厦门风格物件」）页签 —— 本模组只有两个页签，方块一律在 core，
  * 从 {@link XiamenObjects#CORE_TAB_ID} 取 key，不另写一份 id。
  *
- * <p>注册风格与其它方块模块一致：{@code LteServer#blockModule} 包着调用，
+ * <p>注册风格与其它方块模块一致：{@code LteServerDecor#blockModule} 包着调用，
  * 页签条目自己再 try/catch 一次 —— 页签没建出来只影响「创造栏里找不到」，方块照常工作。
  */
 public final class ClockObjects {

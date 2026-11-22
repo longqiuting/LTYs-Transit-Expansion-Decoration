@@ -56,7 +56,12 @@ public final class MtrMixinPlugin implements IMixinConfigPlugin {
             // 站台门型识别：站台方块是双端共享的类，所以用普通方块探测（dedicated server 上也要生效）。
             return HostProbe.mtrBlockPlatform();
         }
-        return HostProbe.mtrTrainRegistry();
+        if (mixinClassName.endsWith(".RouteMapCacheKeyMixin")
+                || mixinClassName.endsWith(".RouteAsyncScopeMixin")) {
+            // 线路图异步绘制 / 缓存键：同一个线路图生成器，探测条件与 RouteMapArtMixin 一致。
+            return HostProbe.mtrRouteMap();
+        }
+        return HostProbe.mtrRouteMap();
     }
 
     @Override

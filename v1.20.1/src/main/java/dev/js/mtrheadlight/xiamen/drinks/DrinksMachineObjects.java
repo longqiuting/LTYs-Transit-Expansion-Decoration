@@ -55,7 +55,7 @@ import net.minecraft.util.Identifier;
  * <p>亮度用 {@code Settings#luminance} 声明，属于<b>方块光照</b>：上下两块<b>全部</b>发微光
  * （上半 10、下半 6），与 blockstate / BER 无关。
  *
- * <p>由 {@code LteServer} 在充电宝机之后调用；条目进「厦门风格物件」页签
+ * <p>由 {@code LteServerDecor} 在充电宝机之后调用；条目进「厦门风格物件」页签
  * （{@link XiamenObjects#CORE_TAB_ID}，车站设备都在这一页）。
  */
 public final class DrinksMachineObjects {

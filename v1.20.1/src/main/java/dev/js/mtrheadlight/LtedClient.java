@@ -22,10 +22,10 @@ import net.fabricmc.api.ClientModInitializer;
  *
  * <h2>第一件事永远是 {@link DecorConfig#load()}</h2>
  * 装饰侧自己的配置（线路条带 / 门灯配色）放在 {@code config/mtrlte_decor.json}。首次启动要把旧
- * {@code config/mtrlte.json} 里的那几个键读出来 —— 而 LTE 侧的 {@code HeadlightConfig.load()}
- * 在版本升级时可能<b>重写</b>那份文件（新字段写出去、旧字段被 Gson 丢掉）。
+ * {@code config/mtrlte.json} 里的那几个键读出来 —— 老版本把它们写在优化侧的配置里，
+ * 那些类已经不在这个 jar 里了，所以只剩这一处迁移入口。
  *
- * <p>真正的迁移时机在 {@code main} 入口 {@code LteServer}（Fabric 先跑 main 再跑 client，所以它
+ * <p>迁移发生在 {@code main} 入口 {@code LteServerDecor}（Fabric 先跑 main 再跑 client，所以它
  * 一定早于这里）；本类这次调用是<b>兜底</b>：文件已经存在时只是一次纯读取。
  *
  * <p>每一条初始化调用都与拆分前的注册顺序一致（渲染器 / 刷子界面 / 声音都按这个顺序挂）。
@@ -37,7 +37,10 @@ public final class LtedClient implements ClientModInitializer {
         // ① 兜底读一次装饰侧配置（main 入口已经迁移过；这里只保证单独走到这一侧时也有一份）。
         DecorConfig.load();
 
-        // ② 以下是拆分前 client 入口里的装饰类，顺序不变。
+        // ② 客户端指令：只剩装饰相关的 /mtr_lte dep（倒数器读数方向 + 取证）。
+        Commands.register();
+
+        // ③ 以下是装饰类，顺序不变。
         new XiamenClient().onInitializeClient();
         new WallSignClient().onInitializeClient();
         new RailingGlassClient().onInitializeClient();

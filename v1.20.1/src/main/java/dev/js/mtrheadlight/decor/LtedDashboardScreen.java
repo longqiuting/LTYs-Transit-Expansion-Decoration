@@ -127,6 +127,9 @@ public final class LtedDashboardScreen extends Screen {
         y = toggleRow(y, "screen.mtrlte.lted.names_below", cfg -> cfg.routeStripNamesBelow,
                 (cfg, v) -> cfg.routeStripNamesBelow = v);
         y = doorLightRow(y);
+        // 方速屏蔽门的开关门音效总开关（拆分前在优化侧的配置界面里，现在只有这一处入口）。
+        y = toggleRow(y, "screen.mtrlte.lted.door_sound", cfg -> cfg.fangsuDoorSound,
+                (cfg, v) -> cfg.fangsuDoorSound = v);
 
         this.contentHeight = y - (CONTENT_TOP - this.scroll);
 

@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import dev.js.mtrheadlight.LteLog;
-import dev.js.mtrheadlight.signal.LteCoreItems;
 import dev.js.mtrheadlight.xiamen.XiamenObjects;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.block.AbstractBlock;
@@ -28,13 +27,13 @@ import net.minecraft.util.Identifier;
  *   <caption>方块 / 贴图 / 页签</caption>
  *   <tr><th>id</th><th>贴图</th><th>进哪个页签</th></tr>
  *   <tr><td>{@code mtrlte:lte_logo}</td><td>{@code block/lte_logo}（LTE 标志）</td>
- *       <td>{@code mtrlte:tools}「LTE 工具」（{@link LteCoreItems#TOOLS_TAB_ID}）</td></tr>
+ *       <td>{@code mtrlte:core}「厦门风格物件」（<b>第 1 位</b>）</td></tr>
  *   <tr><td>{@code mtrlte:jiaomei_logo}</td><td>{@code block/jiaomei_logo}（角美地铁标志）</td>
  *       <td>{@code mtrlte:core}「厦门风格物件」（{@link XiamenObjects#CORE_TAB_ID}）</td></tr>
  * </table>
  *
  * <p>「厦门风格物件」页签的<b>最前排</b>顺序由 {@link #pinCoreTabOrder()} 统一重排：
- * 厦门 logo → 角美 logo → 厦门贴墙标识 → 角美贴墙标识 → LTE 贴墙标识 → 四件站外标志，
+ * LTE logo → LTE 贴墙标识 → 厦门 logo → 角美 logo → 厦门贴墙标识 → 角美贴墙标识 → 四件站外标志，
  * 不依赖「谁先注册谁在前」。
  *
  * <p>方块和物品用同一个 id（本模组一贯的规矩）。两个方块除了贴图没有别的区别，
@@ -53,7 +52,7 @@ import net.minecraft.util.Identifier;
  * 所以这一条必须和数据包里的 {@code data/minecraft/tags/blocks/mineable/pickaxe.json}
  * 一起改（已经加了）。
  *
- * <p>由 {@code LteServer} 在 {@link XiamenObjects#register()} / {@link LteCoreItems#register()}
+ * <p>由 {@code LteServerDecor} 在 {@link XiamenObjects#register()} / {@link dev.js.mtrheadlight.decor.LtedCoreItems#register()}
  * 之后调用 —— 两个页签都得先建好，往页签里追加条目才不会落空。
  */
 public final class LogoObjects {
@@ -75,18 +74,16 @@ public final class LogoObjects {
 
     /**
      * 「厦门风格物件」页签最前面那几件，<b>按用户点名的顺序</b>：
-     * 厦门 logo → 角美 logo → 厦门贴墙标识 → 角美贴墙标识 →
+     * LTE logo → LTE 贴墙标识 → 厦门 logo → 角美 logo → 厦门贴墙标识 → 角美贴墙标识 →
      * 四件站外标志（挂墙 / 杆上 × 厦门 / 角美）。
      *
-     * <p>两面贴墙标识紧跟在两个 logo 块<b>后面</b>（用户：「贴墙标识要放到两个 logo 块的后面」）——
-     * 它们是同一族的「牌子」，排在一起才好找；四件站外标志<sub>（挂墙 / 杆上的出口牌）</sub>
-     * 不属于这一族，排在它们之后。
-     *
-     * <p><b>LTE 的东西一律不进这一页</b>（用户：「厦门地铁标签页不需要出现 LTE 相关的东西」）：
-     * {@code lte_logo} 在 {@link LteCoreItems#TOOLS_TAB_ID}「LTE 工具」页签，
-     * {@code wall_sign_lte} 也只在那一页（第 2 位，见 {@link LteCoreItems#pinToolsTabOrder()}）。
+     * <p>LTE 的两件（{@code lte_logo} / {@code wall_sign_lte}）原先在「LTE 工具」页签里；
+     * 优化侧搬走之后那个页签只剩 LTED 仪表板，用户要求把这两件挪到「厦门地铁物件」页签的
+     * <b>开头两位</b>，所以它们现在是本列表的第 1、2 位。
      */
     private static final List<Identifier> CORE_TAB_FRONT = List.of(
+            LTE_ID,
+            new Identifier(NAMESPACE, "wall_sign_lte"),
             XiamenObjects.LOGO_ID,
             JIAOMEI_ID,
             new Identifier(NAMESPACE, "wall_sign_xiamen"),
@@ -136,31 +133,20 @@ public final class LogoObjects {
         lteItem = registerItem(LTE_ID, lteLogo);
         jiaomeiItem = registerItem(JIAOMEI_ID, jiaomeiLogo);
 
-        // LTE 标志进「LTE 工具」页签，排在最前面（用户要求：装饰性 logo 先看到）。
-        try {
-            ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP, LteCoreItems.TOOLS_TAB_ID))
-                    .register(entries -> {
-                        final List<ItemStack> stacks = entries.getDisplayStacks();
-                        stacks.removeIf(s -> s.isOf(lteItem));
-                        stacks.add(0, new ItemStack(lteItem));
-                    });
-        } catch (Throwable t) {
-            LteLog.LOGGER.warn("[lte] lte logo: could not add the tools tab entry", t);
-        }
-
-        // 厦门 / 角美两个标志进「厦门风格物件」页签的**最前面**，厦门在前、角美紧跟其后。
-        // （最终的「logo → 贴墙标识 → 站外标志」顺序由 pinCoreTabOrder() 统一重排，这里只保证先有位。）
+        // 三个标志都进「厦门风格物件」页签（先有位就行；最终顺序由 pinCoreTabOrder() 统一重排：
+        // LTE logo → LTE 贴墙标识 → 厦门 logo → 角美 logo → …）。
         try {
             ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP, XiamenObjects.CORE_TAB_ID))
                     .register(entries -> {
                         final Item xiamenItem = XiamenObjects.logo().asItem();
                         final List<ItemStack> stacks = entries.getDisplayStacks();
-                        stacks.removeIf(s -> s.isOf(xiamenItem) || s.isOf(jiaomeiItem));
+                        stacks.removeIf(s -> s.isOf(xiamenItem) || s.isOf(jiaomeiItem) || s.isOf(lteItem));
                         stacks.add(0, new ItemStack(jiaomeiItem));
                         stacks.add(0, new ItemStack(xiamenItem));
+                        stacks.add(0, new ItemStack(lteItem));
                     });
         } catch (Throwable t) {
-            LteLog.LOGGER.warn("[lte] jiaomei logo: could not add the core tab entry", t);
+            LteLog.LOGGER.warn("[lte] logo blocks: could not add the core tab entries", t);
         }
 
         LteLog.LOGGER.info("[lte] logo blocks: {} / {}", LTE_ID, JIAOMEI_ID);
@@ -175,7 +161,7 @@ public final class LogoObjects {
      * 按列表顺序摘出来 → 原样（是同一个 {@link ItemStack} 实例，NBT 都不丢）
      * 一次性插回下标 0 / 追加到末尾。其余条目保持原有相对顺序，只被「往下推」。
      *
-     * <h2>为什么单独一个方法、由 {@code LteServer} 在站外标志之后调</h2>
+     * <h2>为什么单独一个方法、由 {@code LteServerDecor} 在站外标志之后调</h2>
      * <p>{@code ItemGroupEvents.modifyEntriesEvent} 的回调<b>按注册顺序</b>执行，回调里才看得见
      * 前面回调已经加进去的条目。两个 logo 在 {@link #register()} 里就进页签了，贴墙标识
      * （{@code WallSignObjects}）紧接着进，站外标志（{@code StationSignObjects}）最后进 ——

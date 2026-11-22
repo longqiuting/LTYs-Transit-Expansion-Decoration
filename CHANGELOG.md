@@ -1,5 +1,19 @@
 # 更新日志
 
+## 未发布 — LTED 拆分（只做装饰，1.20.1）
+
+本仓库改成**纯装饰模组 LTED**（mod id 仍是 `mtrlte`，方块 id 一个不改）：
+
+- 优化侧（车灯 / 光束 / 屏幕空间散射 / 雨雾水花 / 碰撞撞飞 / 道床判定 / 信号灯与 PIDS、投影机连接器 /
+  3D 光束编辑器 / 侧线浏览）整体搬去独立工程 LTE，本仓库的对应代码、mixin、语言键与资源一并删除。
+- `fabric.mod.json`：`name` 改为 `LTED`，入口只剩装饰侧（`LteServerDecor` / `LtedClient`），
+  mixin 只剩 `mtrlte.mtrdecor.mixins.json`。
+- 创造页签：「LTE 工具」页只剩 LTED 仪表板；LTE logo 与 LTE 贴墙标识移到「厦门地铁物件」页**开头两位**。
+- 配置：`HeadlightConfig` 随优化侧删除；装饰配色与方速门音效开关落在 `DecorConfig`
+  （`config/mtrlte_decor.json`），首次启动仍从旧 `config/mtrlte.json` 迁移。
+- 指令只剩 `/mtr_lte dep …`（倒数器读数方向 + 取证），`/mtr_lte` 无参数打开 LTED 仪表板。
+- 仓库只保留 1.20.1：`v1.18.2/`、`v1.19.2/`、`v1.19.4/` 三个版本目录删除。
+
 ## 2.0.2 — 正式版（1.20.1 / 1.19.4 / 1.19.2 / 1.18.2 四版同步）
 
 第一个对外发布的正式版：四个游戏版本功能对齐，字段、资源、语言键逐字节一致（只有各版本映射/API 的写法差别）。

@@ -1,12 +1,11 @@
 // 贴墙标识（厦门 / 角美 / LTE）的注册：3 个方块 + 3 个物品 + 1 个方块实体类型；
-// 厦门、角美进「厦门风格物件」页签的<b>末尾</b>，LTE 那面进「LTE 工具」页签的第 2 位。
+// 三面牌子都进「厦门风格物件」页签，位置由 LogoObjects.pinCoreTabOrder() 统一重排。
 package dev.js.mtrheadlight.xiamen.sign;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import dev.js.mtrheadlight.LteLog;
-import dev.js.mtrheadlight.signal.LteCoreItems;
 import dev.js.mtrheadlight.xiamen.XiamenObjects;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
@@ -42,10 +41,9 @@ import net.minecraft.util.Identifier;
  *
  * <h2>页签顺序</h2>
  * <ul>
- *   <li><b>厦门风格物件</b>（{@link XiamenObjects#CORE_TAB_ID}）：厦门 / 角美两面牌子加到<b>末尾</b>，
- *       由 {@code LogoObjects.pinCoreTabOrder()} 统一重排（它同时决定前排的两个 logo 和四件站外标志）；</li>
- *   <li><b>LTE 工具</b>（{@link LteCoreItems#TOOLS_TAB_ID}）：{@code wall_sign_lte} 排<b>第 2 位</b>
- *       （LTE logo 方块之后、仪表板之前），见 {@link LteCoreItems#pinToolsTabOrder()}。</li>
+ *   <li><b>厦门风格物件</b>（{@link XiamenObjects#CORE_TAB_ID}）：三面牌子都加到这一页，
+ *       由 {@code LogoObjects.pinCoreTabOrder()} 统一重排（LTE logo → LTE 贴墙标识 → 厦门 logo →
+ *       角美 logo → 两面贴墙标识 → 四件站外标志）。</li>
  * </ul>
  */
 public final class WallSignObjects {
@@ -104,26 +102,18 @@ public final class WallSignObjects {
             LteLog.LOGGER.error("[lte] wall sign: could not register the block entity type", t);
         }
 
-        // 厦门 / 角美两面牌子进「厦门风格物件」页签。这里只保证「有位」，
-        // 最终位置由 LogoObjects.pinCoreTabOrder() 把它们挪到末尾。
+        // 厦门 / 角美 / LTE 三面牌子都进「厦门风格物件」页签。这里只保证「有位」，
+        // 最终位置由 LogoObjects.pinCoreTabOrder() 统一重排（LTE logo → LTE 贴墙标识 → …）。
         try {
             ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP, XiamenObjects.CORE_TAB_ID))
                     .register(entries -> {
                         entries.add(xiamen.item());
                         entries.add(jiaomei.item());
+                        entries.add(lte.item());
                     });
         } catch (Throwable t) {
             LteLog.LOGGER.warn("[lte] wall sign: could not add the creative tab entries", t);
         }
-
-        // LTE 那一面进「LTE 工具」页签；排第 2 位由 LteCoreItems.pinToolsTabOrder() 负责。
-        try {
-            ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP, LteCoreItems.TOOLS_TAB_ID))
-                    .register(entries -> entries.add(lte.item()));
-        } catch (Throwable t) {
-            LteLog.LOGGER.warn("[lte] wall sign: could not add the LTE wall sign to the tools tab", t);
-        }
-        LteCoreItems.pinToolsTabOrder();
 
         for (final Entry entry : ENTRIES) {
             LteLog.LOGGER.info("[lte] wall sign: {} (logo={})", entry.id(), entry.logo());

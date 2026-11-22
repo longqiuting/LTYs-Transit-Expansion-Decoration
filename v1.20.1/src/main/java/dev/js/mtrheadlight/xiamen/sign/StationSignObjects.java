@@ -32,7 +32,7 @@ import net.minecraft.util.Identifier;
  * </table>
  *
  * <p>方块和物品用同一个 id（本模组的厦门物件都是这个规矩），没有方块实体、没有存档数据。
- * 由 {@code LteServer} 在 {@link XiamenObjects#register()} 之后调用，
+ * 由 {@code LteServerDecor} 在 {@link XiamenObjects#register()} 之后调用，
  * 物品进「厦门风格物件」页签（页签本身是 {@link XiamenObjects} 建的）。
  *
  * <h2>属性</h2>

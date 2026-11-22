@@ -18,7 +18,7 @@ import net.minecraft.util.Identifier;
  * 挂墙发车倒数器 {@code mtrlte:dep_on_wall} 的注册入口（两端都要跑）。
  *
  * <p>方块 / 物品 / 方块实体类型用<b>同一个</b> id（{@link #ID}）—— 本模组的厦门物件都是这个规矩。
- * 由 {@code LteServer} 在 {@code PidsXiamenObjects.register()} 之后调用，物品进
+ * 由 {@code LteServerDecor} 在 {@code PidsXiamenObjects.register()} 之后调用，物品进
  * 「厦门风格物件」页签（{@link XiamenObjects#CORE_TAB_ID}）。
  */
 public final class DepOnWallObjects {

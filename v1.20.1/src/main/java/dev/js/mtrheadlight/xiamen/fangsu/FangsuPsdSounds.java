@@ -26,7 +26,7 @@ import net.minecraft.util.Identifier;
  * <h2>为什么注册放在 main（服务端也跑的那一段）</h2>
  * <p>{@code SoundEvent} 是 registry 条目，客户端连服务端时要靠 registry 同步拿到同一份 id →
  * 只在客户端注册会让专用服务端的 registry 里少一条（客户端和服务端的条目数不一致，进服握手会报错）。
- * 注册入口是 {@link FangsuPsdBlocks#register()} —— 它在 {@code LteServer} 的方块注册段里、两端都会跑。
+ * 注册入口是 {@link FangsuPsdBlocks#register()} —— 它在 {@code LteServerDecor} 的方块注册段里、两端都会跑。
  *
  * <h2>开与关是同一个音效</h2>
  * <p>素材本身是一整段「门滑动」的声音（约 2 秒），开 / 关各播一次、都按 {@code pitch 1.0}。

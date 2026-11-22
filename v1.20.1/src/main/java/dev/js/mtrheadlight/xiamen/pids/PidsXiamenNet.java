@@ -52,7 +52,7 @@ public final class PidsXiamenNet {
 
     // ---------------------------------------------------------------- 服务端
 
-    /** {@code main} 入口（{@code LteServer}）调用一次。 */
+    /** {@code main} 入口（{@code LteServerDecor}）调用一次。 */
     public static void registerServer() {
         if (registeredServer) {
             return;

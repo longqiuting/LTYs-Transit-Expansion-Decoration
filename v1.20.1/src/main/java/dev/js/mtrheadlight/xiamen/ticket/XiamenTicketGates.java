@@ -52,7 +52,7 @@ import net.minecraft.util.Identifier;
  * 物品模型则是真正的原版 block model（{@code models/block/ticket_gate_*_item.json}，
  * 由 {@code tools/gen-ticket-gate-item-models.js} 生成）—— 方块不存几何，物品必须自带一份。
  *
- * <p>由 {@code LteServer} 在厦门售票机 / 余额查询机之后调用；六个物品进「厦门风格物件」页签
+ * <p>由 {@code LteServerDecor} 在厦门售票机 / 余额查询机之后调用；六个物品进「厦门风格物件」页签
  * （{@link XiamenObjects#CORE_TAB_ID}）。
  */
 public final class XiamenTicketGates {
@@ -161,7 +161,7 @@ public final class XiamenTicketGates {
         return entityType;
     }
 
-    /** 音效 + 6 个方块 + 6 个物品 + 方块实体类型 + 创造页签条目，{@code main} 入口（{@code LteServer}）调一次。 */
+    /** 音效 + 6 个方块 + 6 个物品 + 方块实体类型 + 创造页签条目，{@code main} 入口（{@code LteServerDecor}）调一次。 */
     public static void register() {
         if (registered) {
             return;

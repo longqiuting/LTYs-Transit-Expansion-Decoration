@@ -66,7 +66,7 @@ public final class ClockNet {
     private ClockNet() {
     }
 
-    /** 服务端接收器，{@link ClockObjects#register()} 之外由 {@code LteServer} 的模块再调一次也无害。 */
+    /** 服务端接收器，{@link ClockObjects#register()} 之外由 {@code LteServerDecor} 的模块再调一次也无害。 */
     public static void register() {
         if (registered) {
             return;

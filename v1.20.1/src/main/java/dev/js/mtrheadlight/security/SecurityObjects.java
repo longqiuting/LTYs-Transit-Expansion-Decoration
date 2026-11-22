@@ -59,7 +59,7 @@ public final class SecurityObjects {
         return liquidScannerEntityType;
     }
 
-    /** 方块 + 方块物品 + 创造页签条目，{@code main} 入口（{@code LteServer}）调一次。 */
+    /** 方块 + 方块物品 + 创造页签条目，{@code main} 入口（{@code LteServerDecor}）调一次。 */
     public static void register() {
         if (registered) {
             return;

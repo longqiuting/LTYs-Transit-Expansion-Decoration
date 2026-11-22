@@ -110,7 +110,7 @@ public final class RccPlatforms {
         return new Block[]{platform, indented, quartz};
     }
 
-    /** 方块 + 方块物品 + 独立创造页签，{@code LteServer} 入口调一次。幂等。 */
+    /** 方块 + 方块物品 + 独立创造页签，{@code LteServerDecor} 入口调一次。幂等。 */
     public static void register() {
         if (registered) {
             return;

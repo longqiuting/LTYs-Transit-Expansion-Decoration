@@ -76,7 +76,7 @@ import net.minecraft.world.WorldAccess;
  * <p>开 / 关各播一次，判定用方块实体里 MTR 的 {@code open} 值（0..32）的<b>边沿</b>：
  * {@code 0 → >0} = 开、{@code >0 → 0} = 关。只在<b>客户端</b>播（渲染器里，每扇门的下段一次），
  * 所以服务端不会替每个玩家各播一遍。两级开关是「与」关系：
- * 配置界面「其他 → 门音响」（{@link dev.js.mtrheadlight.HeadlightConfig#fangsuDoorSound}，全局）
+ * 配置界面「其他 → 门音响」（{@link dev.js.mtrheadlight.decor.DecorConfig#fangsuDoorSound}，全局）
  * 与方块实体 NBT 里的单块开关（刷子切）。
  */
 public class FangsuPsdDoorBlock extends BlockPSDAPGDoorBase {
@@ -403,7 +403,7 @@ public class FangsuPsdDoorBlock extends BlockPSDAPGDoorBase {
         /**
          * 单块开关：这扇门的开关门音效。默认开，刷子右键切，存 NBT。
          *
-         * <p>它和全局开关（{@code HeadlightConfig#fangsuDoorSound}）是<b>与</b>关系：
+         * <p>它和全局开关（{@code DecorConfig#fangsuDoorSound}）是<b>与</b>关系：
          * 两个都开才响。这里存「这块门自己的意见」，全局开关关掉时不需要遍历所有门去改。
          */
         private boolean doorSound = true;
@@ -488,11 +488,9 @@ public class FangsuPsdDoorBlock extends BlockPSDAPGDoorBase {
          * @param world 方块所在世界（客户端）
          * @param pos   门的位置
          * @param globalEnabled 配置界面「其他 → 门音响」的全局开关值
-         *                      （{@code HeadlightConfig#fangsuDoorSound}）。<b>由调用方从
-         *                      {@code MtrHeadlightClient} 读好再传进来</b>：那个类引用了
-         *                      {@code net.minecraft.client.MinecraftClient}，而这个方块实体
-         *                      在专用服务端上也会被创建 —— 直接在这里引用它会把客户端类
-         *                      拖进服务端的类解析路径。
+         *                      （{@code DecorConfig#fangsuDoorSound}）。<b>由调用方从
+         *                      {@code DecorConfig} 读好再传进来</b>：配置类本身两端都在，
+         *                      但读配置这件事不属于方块实体的职责，保持这个类只做判定。
          */
                 /**
          * 只做判定，不播放（这个类在专用服务端也会被加载，不能引用客户端类）。

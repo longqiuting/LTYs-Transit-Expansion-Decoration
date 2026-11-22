@@ -104,7 +104,7 @@ import net.minecraft.util.shape.VoxelShape;
  * {@code withFaces=false} 分支。渲染用的完整网格只在客户端、第一次画到的时候才解析（{@link #mesh}）。
  *
  * <h2>由谁调用</h2>
- * <p>{@code LteServer} 在 {@code XiamenTicketGates.register()} 之后调 {@link #register()}；
+ * <p>{@code LteServerDecor} 在 {@code XiamenTicketGates.register()} 之后调 {@link #register()}；
  * 客户端在 {@code XiamenClient} 里调 {@link EyecandyClient#register()}。
  */
 public final class EyecandyBlocks {
@@ -571,7 +571,7 @@ public final class EyecandyBlocks {
     // ------------------------------------------------------------------ 注册
 
     /**
-     * 方块 + 物品 + 方块实体类型 + 两个页签的条目，{@code LteServer} 入口调一次。幂等。
+     * 方块 + 物品 + 方块实体类型 + 两个页签的条目，{@code LteServerDecor} 入口调一次。幂等。
      *
      * <p>页签：厦门那 25 件追加进 {@code mtrlte:core}（注册顺序在别的模块之后，所以排在页签末尾），
      * 南普陀 34 件进自己新开的 {@code mtrlte:nanputuo_decor}。

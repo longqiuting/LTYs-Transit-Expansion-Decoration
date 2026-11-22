@@ -1,8 +1,0 @@
-{
-	"type": "minecraft:stonecutting",
-	"ingredient": {
-		"item": "mtrlte:railing_glass_flat"
-	},
-	"result": "mtrlte:railing_glass_corner_mirror",
-	"count": 1
-}

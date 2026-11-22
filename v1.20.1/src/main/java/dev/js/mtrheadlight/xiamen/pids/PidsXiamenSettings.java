@@ -37,9 +37,8 @@ import net.fabricmc.loader.api.FabricLoader;
  * 站台 / 页码 / 广告序号是<b>每块屏</b>的（在方块实体里，跟着世界存档走），
  * 由刷子打开的 {@link PidsXiamenConfigScreen} 改。
  *
- * <h2>为什么单独一份 JSON，而不是写进 {@code HeadlightConfig}</h2>
- * {@code HeadlightConfig} 在 {@code common/}，四个版本共用 —— 只给 1.20.1 加字段会让别的版本跟着变。
- * 这份开关只在 1.20.1 的 PIDS 渲染里读，所以放在本包自己的文件里：
+ * <h2>为什么单独一份 JSON</h2>
+ * 这几个开关只在 1.20.1 的 PIDS 渲染里读，和方块本身的 NBT 无关，所以放在本包自己的文件里：
  * <pre>{@code
  *   config/lte_xiamen_pids.json
  *   { "localTime": true, "arriving": true, "advertisements": true, "lineStrip": true,

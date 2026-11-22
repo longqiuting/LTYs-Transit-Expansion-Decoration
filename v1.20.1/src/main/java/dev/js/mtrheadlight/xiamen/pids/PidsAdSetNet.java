@@ -59,7 +59,7 @@ public final class PidsAdSetNet {
     private PidsAdSetNet() {
     }
 
-    /** 服务端接收器 + 进服快照。由 {@code LteServer} 调一次。 */
+    /** 服务端接收器 + 进服快照。由 {@code LteServerDecor} 调一次。 */
     public static void register() {
         if (registered) {
             return;

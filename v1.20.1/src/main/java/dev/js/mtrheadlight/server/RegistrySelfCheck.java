@@ -11,7 +11,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
 
 /**
@@ -35,7 +34,7 @@ import net.minecraft.util.Identifier;
  * 未注册的方块查 id 拿到的是<b>默认 id</b>（BLOCK 是有默认值的注册表，默认 = {@code minecraft:air}），
  * 于是不管漏了几个、是哪几个，崩溃信息里全是 {@code Block{minecraft:air}}。
  *
- * <h2>本类做三件事</h2>
+ * <h2>本类做两件事</h2>
  * <ol>
  *   <li>{@link #reportBlocks}：遍历 {@code Registries.BLOCK}，数出总数 N，并把「默认态是空气」的方块
  *       连类名一起 WARN（{@code [lte] unregistered block: class=…}），末尾一行
@@ -43,10 +42,8 @@ import net.minecraft.util.Identifier;
  *   <li>{@link #purgePending}：读「待绑定」表 —— 表里的方块<b>根本不在注册表里</b>，
  *       遍历注册表看不到它们，必须走这张表。点名（类名 + 默认态）后把残留引用删掉：
  *       这些实例除了这张表没有任何引用（不在注册表、也不在任何字段里），留着只会让冻结校验抛，
- *       删掉之后服务端能正常起到 {@code Done}；</li>
- *   <li>{@link #onFreeze}：由 {@code SimpleRegistryFreezeMixin} 在
- *       {@code SimpleRegistry.freeze()} 的 HEAD 调用 —— 这是<b>冻结前最后的位置</b>，
- *       此时所有模组的注册都已完成，任何模组的漏网方块都会被点名。</li>
+ *       删掉之后服务端能正常起到 {@code Done}。（注册表冻结前的全表钩子随优化侧的
+ *       {@code SimpleRegistryFreezeMixin} 一起删掉了，现在只在每个方块模块注册失败时清一次。）</li>
  * </ol>
  *
  * <h2>为什么用反射读私有字段</h2>
@@ -193,25 +190,7 @@ public final class RegistrySelfCheck {
         }
     }
 
-    /**
-     * 由 {@code SimpleRegistryFreezeMixin} 在 {@code freeze()} 的 HEAD 调用。
-     *
-     * <p>只处理方块注册表：别的注册表（物品 / 声音 / 方块实体类型）同理可查，
-     * 但本条崩溃只关心方块，少做一次全表扫描更便宜。
-     */
-    public static void onFreeze(final Registry<?> registry) {
-        if (registry != Registries.BLOCK) {
-            return;
-        }
-        try {
-            purgePending("freeze");
-        } catch (final Throwable t) {
-            // 自检失败绝不能让 freeze 跟着失败。
-            LteLog.LOGGER.debug("[lte] freeze-time block self-check failed: {}", t.toString());
-        }
-    }
-
-    /** 取「待绑定」表（{@code null} = 已经冻结过，或读不到）。 */
+    // ------------------------------------------------------------------ 待绑定表（真正的漏网户）
     @SuppressWarnings("unchecked")
     private static Map<Object, Object> pendingTable(final Object registry) {
         final Field field = findPendingField(registry.getClass());

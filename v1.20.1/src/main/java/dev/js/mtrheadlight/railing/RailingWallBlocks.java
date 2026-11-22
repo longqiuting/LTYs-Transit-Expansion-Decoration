@@ -29,7 +29,7 @@ import net.minecraft.util.Identifier;
  * 和 MSD 一样<b>任意位置可放</b>：不检查背后有没有墙，也不因为墙/邻居被拆而掉落。
  *
  * <p>物品按 {@link #VARIANTS} 的顺序进 {@code mtrlte:core}（「厦门风格物件 / Xiamen Style Objects」）页签。
- * 那个页签由 {@code XiamenObjects#register()} 建，所以 {@code LteServer} 里本类的调用排在它后面。
+ * 那个页签由 {@code XiamenObjects#register()} 建，所以 {@code LteServerDecor} 里本类的调用排在它后面。
  */
 public final class RailingWallBlocks {
 
@@ -108,7 +108,7 @@ public final class RailingWallBlocks {
     private RailingWallBlocks() {
     }
 
-    /** 方块 + 方块物品 + 页签归类，{@code LteServer} 入口调一次。 */
+    /** 方块 + 方块物品 + 页签归类，{@code LteServerDecor} 入口调一次。 */
     public static void register() {
         if (registered) {
             return;

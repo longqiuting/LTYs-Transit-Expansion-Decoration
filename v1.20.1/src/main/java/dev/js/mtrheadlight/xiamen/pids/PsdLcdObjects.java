@@ -26,8 +26,8 @@ import net.minecraft.util.Identifier;
  *   <tr><td>方块实体</td><td>{@code mtrlte:psd_lcd_xiamen}</td></tr>
  * </table>
  *
- * <p>进「厦门风格物件」页签，排在厦门 PIDS 之后（由 {@code LteServer} 的调用顺序决定）。
- * 由 {@code LteServer} 在 {@link PidsXiamenObjects#register()} 之后调用 ——
+ * <p>进「厦门风格物件」页签，排在厦门 PIDS 之后（由 {@code LteServerDecor} 的调用顺序决定）。
+ * 由 {@code LteServerDecor} 在 {@link PidsXiamenObjects#register()} 之后调用 ——
  * 方块实体、界面、广告表都复用厦门 PIDS 那一套。
  */
 public final class PsdLcdObjects {

@@ -18,7 +18,7 @@ import net.minecraft.util.Identifier;
  * 挂顶 DEP 挂杆 {@code mtrlte:dep_pole} 的注册入口（两端都要跑）。
  *
  * <p>方块 / 物品 / 方块实体类型用<b>同一个</b> id —— 和 {@code dep_on_wall} / {@code dep_on_roof} 一个规矩。
- * 由 {@code LteServer} 在 {@link DepOnRoofObjects#register()} 之后调用（也就是 DEP 那三件连着排），
+ * 由 {@code LteServerDecor} 在 {@link DepOnRoofObjects#register()} 之后调用（也就是 DEP 那三件连着排），
  * 物品进「厦门风格物件」页签（{@link XiamenObjects#CORE_TAB_ID}）。
  *
  * <p>渲染资源：几何 {@code assets/mtrlte/rawmodels/dep_pole.json}、贴图

@@ -37,7 +37,7 @@ import net.minecraft.util.Identifier;
  * 就像本模组的屏蔽门那样，{@code BlockEntityType} 本来就是一个类型对多块方块，
  * 拆成两个只会多一个 id，没有任何好处。
  *
- * <p>由 {@code LteServer} 在 {@code XiamenObjects.register()} 之后调用（两端都要跑）。
+ * <p>由 {@code LteServerDecor} 在 {@code XiamenObjects.register()} 之后调用（两端都要跑）。
  */
 public final class PidsXiamenObjects {
 

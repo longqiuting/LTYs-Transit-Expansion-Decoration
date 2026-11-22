@@ -147,7 +147,7 @@ public final class FangsuPsdBlocks {
         return ITEMS.get(new Identifier(NAMESPACE, def.id()));
     }
 
-    /** 方块 + 物品 + 方块实体 + 页签条目。{@code LteServer} 在 eyecandy 之后调一次。 */
+    /** 方块 + 物品 + 方块实体 + 页签条目。{@code LteServerDecor} 在 eyecandy 之后调一次。 */
     public static void register() {
         if (registered) {
             return;

@@ -132,7 +132,7 @@ public final class RailingGlassBlocks {
     private RailingGlassBlocks() {
     }
 
-    /** 方块 + 方块物品 + 页签归类，{@code LteServer} 入口调一次（排在 {@code RailingWallBlocks} 之后）。 */
+    /** 方块 + 方块物品 + 页签归类，{@code LteServerDecor} 入口调一次（排在 {@code RailingWallBlocks} 之后）。 */
     public static void register() {
         if (registered) {
             return;

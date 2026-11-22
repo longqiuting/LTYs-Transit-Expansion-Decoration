@@ -28,7 +28,7 @@ import net.minecraft.util.Identifier;
  * 都按内容框裁到 16×16（保比例、居中、NEAREST 采样、alpha 不动），转换脚本见
  * {@code temp/Scale.java}。
  *
- * <p>{@link #register()} 幂等，两个页签的注册类（{@code signal.LteCoreItems} /
+ * <p>{@link #register()} 幂等，两个页签的注册类（{@code decor.LtedCoreItems} /
  * {@code xiamen.XiamenObjects}）各自先调一次，所以入口里的调用顺序无所谓。
  */
 public final class TabIcons {

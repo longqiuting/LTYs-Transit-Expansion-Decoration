@@ -41,7 +41,7 @@ import net.minecraft.util.Identifier;
  *       售票机切到节能关机（{@code ui=eco}）时整机断电，两段都不发光。</li>
  * </ul>
  *
- * <p>由 {@code LteServer} 在 {@code StationSignObjects.register()} 之后调用，两个物品进
+ * <p>由 {@code LteServerDecor} 在 {@code StationSignObjects.register()} 之后调用，两个物品进
  * 「厦门风格物件」页签（{@link XiamenObjects#CORE_TAB_ID}）。
  */
 public final class XiamenMachines {

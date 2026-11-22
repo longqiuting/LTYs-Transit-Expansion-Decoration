@@ -2,7 +2,6 @@
 package dev.js.mtrheadlight.xiamen.fangsu;
 
 import dev.js.mtrheadlight.client.RenderDistance;
-import dev.js.mtrheadlight.MtrHeadlightClient;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
@@ -61,7 +60,8 @@ public class FangsuPsdRenderer implements BlockEntityRenderer<FangsuPsdDoorBlock
         // （每扇门每一列一次）。全局开关在这里读好再传进去 —— 方块实体本身不引用客户端类
         // （它在专用服务端上也会被创建），见 FangsuPsdDoorEntity#tickDoorSound。
         FangsuPsdSoundsClient.play(entity.getPos(),
-                entity.tickDoorSound(world, entity.getPos(), MtrHeadlightClient.config().fangsuDoorSound));
+                entity.tickDoorSound(world, entity.getPos(),
+                        dev.js.mtrheadlight.decor.DecorConfig.get().fangsuDoorSound));
         final float progress = entity.progress(world == null ? 0L : world.getTime(), tickDelta);
         FangsuPsdDraw.draw(block.def(), progress, FangsuPsdDraw.facingOf(state),
                 matrices, vertexConsumers, light, overlay);

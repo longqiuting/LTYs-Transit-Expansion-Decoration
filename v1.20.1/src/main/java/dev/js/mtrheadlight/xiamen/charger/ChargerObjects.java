@@ -50,7 +50,7 @@ import net.minecraft.util.Identifier;
  * <p>{@code data/mtrlte/loot_tables/blocks/charger_top.json} 与 {@code charger_bottom.json}
  * 各自掉自己（原版 {@code Block#onStateReplaced} 走战利品表，没有手写 {@code onBreak}）。
  *
- * <p>由 {@code LteServer} 在厦门售票机 / 余额查询机之后调用；条目进
+ * <p>由 {@code LteServerDecor} 在厦门售票机 / 余额查询机之后调用；条目进
  * 「厦门风格物件」页签（{@link XiamenObjects#CORE_TAB_ID}）。
  */
 public final class ChargerObjects {

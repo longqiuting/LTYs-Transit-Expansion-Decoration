@@ -45,7 +45,7 @@ import net.minecraft.util.Identifier;
  *
  * <h2>进哪个创造页签</h2>
  * <p>两个物品都进 {@code mtrlte:core}（「厦门风格物件」），排在墙上扶手 / 玻璃扶手之后。页签由
- * {@link XiamenObjects#register()} 建，所以 {@code LteServer} 里本类的调用排在它后面
+ * {@link XiamenObjects#register()} 建，所以 {@code LteServerDecor} 里本类的调用排在它后面
  * （页签不存在时 {@code modifyEntriesEvent} 会抛异常，这里也包了一层 try/catch）。
  */
 public final class DecorBlocks {
@@ -84,7 +84,7 @@ public final class DecorBlocks {
         return marblePlatformItem;
     }
 
-    /** 方块 + 方块物品 + 创造页签条目，{@code LteServer} 入口调一次。 */
+    /** 方块 + 方块物品 + 创造页签条目，{@code LteServerDecor} 入口调一次。 */
     public static void register() {
         if (registered) {
             return;

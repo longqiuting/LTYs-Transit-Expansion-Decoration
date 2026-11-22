@@ -1,9 +1,11 @@
 package dev.js.mtrheadlight;
 
+import dev.js.mtrheadlight.decor.DecorConfig;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
@@ -28,6 +30,11 @@ import java.util.function.IntConsumer;
 public final class ColorPickerScreen extends Screen {
     private static final Identifier OPTIONS_BACKGROUND =
             new Identifier("textures/gui/options_background.png");
+
+    /** 翻译键 -> 文本（本类自带的单行工具；原先借的是 {@code ParameterScreen} 的同名方法）。 */
+    static MutableText tr(final String key, final Object... args) {
+        return Text.translatable(key, args);
+    }
 
     private static final int COLS = 8;
     private static final int ROWS = 5;
@@ -89,7 +96,7 @@ public final class ColorPickerScreen extends Screen {
      */
     public ColorPickerScreen(final Screen parentScreen, final String label, final int initialRgb,
                              final IntConsumer onDone) {
-        super(ParameterScreen.tr("color.title", label));
+        super(tr("color.title", label));
         this.parentScreen = parentScreen;
         this.onDone = onDone;
         this.selected = initialRgb & 0xFFFFFF;
@@ -114,12 +121,12 @@ public final class ColorPickerScreen extends Screen {
         this.buttonY = this.hexY + HEX_H + 14;
 
         // ---- hex field: same width as the grid, label in front of it ----
-        final int labelW = this.textRenderer.getWidth(ParameterScreen.tr("color.hex").getString()) + 8;
+        final int labelW = this.textRenderer.getWidth(tr("color.hex").getString()) + 8;
         this.hexField = new TextFieldWidget(this.textRenderer, this.gridX + labelW, this.hexY,
-                this.gridW - labelW, HEX_H, ParameterScreen.tr("color.hex"));
+                this.gridW - labelW, HEX_H, tr("color.hex"));
         this.hexField.setMaxLength(7);
         this.hexField.setTextPredicate(text -> text.matches("#?[0-9a-fA-F]{0,6}"));
-        this.hexField.setText(HeadlightConfig.formatColor(this.selected));
+        this.hexField.setText(DecorConfig.formatColor(this.selected));
         this.hexField.setChangedListener(text -> {
             final Integer rgb = parseHex(text);
             if (rgb != null) {
@@ -132,8 +139,8 @@ public final class ColorPickerScreen extends Screen {
 
         final int bw = Math.max(64, Math.min(96, (this.gridW - GAP) / 2));
         final int bx = (this.width - (bw * 2 + GAP)) / 2;
-        addButton(bx, this.buttonY, bw, BTN_H, ParameterScreen.tr("btn.done"), button -> complete());
-        addButton(bx + bw + GAP, this.buttonY, bw, BTN_H, ParameterScreen.tr("btn.cancel"),
+        addButton(bx, this.buttonY, bw, BTN_H, tr("btn.done"), button -> complete());
+        addButton(bx + bw + GAP, this.buttonY, bw, BTN_H, tr("btn.cancel"),
                 button -> this.close());
     }
 
@@ -204,7 +211,7 @@ public final class ColorPickerScreen extends Screen {
                 this.hexInvalid = false;
                 if (this.hexField != null) {
                     // setText fires the changed listener, which re-selects the same value.
-                    this.hexField.setText(HeadlightConfig.formatColor(hit));
+                    this.hexField.setText(DecorConfig.formatColor(hit));
                 }
                 return true;
             }
@@ -217,7 +224,7 @@ public final class ColorPickerScreen extends Screen {
         if (this.hexField != null && this.hexField.isFocused()
                 && (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER)) {
             if (applyHex() && this.hexField != null) {
-                this.hexField.setText(HeadlightConfig.formatColor(this.selected));
+                this.hexField.setText(DecorConfig.formatColor(this.selected));
             }
             return true;
         }
@@ -242,7 +249,7 @@ public final class ColorPickerScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
 
         drawCentered(context, this.title, this.width / 2, 20, 0xFFFFFF);
-        drawCentered(context, ParameterScreen.tr("color.hint"), this.width / 2, 34, 0xB0B0B0);
+        drawCentered(context, tr("color.hint"), this.width / 2, 34, 0xB0B0B0);
 
         final int rgb = this.selected & 0xFFFFFF;
 
@@ -251,7 +258,7 @@ public final class ColorPickerScreen extends Screen {
                 this.previewY + PREVIEW_H + 1, FRAME);
         context.fill(this.gridX, this.previewY, this.gridX + this.gridW, this.previewY + PREVIEW_H,
                 0xFF000000 | rgb);
-        drawCentered(context, Text.literal(HeadlightConfig.formatColor(rgb)),
+        drawCentered(context, Text.literal(DecorConfig.formatColor(rgb)),
                 this.gridX + this.gridW / 2, this.previewY + 2,
                 luminance(rgb) > 140 ? 0xFF101010 : 0xFFFFFFFF);
 
@@ -281,10 +288,10 @@ public final class ColorPickerScreen extends Screen {
         }
 
         // ---- hex row label + validation message ----
-        context.drawTextWithShadow(this.textRenderer, ParameterScreen.tr("color.hex"),
+        context.drawTextWithShadow(this.textRenderer, tr("color.hex"),
                 this.gridX, this.hexY + (HEX_H - 8) / 2, 0xFFFFFF);
         if (this.hexInvalid) {
-            drawCentered(context, ParameterScreen.tr("color.hexInvalid"),
+            drawCentered(context, tr("color.hexInvalid"),
                     this.gridX + this.gridW / 2, this.hexY + HEX_H + 2, 0xFF5555);
         }
     }

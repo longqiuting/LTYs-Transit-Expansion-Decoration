@@ -19,8 +19,8 @@ import java.util.Map;
  * LTED（装饰侧）自己的配置：<b>线路条带与门灯配色</b>。
  *
  * <h2>为什么从这里开始拆</h2>
- * {@code HeadlightConfig} 在 {@code common/}，四个 MC 版本共用；而线路色覆盖 / 门灯配色只服务
- * 「厦门吊板 · APG 玻璃 · 屏蔽门」这些<b>装饰</b>内容。拆分后 LTE（优化版）不再持有这些字段，
+ * 线路色覆盖 / 门灯配色只服务「厦门吊板 · APG 玻璃 · 屏蔽门」这些<b>装饰</b>内容，原先塞在
+ * 四个 MC 版本共用的 {@code HeadlightConfig} 里。拆分后那份配置随优化侧整体搬去 LTE，
  * LTED 自己带一份，两者各自读写各自的文件。
  *
  * <p>文件：{@code config/mtrlte_decor.json}（{@link #CONFIG_FILE}）。
@@ -28,9 +28,8 @@ import java.util.Map;
  * <h2>向后兼容（一次性迁移）</h2>
  * 旧版本的这些键写在 {@code config/mtrlte.json} 里。本类首次启动、且
  * {@code mtrlte_decor.json} 还不存在时，会去 {@code mtrlte.json}（以及更早的两个旧文件名）
- * 按<b>键名</b>把这几项读出来，写进新文件，并打<b>一行</b> INFO。之后旧文件由
- * {@code HeadlightConfig} 的 Gson 序列化自然丢弃这些键（类里已经没这几个字段了），
- * 下一次保存只写新位置。
+ * 按<b>键名</b>把这几项读出来，写进新文件，并打<b>一行</b> INFO。之后旧文件不再由本模组改写
+ * （优化侧的配置类已经不在这个 jar 里），LTED 也不会把它们写回去。
  *
  * <p>旧键一个都读不到 = 全新安装或已经被迁移过：直接用字段初始值（= 出厂默认）建文件，
  * 不报错、不刷日志。
@@ -48,7 +47,7 @@ public final class DecorConfig {
     /** 旧版本把这些键写在这个文件里。 */
     private static final String LEGACY_FILE = "mtrlte.json";
 
-    /** 改名前的两个旧文件名（{@code HeadlightConfig} 也会从它们迁移，这里一并兜住）。 */
+    /** 改名前的两个旧文件名（老版本用它们存同一批键，这里一并兜住）。 */
     private static final String[] LEGACY_NAMES = {
         "mtr-external-lights.json", "mtr-headlight.json"
     };
@@ -112,6 +111,14 @@ public final class DecorConfig {
      * → 线路名里抽数字。
      */
     public Map<String, String> doorLightByLine = new LinkedHashMap<>();
+
+    /**
+     * 方速屏蔽门（搬运版）开 / 关门音效的<b>全局总开关</b>。
+     *
+     * <p>关掉这里 = 全地图的门一并不响，但不会改写任何一块门的 NBT —— 重新打开就回到各自的设置。
+     * 默认开。原先在优化侧的全局配置里，因为它只影响装饰门方块，拆分时搬到这里。
+     */
+    public boolean fangsuDoorSound = true;
 
     /** 当前生效的一份。永远不会是 {@code null}（渲染线程随时可读）。 */
     private static volatile DecorConfig live = new DecorConfig();
@@ -285,7 +292,7 @@ public final class DecorConfig {
     }
 
     // -----------------------------------------------------------------------------------------
-    // 着色工具（原来在 HeadlightConfig 里，只服务条带 / 门灯，所以跟着搬过来）
+    // 着色工具（只服务条带 / 门灯，所以留在这里）
     // -----------------------------------------------------------------------------------------
 
     /**
