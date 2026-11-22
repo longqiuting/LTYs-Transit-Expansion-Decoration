@@ -9,6 +9,9 @@ temp/
 javac.*.args
 *.log
 
+# 机器迁移中间产物（重映射 jar / 三命名空间映射 / 反编译日志）
+.remap-work/
+
 # 编辑器
 .idea/
 *.iml

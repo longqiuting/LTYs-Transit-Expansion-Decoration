@@ -10,7 +10,10 @@ JAVA_HOME="C:/Program Files/Java/jdk-17" ./forge/gradlew -p forge build
 
 - 映射：`official`（mojmap）
 - 已迁移并注册：`LogoBlock`、`ClockBlock` + `ClockBlockEntity`、`LtedTooltipItem`
+- 机器迁移基线：`src/main/java-gen/`（200 个 .java，由 `../tools/remap-to-mojmap.sh` 从 Fabric jar
+  生成，**不在** Gradle sourceSet 里，重跑会整目录覆盖 —— 不要在里面手改，手改产物放 `src/main/java/`）
 - 编译期 MTR：`libs/MTR-forge-1.20.1-3.6.6.1.jar`（gitignored，需要时从附件拷进来）
 - 完整说明、yarn→mojmap 对照表、工作量评估：`../docs/forge-m4a-toolchain.md`
+- 机器迁移管线与基线报告：`../docs/forge-m4b2-mojmap-baseline.md`
 
 版本组合（实测可用）：Gradle 8.1.1 + ForgeGradle 6.0.24 + Forge 1.20.1-47.4.0 + JDK 17。

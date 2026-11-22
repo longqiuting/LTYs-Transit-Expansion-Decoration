@@ -2,7 +2,7 @@
 // 合并 Fabric + Forge 产物为单个 jar。
 //
 // 前置：先分别构建两侧产物（脚本 tools/merge-single-jar.sh 会按顺序跑）
-//   gradle-8.14 -p v1.20.1 build          (JDK 21 → v1.20.1/build/libs/lted-3.0.0.jar)
+//   gradle-8.14 -p v1.20.1 build          (JDK 21 → v1.20.1/build/libs/LTYs-Transit-Expansion-Decoration-3.0.0.jar)
 //   forge/gradlew -p forge build          (JDK 17 → forge/build/reobfJar/output.jar)
 // 然后：
 //   gradle-8.14 -p merge mergeJars        (JDK 21，Forgix 跑在 Gradle daemon 里)
@@ -33,13 +33,13 @@ version = fabricVersion
 forgix {
     // 合并后 jar 的 group 与文件名（不带 -forge / -fabric 后缀）
     group = 'dev.js.mtrheadlight'
-    mergedJarName = "lted-${fabricVersion}.jar"
+    mergedJarName = "LTYs-Transit-Expansion-Decoration-${fabricVersion}.jar"
     outputDir = 'build/libs'
 
     fabric {
         projectName = 'fabric'                 // settings.gradle 里的空壳子项目名
         // 相对子项目 projectDir（即 ../v1.20.1）定位
-        jarLocation = 'build/libs/lted-3.0.0.jar'
+        jarLocation = 'build/libs/LTYs-Transit-Expansion-Decoration-3.0.0.jar'
     }
 
     forge {
@@ -53,7 +53,7 @@ forgix {
 // 方便重复执行：mergeJars 之前先确认两侧产物在，不在就直接报错，不要产出空包。
 tasks.named('mergeJars') {
     doFirst {
-        def fabricJar = new File(project(':fabric').projectDir, 'build/libs/lted-3.0.0.jar')
+        def fabricJar = new File(project(':fabric').projectDir, 'build/libs/LTYs-Transit-Expansion-Decoration-3.0.0.jar')
         def forgeJar = new File(project(':forge').projectDir, 'build/reobfJar/output.jar')
         [fabricJar, forgeJar].each {
             if (!it.isFile() || it.length() == 0) {
