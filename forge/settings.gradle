@@ -1,0 +1,13 @@
+pluginManagement {
+    repositories {
+        // 国内可直连的 Forge maven 镜像（creeperhost 完整镜像了 maven.minecraftforge.net）。
+        // 先镜像后官方：官方源在部分网络下会 30s 读超时，放在后面只作兜底。
+        maven { name = 'ForgeMirror'; url = 'https://maven.creeperhost.net' }
+        maven { name = 'Forge'; url = 'https://maven.minecraftforge.net/' }
+        maven { name = 'Mojang'; url = 'https://libraries.minecraft.net/' }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'lted-forge-1.20.1'

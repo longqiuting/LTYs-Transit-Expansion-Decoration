@@ -17,3 +17,6 @@ javac.*.args
 # 本地凭据（绝不入库）
 *.token
 .env
+
+# Forge 侧编译期依赖（86MB，不入库）
+forge/libs/

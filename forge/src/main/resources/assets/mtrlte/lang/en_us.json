@@ -1,0 +1,6 @@
+{
+  "block.mtrlte.clock": "LTE Clock",
+  "block.mtrlte.lte_logo": "LTE Logo",
+  "item.mtrlte.lte_tool": "LTE Tool",
+  "tooltip.mtrlte.lte_tool": "Forge toolchain probe item"
+}

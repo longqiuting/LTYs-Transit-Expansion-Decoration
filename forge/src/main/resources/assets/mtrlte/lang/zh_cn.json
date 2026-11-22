@@ -1,0 +1,6 @@
+{
+  "block.mtrlte.clock": "LTE 时钟",
+  "block.mtrlte.lte_logo": "LTE 标志",
+  "item.mtrlte.lte_tool": "LTE 工具",
+  "tooltip.mtrlte.lte_tool": "Forge 工具链验证用物品"
+}

@@ -1,0 +1,85 @@
+// LTE 的 Forge 侧模块（M4a 工具链验证）。
+// 与 v1.20.1/（Fabric + Loom）完全隔离：各自是独立 root project，互不引用对方的构建脚本。
+// 构建：在仓库根执行  ./gradlew -p forge build   （JAVA_HOME 指向 JDK 17）
+buildscript {
+    repositories {
+        // 镜像优先，官方源兜底（本机直连 maven.minecraftforge.net 会读超时）。
+        maven { name = 'ForgeMirror'; url = 'https://maven.creeperhost.net' }
+        maven { name = 'Forge'; url = 'https://maven.minecraftforge.net/' }
+        maven { name = 'Mojang'; url = 'https://libraries.minecraft.net/' }
+        mavenCentral()
+    }
+    dependencies {
+        // ForgeGradle 6 —— MC 1.20.1 / Forge 47.x 这一代的官方工具链
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.24', changing: true
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'java'
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
+    withSourcesJar()
+}
+
+minecraft {
+    // official = Mojang 官方映射（mojmap）。Forge 1.17+ 的运行期就是 official 名，
+    // 所以这里不能写 yarn / MCP stable。
+    mappings channel: 'official', version: "${project.minecraft_version}"
+}
+
+repositories {
+    maven { name = 'ForgeMirror'; url = 'https://maven.creeperhost.net' }
+    maven { name = 'Forge'; url = 'https://maven.minecraftforge.net/' }
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${project.forge_version}"
+
+    // YMTR 的 Forge 版，只做编译期依赖（运行期由已安装的 MTR 提供）。
+    // 这份 jar 本身已按 mojmap 编译（mtr.Items.BRUSH 的类型就是 net.minecraft.world.item.Item），
+    // 不需要 remap，也不需要 architectury（本轮只用到 mtr.Items）。
+    compileOnly files("libs/MTR-forge-1.20.1-3.6.6.1.jar")
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 17
+}
+
+processResources {
+    inputs.property 'version', project.version
+    // mods.toml 里有中文；Groovy 的 expand 默认按平台编码读（本机 GBK），必须显式 UTF-8，
+    // 否则 jar 里的描述会变成乱码。
+    filteringCharset = 'UTF-8'
+    filesMatching('META-INF/mods.toml') {
+        expand 'version': project.version,
+               'forge_version': project.forge_version,
+               'minecraft_version': project.minecraft_version
+    }
+    // 许可 / 来源声明随分发物走，与 Fabric 侧一致。
+    from(file('../LICENSE')) { into 'META-INF' rename { 'LICENSE-mtrlte' } }
+    from(file('../NOTICE.md')) { into 'META-INF' rename { 'NOTICE-mtrlte.md' } }
+}
+
+jar {
+    manifest {
+        attributes([
+                'Specification-Title'     : 'lted',
+                'Specification-Vendor'    : 'LTE',
+                'Specification-Version'   : '1',
+                'Implementation-Title'    : project.name,
+                'Implementation-Version'  : project.version,
+                'Implementation-Vendor'   : 'LTE'
+        ])
+    }
+}

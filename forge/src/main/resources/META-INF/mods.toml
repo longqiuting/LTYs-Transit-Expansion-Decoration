@@ -1,0 +1,37 @@
+modLoader = "javafml"
+loaderVersion = "[47,)"
+license = "MIT"
+issueTrackerURL = "https://github.com/longqiuting/lted/issues"
+
+[[mods]]
+modId = "mtrlte"
+version = "${version}"
+displayName = "LTE (Forge, 1.20.1)"
+authors = "LTE"
+description = '''
+LTE 的 Forge 侧构建。M4a 阶段只用于验证工具链：一个方块（lte_logo）、
+一个方块 + 方块实体（clock）与一个无渲染物品。
+'''
+
+[[dependencies.mtrlte]]
+modId = "forge"
+mandatory = true
+versionRange = "[47,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.mtrlte]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.20.1,1.20.2)"
+ordering = "NONE"
+side = "BOTH"
+
+# 运行期由已安装的 MTR Forge 版提供；编译期只用了 mtr.Items.BRUSH，
+# 所以这里不强制依赖，缺 MTR 也不会让模组加载失败。
+[[dependencies.mtrlte]]
+modId = "mtr"
+mandatory = false
+versionRange = "[3.6,)"
+ordering = "AFTER"
+side = "BOTH"

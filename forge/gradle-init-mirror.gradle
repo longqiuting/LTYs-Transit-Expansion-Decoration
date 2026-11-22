@@ -1,0 +1,33 @@
+// ForgeGradle 内部会自己注册 maven.minecraftforge.net（userdev / MCPConfig 元数据）。
+// 本机直连该域名会 30s 读超时，用这个 init script 把它的仓库 URL 改到镜像上
+// （只改 URL，不清空、不删除任何仓库）：
+//
+//   ./forge/gradlew -p forge build --init-script "D:/MC-MTR-JS/mtr-headlight/forge/gradle-init-mirror.gradle"
+//
+// 注意：`-p forge` 时 --init-script 的相对路径是相对 forge/ 解析的，所以这里用绝对路径。
+// 一般情况下不需要它（build.gradle 里已经镜像优先 + 官方兜底）。
+def MIRROR = 'https://maven.creeperhost.net'
+
+def rewrite = { repo ->
+    if (repo instanceof org.gradle.api.artifacts.repositories.MavenArtifactRepository) {
+        def url = repo.url.toString()
+        if (url.contains('maven.minecraftforge.net')) {
+            repo.url = MIRROR
+        }
+    }
+}
+
+gradle.settingsEvaluated { settings ->
+    settings.pluginManagement.repositories.all(rewrite)
+}
+
+gradle.beforeProject { project ->
+    project.buildscript.repositories.all(rewrite)
+    project.repositories.all(rewrite)
+}
+
+// ForgeGradle 在自己的 afterEvaluate 里加仓库，所以在每个 project 评估完再扫一遍。
+gradle.afterProject { project ->
+    project.buildscript.repositories.all(rewrite)
+    project.repositories.all(rewrite)
+}
