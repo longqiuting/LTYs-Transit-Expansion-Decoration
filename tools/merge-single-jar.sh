@@ -39,7 +39,7 @@ fi
 echo "== [3/3] Forgix 合并（JDK 21 + Gradle 8.14）"
 JAVA_HOME="$JDK21" "$GRADLE" -p merge mergeJars --console=plain
 
-OUT="merge/build/libs/LTYs-Transit-Expansion-Decoration-3.0.0.jar"
+OUT="merge/build/libs/$(grep -E '^archives_base_name=' v1.20.1/gradle.properties | cut -d= -f2)-$(grep -E '^mod_version=' v1.20.1/gradle.properties | cut -d= -f2).jar"
 echo
 echo "产物：$OUT"
 ls -l "$OUT"
