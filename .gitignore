@@ -24,3 +24,5 @@ javac.*.args
 # Forge 侧编译期依赖（86MB，不入库）
 forge/libs/
 forge/run/
+libs/*.jar
+_legacy-single/
