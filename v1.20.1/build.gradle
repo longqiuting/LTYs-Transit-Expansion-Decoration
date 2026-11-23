@@ -36,7 +36,13 @@ loom {
 sourceSets {
     main {
         java { srcDirs = ['../common/src/main/java', 'src/main/java'] }
-        resources { srcDirs = ['src/main/resources'] }
+        resources {
+            srcDirs = ['src/main/resources']
+            // hd/ 是原清晰度贴图的「备份源」（tools/strip-textures.sh 的输入），
+            // 游戏里用不到 —— 玩家要的是 resourcepacks/lted_hd/ 那个内置包，
+            // 不排除的话同一份原图会在 jar 里存两遍（+18 MB）。
+            exclude 'hd/**'
+        }
     }
 }
 

@@ -180,6 +180,7 @@ const IMPORT_RULES = [
   ['import net.fabricmc.fabric.api.networking.v1.PlayerLookup;', `import ${PLATFORM}Net;`],
   ['import net.fabricmc.loader.api.FabricLoader;', `import ${PLATFORM}Env;`],
   ['import net.fabricmc.fabric.api.resource.SimpleResourceReloadListener;', `import ${PLATFORM}Resources;`],
+  ['import dev.js.mtrheadlight.platform.BuiltinPacks;', `import ${PLATFORM}BuiltinPacks;`],
   ['import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;', 'import net.minecraft.commands.CommandSourceStack;'],
   // 纯 Fabric 事件的 import：直接去掉（调用点已改写）
   ['import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;', null],
@@ -254,6 +255,7 @@ const NEEDED_IMPORTS = [
   [/\bNet\./, `import ${PLATFORM}Net;`],
   [/\bEnv\./, `import ${PLATFORM}Env;`],
   [/\bResources\./, `import ${PLATFORM}Resources;`],
+  [/\bBuiltinPacks\./, `import ${PLATFORM}BuiltinPacks;`],
   [/\bCmds\./, `import ${PLATFORM}Cmds;`],
   [/\bimplements ClientInit\b/, `import ${PLATFORM}ClientInit;`],
   [/\bimplements CommonInit\b/, `import ${PLATFORM}CommonInit;`],

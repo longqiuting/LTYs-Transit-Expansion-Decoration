@@ -71,6 +71,8 @@ sourceSets {
             //   mtrlte.mtrdecor.mixins.json —— 目标是 yarn 名，Forge 侧用 mtrlte.forge.mixins.json
             exclude 'fabric.mod.json'
             exclude 'mtrlte.mtrdecor.mixins.json'
+            // 与 Fabric 侧一致：hd/ 只是原图备份，不进 jar（原图由 resourcepacks/lted_hd/ 携带）
+            exclude 'hd/**'
         }
     }
 }

@@ -13,6 +13,7 @@ import dev.js.mtrheadlight.xiamen.fangsu.FangsuPsdClient;
 import dev.js.mtrheadlight.xiamen.machine.XiamenMachinesClient;
 import dev.js.mtrheadlight.xiamen.pids.PidsXiamenClient;
 import dev.js.mtrheadlight.xiamen.pids.PsdLcdClient;
+import dev.js.mtrheadlight.platform.BuiltinPacks;
 import dev.js.mtrheadlight.xiamen.sign.WallSignClient;
 import net.fabricmc.api.ClientModInitializer;
 
@@ -37,10 +38,14 @@ public final class LtedClient implements ClientModInitializer {
         // ① 兜底读一次装饰侧配置（main 入口已经迁移过；这里只保证单独走到这一侧时也有一份）。
         DecorConfig.load();
 
-        // ② 客户端指令：只剩装饰相关的 /mtr_lte dep（倒数器读数方向 + 取证）。
+        // ② 内置高清资源包（原清晰度贴图，默认关闭、玩家在资源包界面手动勾选）。
+        //    必须在资源包发现之前登记，客户端初始化阶段正是这个时机。
+        BuiltinPacks.register();
+
+        // ③ 客户端指令：只剩装饰相关的 /mtr_lte dep（倒数器读数方向 + 取证）。
         Commands.register();
 
-        // ③ 以下是装饰类，顺序不变。
+        // ④ 以下是装饰类，顺序不变。
         new XiamenClient().onInitializeClient();
         new WallSignClient().onInitializeClient();
         new RailingGlassClient().onInitializeClient();
