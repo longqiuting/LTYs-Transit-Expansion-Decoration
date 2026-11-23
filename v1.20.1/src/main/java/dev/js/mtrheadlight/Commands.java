@@ -8,7 +8,6 @@ import dev.js.mtrheadlight.xiamen.dep.DepOnWallOrient;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 
 /**
@@ -99,11 +98,26 @@ public final class Commands {
                                         StringArgumentType.getString(context, "mode")))));
     }
 
-    /** {@code /mtr_lte} —— 打开 LTED 仪表板（与仪表板物品右键同一条路径）。 */
+    /**
+     * {@code /mtr_lte} —— 打开 LTED 仪表板（与仪表板物品右键同一条路径）。
+     *
+     * <p>成败都<b>只报一次</b>，而且是在界面真的开起来（或真的失败）之后才报 —— 从前这里是
+     * 「先排任务、再无条件报『已打开』」，任务里抛什么都看不见，玩家只会看到一句成功。
+     * 2026-11-23 的实例日志里就是这么演的：报完「已打开」紧跟一条
+     * {@code Error executing task on Client / Failed to load class file ... ZipException}
+     * （jar 被写坏），聊天栏依旧只显示「已打开」。
+     */
     private static int openDashboard(final FabricClientCommandSource source) {
-        final MinecraftClient client = MinecraftClient.getInstance();
-        client.send(() -> client.setScreen(new LtedDashboardScreen(client.currentScreen)));
-        source.sendFeedback(Text.literal("LTED：已打开仪表板"));
+        // 线程与时机都交给 LtedDashboardScreen 统一处理（物品右键走同一段）：
+        // 它会把打开动作排到下一帧，并把任何 Throwable 转成一句能发给玩家的话。
+        LtedDashboardScreen.openAsync(failure -> {
+            if (failure == null) {
+                source.sendFeedback(Text.literal("LTED：已打开仪表板"));
+            } else {
+                source.sendFeedback(Text.literal("LTED：打开失败 —— " + failure
+                        + "（详细堆栈见 logs/latest.log 的 [lte] 行）"));
+            }
+        });
         return 1;
     }
 

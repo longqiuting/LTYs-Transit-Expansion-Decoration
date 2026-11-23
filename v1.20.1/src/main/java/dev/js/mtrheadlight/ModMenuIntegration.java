@@ -13,6 +13,14 @@ import dev.js.mtrheadlight.decor.LtedDashboardScreen;
 public final class ModMenuIntegration implements ModMenuApi {
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return parent -> new LtedDashboardScreen(parent);
+        return parent -> {
+            try {
+                return new LtedDashboardScreen(parent);
+            } catch (Throwable t) {
+                // 模组列表里点「配置」不该把整个界面列表带崩：记一行，退回上一页。
+                dev.js.mtrheadlight.LteLog.LOGGER.warn("[lte] could not build the LTED dashboard screen", t);
+                return parent;
+            }
+        };
     }
 }

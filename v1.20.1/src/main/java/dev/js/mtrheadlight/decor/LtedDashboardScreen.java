@@ -75,16 +75,92 @@ public final class LtedDashboardScreen extends Screen {
     }
 
     /**
-     * 打开这一页（物品右键 / 将来的指令入口都走这里）。
+     * 打开这一页（物品右键 / ModMenu 之外的入口都走这里；反射调用的是这个签名，别改）。
      *
-     * <p>{@code client.send}：物品的 {@code use} 可能不在渲染线程上，而建界面只能在客户端线程。
+     * <p>等价于 {@code openAsync(null)}：失败只打日志，没有可以回话的玩家。
      */
     public static void open() {
-        try {
-            final MinecraftClient client = MinecraftClient.getInstance();
-            client.send(() -> client.setScreen(new LtedDashboardScreen(client.currentScreen)));
-        } catch (Throwable t) {
-            LteLog.LOGGER.warn("[lte] could not open the LTED dashboard", t);
+        openAsync(null);
+    }
+
+    /**
+     * 真正打开仪表板 —— 指令、物品、所有入口共用这一段。
+     *
+     * <h2>为什么必须排到下一帧</h2>
+     * Fabric 的客户端指令是在 {@code ChatScreen#keyPressed} 里<b>同步</b>跑的，而那一帧收尾还有一句
+     * {@code MinecraftClient.setScreen(null)}（1.20.1 {@code ChatScreen#keyPressed} 第 38 / 77 条字节码，
+     * 紧跟 {@code sendMessage(...)} 之后）。所以在指令里当场 {@code setScreen} 会被它立刻抹掉。
+     * 反过来说，{@code client.execute(...)} 在客户端线程上是<b>原地执行</b>的
+     * （{@code ThreadExecutor#execute}：{@code shouldExecuteAsync() == false} 时直接 {@code run()}），
+     * 一样会被抹；只有 {@code send(...)} 是「无条件下队」、下一帧再跑，这才活得下来。
+     *
+     * <h2>为什么失败要在这里收</h2>
+     * 从前 {@code open()} 的 try/catch 包着 {@code client.send(...)} 本身 —— 那永远抓不到东西：
+     * 真正会抛的是<b>任务体</b>（{@code new LtedDashboardScreen} 会触发一堆子界面的类加载，
+     * jar 里有一个 entry 读不出来就 {@code RuntimeException: Failed to load class file ...}）。
+     * 任务体抛出去会被 {@code ThreadExecutor#runTasks} 吞成一行
+     * {@code Error executing task on Client}，界面上什么都不发生。所以 try/catch 必须在任务体里。
+     *
+     * @param reporter 任务跑完后的回调：<b>成功传 {@code null}</b>，失败传一句可以直接发给玩家的说明
+     *                 （已含异常类型与根因首行）。回调在客户端线程上执行；传 {@code null} = 只要日志。
+     */
+    public static void openAsync(final java.util.function.Consumer<String> reporter) {
+        final MinecraftClient client = MinecraftClient.getInstance();
+        final Runnable task = () -> {
+            String failure = null;
+            try {
+                final Screen parent = client.currentScreen;
+                final Screen screen = new LtedDashboardScreen(parent);
+                client.setScreen(screen);
+                // 「开起来了又被顶掉」（另一个 setScreen 抢了前台）也要算失败，不能再报成功。
+                if (client.currentScreen != screen) {
+                    failure = "界面被立刻替换掉了（当前："
+                            + (client.currentScreen == null ? "无（游戏界面）"
+                                    : client.currentScreen.getClass().getSimpleName()) + "）";
+                }
+            } catch (Throwable t) {
+                LteLog.LOGGER.warn("[lte] could not open the LTED dashboard", t);
+                failure = summarize(t);
+            }
+            if (failure != null) {
+                LteLog.LOGGER.warn("[lte] LTED dashboard did not stay open: {}", failure);
+            }
+            if (reporter != null) {
+                reporter.accept(failure);
+            }
+        };
+        if (client.isOnThread()) {
+            // 在客户端线程上：只能排队（原地开会本帧被 ChatScreen 收尾抹掉，见上）。
+            client.send(task);
+        } else {
+            // 不在客户端线程上：execute 会自己转成排队，等价于 send，但语义更清楚。
+            client.execute(task);
+        }
+    }
+
+    /** 把异常压成一句能塞进聊天栏的话：{@code 类型: 消息 ← 根因类型: 根因消息}。 */
+    private static String summarize(final Throwable t) {
+        Throwable root = t;
+        for (int depth = 0; depth < 8 && root.getCause() != null && root.getCause() != root; depth++) {
+            root = root.getCause();
+        }
+        final StringBuilder sb = new StringBuilder(t.getClass().getSimpleName());
+        appendMessage(sb, t.getMessage());
+        if (root != t) {
+            sb.append(" ← ").append(root.getClass().getSimpleName());
+            appendMessage(sb, root.getMessage());
+        }
+        return sb.length() > 220 ? sb.substring(0, 217) + "…" : sb.toString();
+    }
+
+    /** 消息只取首行、去掉换行，避免撑爆聊天栏。 */
+    private static void appendMessage(final StringBuilder sb, final String raw) {
+        if (raw == null) {
+            return;
+        }
+        final String first = raw.split("\\R", 2)[0].trim();
+        if (!first.isEmpty()) {
+            sb.append(": ").append(first.length() > 160 ? first.substring(0, 157) + "…" : first);
         }
     }
 
