@@ -20,26 +20,27 @@ import net.minecraftforge.client.event.EntityRenderersEvent;
  * {@link EntityRenderersEvent.RegisterRenderers}。所以这里先把调用排队，
  * 由 {@link #onRegisterRenderers(EntityRenderersEvent.RegisterRenderers)} 统一回放。
  *
- * <p><b>顺序陷阱（实测，Forge 47.4.0 / 1.20.1）：</b>{@code RegisterRenderers} 早于
+ * <p><b>顺序陷阱（实测 Forge 47.4.0 / 1.20.1）：</b>{@code RegisterRenderers} 早于
  * {@code FMLClientSetupEvent}。前者在 {@code Minecraft} 构造器里由
- * {@code ForgeHooksClient.initClientHooks} 发出，后者晚约 0.5 秒。所以「在 FMLClientSetupEvent 里
- * 排队、等 RegisterRenderers 回放」是反的：事件到的时候队列还是空的，19 个 BER 全部静默丢失
- * （方块只剩一块看不见的模型，PIDS / PSD-LCD / 时钟 / 贴墙 logo / eyecandy 全都空白）。
+ * {@code ForgeHooksClient.initClientHooks} 发出，后者晚约 0.5 秒。所以
+ * 「FMLClientSetupEvent 里排队、等 RegisterRenderers 回放」是反的：事件到的时候队列还是空的
+ * （实测 pending=0 / queuedEver=0），随后 19 个 BER 全排进一个永不再回放的队列 →
+ * PIDS / PSD-LCD / 时钟 / 贴墙 logo / eyecandy / 闸机 / 售货机 等只剩一块看不见的方块。
  *
  * <p>修法：把「客户端初始化」也交给这里调度 —— {@link #onRegisterRenderers} 一进来就先
  * {@link #ensureClientInit()}（跑一次 {@code LtedClient#onInitializeClient}，队列因此在这一刻填满），
- * 再回放。{@code ClientBootstrap} 里的 FMLClientSetupEvent 也调同一个方法，谁先到谁填队列，
- * 不依赖 Forge 版本的事件顺序。
+ * 再回放。{@code ClientBootstrap} 的 FMLClientSetupEvent 也调同一个方法，
+ * 谁先到谁填队列，不依赖 Forge 版本的事件顺序。
  */
 public final class Renderers {
 
-    private static final List<Consumer<EntityRenderersEvent.RegisterRenderers>> PENDING = new ArrayList<>();
+    private static final List<Consumer<EntityRenderersEvent.RegisterRenderers>> PENDING_BLOCK_ENTITY =
+            new ArrayList<>();
+    private static final List<Consumer<EntityRenderersEvent.RegisterRenderers>> PENDING_ENTITY = new ArrayList<>();
 
     /** 客户端初始化的真正内容（{@code new LtedClient().onInitializeClient()}），由 ClientBootstrap 注入。 */
     private static Runnable clientInit;
     private static int initState; // 0 = 未跑，1 = 已跑，2 = 失败（不再重试）
-    private static int berCount;
-    private static int entityCount;
 
     /**
      * 事件已经发过之后才来注册的兜底：直接写进 Forge 给的那张表（MC 的静态 map），
@@ -82,11 +83,14 @@ public final class Renderers {
             return;
         }
         if (fired != null) {
-            registerNow(fired, () -> fired.registerBlockEntityRenderer(type, provider), type.toString());
+            try {
+                fired.registerBlockEntityRenderer(type, provider);
+            } catch (Throwable t) {
+                LteLog.LOGGER.error("[lte] late block entity renderer failed: {}", type, t);
+            }
             return;
         }
-        PENDING.add(event -> event.registerBlockEntityRenderer(type, provider));
-        berCount++;
+        PENDING_BLOCK_ENTITY.add(event -> event.registerBlockEntityRenderer(type, provider));
     }
 
     public static <T extends Entity> void entity(EntityType<T> type, EntityRendererProvider<T> provider) {
@@ -95,37 +99,40 @@ public final class Renderers {
             return;
         }
         if (fired != null) {
-            registerNow(fired, () -> fired.registerEntityRenderer(type, provider), type.toString());
+            try {
+                fired.registerEntityRenderer(type, provider);
+            } catch (Throwable t) {
+                LteLog.LOGGER.error("[lte] late entity renderer failed: {}", type, t);
+            }
             return;
         }
-        PENDING.add(event -> event.registerEntityRenderer(type, provider));
-        entityCount++;
+        PENDING_ENTITY.add(event -> event.registerEntityRenderer(type, provider));
     }
 
     public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
         // 先填队列：Forge 1.20.1 里这个事件早于 FMLClientSetupEvent（见类注释）。
         ensureClientInit();
 
-        List<Consumer<EntityRenderersEvent.RegisterRenderers>> queued = new ArrayList<>(PENDING);
-        PENDING.clear();
+        int blockEntity = replay(PENDING_BLOCK_ENTITY, event);
+        int entity = replay(PENDING_ENTITY, event);
+        fired = event;
+        // 一条就够：DEBUG 级别，正式日志里不刷屏（排查 BER 不显示时再开）。
+        LteLog.LOGGER.debug("[lte] renderers registered: {} block entity, {} entity", blockEntity, entity);
+    }
+
+    private static int replay(List<Consumer<EntityRenderersEvent.RegisterRenderers>> pending,
+                              EntityRenderersEvent.RegisterRenderers event) {
+        List<Consumer<EntityRenderersEvent.RegisterRenderers>> queued = new ArrayList<>(pending);
+        pending.clear();
         int ok = 0;
         for (Consumer<EntityRenderersEvent.RegisterRenderers> registration : queued) {
             try {
                 registration.accept(event);
                 ok++;
             } catch (Throwable t) {
-                LteLog.LOGGER.error("[lte] block entity renderer registration failed", t);
+                LteLog.LOGGER.error("[lte] renderer registration failed", t);
             }
         }
-        fired = event;
-        LteLog.LOGGER.info("[lte] renderers registered: {} block entity, {} entity", ok, entityCount);
-    }
-
-    private static void registerNow(EntityRenderersEvent.RegisterRenderers event, Runnable action, String what) {
-        try {
-            action.run();
-        } catch (Throwable t) {
-            LteLog.LOGGER.error("[lte] late renderer registration failed: {}", what, t);
-        }
+        return ok;
     }
 }
