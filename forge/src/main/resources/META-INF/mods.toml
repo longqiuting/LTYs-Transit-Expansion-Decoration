@@ -6,12 +6,11 @@ issueTrackerURL = "https://github.com/longqiuting/lted/issues"
 [[mods]]
 modId = "mtrlte"
 version = "${version}"
-displayName = "LTY's Transit Expansion Decoration (LTED)"
+displayName = "LTY's Transit Expansion Decoration"
 logoFile = "icon.png"
 authors = "厦航在拍车的无名机长 (kigurumiLTY)"
 description = '''
-LTY's Transit Expansion Decoration（LTED）是 MTR 的装饰拓展（Forge 侧）：厦门风格的屏蔽门与站台方块、PIDS / PSD-LCD 显示屏、挂墙与挂顶发车倒数器、站外标志与贴墙标识、时钟、售票机 / 闸机 / 充电宝 / 售卖机 / 安检机等站内设备，以及方速屏蔽门搬运版。
-LTY's Transit Expansion Decoration (LTED) is a decoration pack for Minecraft Transit Railway (Forge side): Xiamen-style platform screen doors and platform blocks, PIDS / PSD-LCD displays, wall and ceiling departure countdowns, station signage, clocks, ticket machines, gates, power-bank and vending machines, security scanners and a ported Fangsu PSD set.
+LTY's Transit Expansion Decoration（LTED）是 Minecraft Transit Railway 的装饰拓展：厦门风格的屏蔽门与站台方块、地铁与 BRT 两种 PIDS、PSD-LCD 吊板、挂墙与挂顶发车倒数器、站外标志与贴墙标识、时钟、售票机 / 闸机 / 安检机 / 充电宝 / 饮料机、RCC 站台方块、厦门与南普陀与角美的装饰物件，以及方速屏蔽门的搬运版。 LTY's Transit Expansion Decoration (LTED) is a decoration add-on for Minecraft Transit Railway: Xiamen-style platform screen doors and platform blocks, two PIDS variants (metro and BRT), PSD-LCD hanging boards, wall and ceiling departure countdowns, station signage, clocks, ticket machines, gates, security scanners, power-bank and drinks machines, RCC platform blocks, Xiamen, Nanputuo and Jiaomei decoration props, and a ported Fangsu platform screen door set.
 '''
 
 [[dependencies.mtrlte]]
