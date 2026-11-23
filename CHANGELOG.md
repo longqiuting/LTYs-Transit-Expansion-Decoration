@@ -12,6 +12,13 @@
 - 配置：`HeadlightConfig` 随优化侧删除；装饰配色与方速门音效开关落在 `DecorConfig`
   （`config/mtrlte_decor.json`），首次启动仍从旧 `config/mtrlte.json` 迁移。
 - 指令只剩 `/mtr_lte dep …`（倒数器读数方向 + 取证），`/mtr_lte` 无参数打开 LTED 仪表板。
+- **仪表板打不开时不再谎报成功**：`/mtr_lte` 与物品右键的打开动作统一走
+  `LtedDashboardScreen.openAsync(...)`；界面真的开起来才回「已打开」，失败回
+  「打开失败 —— <异常类型>: <消息>」并 `LOGGER.warn(..., t)` 打全栈。
+  （2026-11-23 现场：mods 里的 jar 在客户端运行期间被覆盖写坏，
+  `Failed to load class file ... ZipException: invalid LOC header`，
+  任务异常被 `ThreadExecutor.runTasks` 吞掉，聊天栏却显示「已打开」。
+  同步脚本改成 `tools/sync-jar.sh`：有客户端在跑就拒绝、写 tmp 再原子替换、逐副本校验。）
 - 仓库只保留 1.20.1：`v1.18.2/`、`v1.19.2/`、`v1.19.4/` 三个版本目录删除。
 
 ## 2.0.2 — 正式版（1.20.1 / 1.19.4 / 1.19.2 / 1.18.2 四版同步）
