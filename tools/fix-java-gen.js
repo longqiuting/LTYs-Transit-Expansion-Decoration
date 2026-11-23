@@ -268,6 +268,58 @@ function fixDupVar(rel, errLine) {
 /* ---------------- 主流程 ---------------- */
 applyTable();
 
+/* ---------------- 自递归兜底检查（只报警，不改） ---------------- */
+// 反编译会把 `super.read(x)` / `in.read(x)` 掉成裸 `read(x)`：方法体里只剩「用同样实参调自己」
+// 就是死循环（一调用 StackOverflowError）。修法进 TABLE；这里保证重生成回退时不会静默带出崩溃。
+function selfRecursiveMethods(rel) {
+  const src = read(rel);
+  const m = mask(src);
+  const decl = /(?:^|\n)[ \t]*(?:(?:public|private|protected|static|final|synchronized|abstract|native)\s+)*[\w$.<>\[\], ?]+[ \t]+(\w+)[ \t]*\(([^)]*)\)[ \t]*(?:throws [\w., \t]+)?\{/g;
+  const found = [];
+  let hit;
+  while ((hit = decl.exec(m))) {
+    const name = hit[1];
+    const params = hit[2];
+    const open = m.indexOf('{', hit.index + hit[0].length - 1);
+    let depth = 0, close = -1;
+    for (let i = open; i < m.length; i++) {
+      if (m[i] === '{') depth++;
+      else if (m[i] === '}') { depth--; if (depth === 0) { close = i; break; } }
+    }
+    if (close < 0) continue;
+    const pnames = params.split(',').map(s => s.trim()).filter(Boolean).map(s => {
+      const t = s.replace(/@[\w$.]+(\([^)]*\))?/g, '').replace(/\bfinal\b/g, '').trim();
+      const parts = t.split(/\s+/).filter(Boolean);
+      return parts.length ? parts[parts.length - 1].replace(/\[\]$/, '') : '';
+    });
+    if (!pnames.length) continue;
+    const args = pnames.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s*,\\s*');
+    const bodyOne = m.slice(open + 1, close).replace(/\s+/g, ' ').trim();
+    if (new RegExp(`^(?:return |)(?:this\\.)?${name}\\s*\\(\\s*${args}\\s*\\)\\s*;$`).test(bodyOne)) {
+      found.push(`${name}(${pnames.join(', ')})  @ ${rel}:${src.slice(0, hit.index + hit[0].indexOf(name)).split('\n').length}`);
+    }
+  }
+  return found;
+}
+
+(function selfRecursionGuard() {
+  const files = [];
+  (function walk(d) {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.name.endsWith('.java')) files.push(path.relative(GEN, p).replace(/\\/g, '/'));
+    }
+  })(GEN);
+  const bad = [];
+  for (const rel of files) bad.push(...selfRecursiveMethods(rel));
+  if (bad.length) {
+    console.error('!! java-gen 里仍有自递归方法（会 StackOverflowError），请把修法加进表格：');
+    for (const b of bad) console.error('   - ' + b);
+    process.exitCode = 1;
+  }
+})();
+
 if (fs.existsSync(LOG)) {
   const raw = fs.readFileSync(LOG, 'utf8').replace(/\r/g, '');
   const hits = [];

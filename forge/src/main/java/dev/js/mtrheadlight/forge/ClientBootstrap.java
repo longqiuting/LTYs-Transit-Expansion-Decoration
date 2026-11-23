@@ -35,6 +35,10 @@ final class ClientBootstrap {
         modBus.addListener(Renderers::onRegisterRenderers);
         modBus.addListener(Resources::onRegisterClientReloadListeners);
 
+        // BER 注册的排队内容必须在 RegisterRenderers 之前就位；Forge 1.20.1 里那个事件
+        // 反而早于 FMLClientSetupEvent，所以把初始化本身交给 Renderers 调度（谁先到谁跑）。
+        Renderers.setClientInit(() -> new LtedClient().onInitializeClient());
+
         Net.installClientHooks();
         MinecraftForge.EVENT_BUS.addListener(Cmds::onRegisterClientCommands);
 
@@ -46,8 +50,8 @@ final class ClientBootstrap {
     }
 
     private static void onClientSetup(FMLClientSetupEvent event) {
-        // 不放进 enqueueWork：BER 注册是「排队」，但渲染层 / 频道必须在
-        // RegisterRenderers 之前就绪，直接在主线程路径上跑最简单也最稳。
-        new LtedClient().onInitializeClient();
+        // 正常情况下这里已经是 no-op：Forge 1.20.1 的 RegisterRenderers 先到，客户端初始化
+        // 已经在那里跑完（BER 队列随之填满）。保留这条是为了不依赖 Forge 的事件顺序。
+        Renderers.ensureClientInit();
     }
 }
