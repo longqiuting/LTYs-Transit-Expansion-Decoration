@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "id": "mtrlte",
   "version": "${version}",
-  "name": "LTED",
-  "description": "LTED 是 MTR（Minecraft Transit Railway）的装饰拓展：厦门风格的屏蔽门与站台方块、PIDS / PSD-LCD 显示屏、挂墙与挂顶发车倒数器、站外标志与贴墙标识、时钟、售票机 / 闸机 / 充电宝 / 售卖机 / 安检机等站内设备，以及方速屏蔽门搬运版。\\nLTED is a decoration pack for Minecraft Transit Railway: Xiamen-style platform screen doors and platform blocks, PIDS / PSD-LCD displays, wall and ceiling departure countdowns, station signage, clocks, ticket machines, gates, power-bank and vending machines, security scanners and a ported Fangsu PSD set.",
+  "name": "LTY's Transit Expansion Decoration (LTED)",
+  "description": "LTY's Transit Expansion Decoration（LTED）是 MTR（Minecraft Transit Railway）的装饰拓展：厦门风格的屏蔽门与站台方块、PIDS / PSD-LCD 显示屏、挂墙与挂顶发车倒数器、站外标志与贴墙标识、时钟、售票机 / 闸机 / 充电宝 / 售卖机 / 安检机等站内设备，以及方速屏蔽门搬运版。\nLTY's Transit Expansion Decoration (LTED) is a decoration pack for Minecraft Transit Railway: Xiamen-style platform screen doors and platform blocks, PIDS / PSD-LCD displays, wall and ceiling departure countdowns, station signage, clocks, ticket machines, gates, power-bank and vending machines, security scanners and a ported Fangsu PSD set.",
   "authors": [
     "厦航在拍车的无名机长 (kigurumiLTY)"
   ],
