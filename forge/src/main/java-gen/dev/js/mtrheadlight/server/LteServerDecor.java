@@ -37,6 +37,8 @@ public final class LteServerDecor implements CommonInit {
       }
 
       blockModule("xiamen objects", XiamenObjects::register);
+      blockModule("regional tabs", dev.js.mtrheadlight.region.RegionalTabs::register);
+      blockModule("regional logo blocks", dev.js.mtrheadlight.region.RegionalLogos::register);
       blockModule("logo blocks", LogoObjects::register);
       module("lted dashboard item", LtedCoreItems::register);
       blockModule("wall sign blocks", WallSignObjects::register);
@@ -53,8 +55,10 @@ public final class LteServerDecor implements CommonInit {
       blockModule("dep pole block", DepPoleObjects::register);
       blockModule("station sign blocks", StationSignObjects::register);
       module("core tab order", LogoObjects::pinCoreTabOrder);
+      module("regional tab order", dev.js.mtrheadlight.region.RegionalLogos::pinRegionalTabOrder);
       module("lted dashboard tab", LtedCoreItems::pinToolsTabOrder);
       blockModule("xiamen ticket / balance machines", XiamenMachines::register);
+      blockModule("mtr hk ticket machine", dev.js.mtrheadlight.region.RegionalMachines::register);
       blockModule("power bank charger", ChargerObjects::register);
       blockModule("drinks machine", DrinksMachineObjects::register);
       blockModule("security blocks", SecurityObjects::register);

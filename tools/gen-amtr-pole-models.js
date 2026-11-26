@@ -74,7 +74,7 @@ function convert(file, outName) {
 
   // 柱底：几何交给 BER（PoleRawRenderer）用 rawmodel 逐面画，方块模型留空，
   // 免得同一份几何被烘焙模型和方块实体各画一遍。
-  if (file === TINT_RANGE.file) {
+  if (file === TINT_RANGE.file && process.env.RAW === '1') {
     const groups = [
       { name: 'pole_core', tex: 'textures/block/gray_concrete', from: 0, to: 0 },
       { name: 'pole_fins', tex: 'textures/block/white_concrete', from: 1, to: 8 },

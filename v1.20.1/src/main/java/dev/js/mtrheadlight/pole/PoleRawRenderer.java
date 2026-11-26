@@ -50,7 +50,15 @@ public final class PoleRawRenderer implements BlockEntityRenderer<AmtrPoleBottom
         }
         matrices.push();
         matrices.translate(0.0, 0.0, 0.0);
-        final int packedLight = light;
+        // 取「自己 + 六邻」里最亮的那一格：柱子是细杆，自己那格常年被自身/半砖压暗，
+        // 直接用自己的光会偏黑（野外背光面尤其明显）。
+        int packedLight = net.minecraft.client.render.WorldRenderer.getLightmapCoordinates(entity.getWorld(), entity.getPos());
+        for (final net.minecraft.util.math.Direction direction : net.minecraft.util.math.Direction.values()) {
+            final int neighbour = net.minecraft.client.render.WorldRenderer.getLightmapCoordinates(entity.getWorld(), entity.getPos().offset(direction));
+            if (neighbour > packedLight) {
+                packedLight = neighbour;
+            }
+        }
         try {
             draw(vertexConsumers, matrices, CORE, packedLight, 1.0F, 1.0F, 1.0F);
             draw(vertexConsumers, matrices, FINS, packedLight, 1.0F, 1.0F, 1.0F);

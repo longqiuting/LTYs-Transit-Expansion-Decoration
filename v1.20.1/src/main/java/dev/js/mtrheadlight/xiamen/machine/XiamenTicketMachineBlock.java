@@ -105,14 +105,39 @@ public class XiamenTicketMachineBlock extends XiamenMachineBlock {
 
     public XiamenTicketMachineBlock(final AbstractBlock.Settings settings) {
         // 微光：上段（屏幕）8 级、下段 6 级；节能关机态（ui=eco）整机断电 → 0（不发光）。
-        super(settings.luminance(state -> state.contains(UI) && state.get(UI).poweredOff()
-                ? 0 : screenGlowOf(state)), LOWER_BOX, UPPER_BOX, "tooltip.mtrlte.ticket_machine_xiamen");
+        this(settings, LOWER_BOX, UPPER_BOX, "tooltip.mtrlte.ticket_machine_xiamen");
+    }
 
+    /**
+     * 同一条交互框架，但几何包围盒 / 物品提示换成子类自己的那份（{@code MtrTicketMachineBlock}：
+     * 港铁新售票机的模型比厦门那台薄一点，z 只到 15.5）。
+     *
+     * <p>除了这两个参数，别的（{@code ui} 属性、刷子三档循环、方速 / 原版两套界面、关机贴图切换）
+     * 一行都不另写 —— 子类要的只是「换一台机器的外形」。
+     *
+     * @param settings   方块设置
+     * @param lowerBox   下段包围盒 {@code {minX, maxX, minZ, maxZ}}（1/16 格，模型空间）
+     * @param upperBox   上段包围盒，同上
+     * @param tooltipKey 物品提示的翻译键
+     */
+    protected XiamenTicketMachineBlock(final AbstractBlock.Settings settings,
+                                       final double[] lowerBox, final double[] upperBox,
+                                       final String tooltipKey) {
+        super(settings.luminance(state -> state.contains(UI) && state.get(UI).poweredOff()
+                ? 0 : screenGlowOf(state)), lowerBox, upperBox, tooltipKey);
     }
 
     /** 新放下的机器默认用哪套界面：装了方速就方速（= 开机默认档；没装方速就是原版）。 */
     public static TicketUi defaultUi() {
         return FangsuTicketUi.loaded() ? TicketUi.FANGSU : TicketUi.VANILLA;
+    }
+
+    /**
+     * 方速界面标题的翻译键。默认是「厦门地铁售票机」；港铁那台（{@code MtrTicketMachineBlock}）
+     * 覆写成自己的键 —— 界面上不该写着别的城市的名字。
+     */
+    protected String screenTitleKey() {
+        return "screen.mtrlte.ticket_machine";
     }
 
     @Override
@@ -177,7 +202,7 @@ public class XiamenTicketMachineBlock extends XiamenMachineBlock {
         // ③ 方速界面：纯客户端，服务端什么都不做。
         if (state.get(UI) == TicketUi.FANGSU) {
             if (world.isClient) {
-                if (FangsuTicketUi.open(Text.translatable("screen.mtrlte.ticket_machine"), base)) {
+                if (FangsuTicketUi.open(Text.translatable(screenTitleKey()), base)) {
                     return ActionResult.SUCCESS;
                 }
                 // 客户端没有方速（服务端装了、客户端没装）：提示一次。

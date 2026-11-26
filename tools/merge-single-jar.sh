@@ -33,7 +33,7 @@ if [[ "${SKIP_BUILD:-0}" != "1" ]]; then
   JAVA_HOME="$JDK21" "$GRADLE" -p v1.20.1 build --console=plain
 
   echo "== [2/3] Forge 侧（JDK 17 + Gradle 8.1.1）"
-  JAVA_HOME="$JDK17" bash forge/gradlew -p forge build --console=plain
+  JAVA_HOME="$JDK17" bash forge/gradlew -p forge build --offline --console=plain
 fi
 
 echo "== [3/3] Forgix 合并（JDK 21 + Gradle 8.14）"

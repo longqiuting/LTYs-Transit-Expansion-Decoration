@@ -62,6 +62,7 @@ public final class PoleClient implements net.fabricmc.api.ClientModInitializer {
 
     /** 柱底几何由 BER 画（见 {@link PoleRawRenderer}），不走方块模型烘焙。 */
     private static void registerRenderer() {
+        if (!Boolean.getBoolean("lte.pole.raw")) { return; } // 默认走方块模型；-Dlte.pole.raw=true 才用 BER 兜底
         try {
             final BlockEntityType<AmtrPoleBottomBlockEntity> type = PoleBlocks.bottomEntityType();
             if (type == null) {

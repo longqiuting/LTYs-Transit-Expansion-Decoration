@@ -1,0 +1,8 @@
+{
+  "__comment": "港铁售票机「上段」的节能关机态：几何照抄 ticket_machine_mtr_top，只把贴图换成 mtrlte:block/ticket_machine_mtr_off（素材 new_ticket_machine_off.png）。厦门那台同类子模型叫 _closed，这里跟素材叫 _off。",
+  "parent": "mtrlte:block/ticket_machine_mtr_top",
+  "textures": {
+    "particle": "mtrlte:block/ticket_machine_mtr_off",
+    "tex": "mtrlte:block/ticket_machine_mtr_off"
+  }
+}

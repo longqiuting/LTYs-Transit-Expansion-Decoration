@@ -13,7 +13,7 @@ const zlib = require("zlib");
 
 const VER = process.argv[2] || "v1.20.1";
 const ROOT = path.join(VER, "src/main/resources");
-const IDS = ["xiamen", "jiaomei", "lte"];
+const IDS = ["xiamen", "jiaomei", "lte", "fuzhou", "shenzhen", "mtr_hk"];
 
 const FACINGS = [
   ["north", 0],
@@ -38,13 +38,26 @@ const LOGO_FROM = [10.5, 5.5, LOGO_Z];
 const LOGO_TO = [15.5, 10.5, LOGO_Z];
 
 // 每个品牌的 blockstate 注释（沿用仓库里已有的措辞，重跑本脚本不会产生无意义 diff）。
-const BRAND_LABEL = { xiamen: "厦门地铁", jiaomei: "角美地铁", lte: "LTE" };
+const BRAND_LABEL = {
+  xiamen: "厦门地铁",
+  jiaomei: "角美地铁",
+  lte: "LTE",
+  fuzhou: "福州地铁",
+  shenzhen: "深圳地铁",
+  mtr_hk: "香港地铁（MTR）",
+};
 const BLOCKSTATE_COMMENT = {
   xiamen:
     "照 MTR 3.6.4.2 的 blockstates/station_name_entrance.json：属性名就是它的 propagate_property（0=矮板 / 1=高板），facing = 墙在哪一侧。2..5 是 MTR 的「无灯板」形态（只有字），照 MTR 一样不挂模型。模型换成带厦门地铁 logo 的那一份。",
   jiaomei:
     "与 wall_sign_xiamen.json 同一套（MTR 的 station_name_entrance：propagate_property 0=矮 / 1=高，2..5 无灯板），模型换成带角美地铁 logo 的那一份。",
   lte: "与 wall_sign_xiamen.json 同一套（MTR 的 station_name_entrance：propagate_property 0=矮 / 1=高，2..5 无灯板），模型换成带 LTE logo 的那一份。",
+  fuzhou:
+    "与 wall_sign_xiamen.json 同一套（MTR 的 station_name_entrance：propagate_property 0=矮 / 1=高，2..5 无灯板），模型换成带福州地铁 logo 的那一份。",
+  shenzhen:
+    "与 wall_sign_xiamen.json 同一套（MTR 的 station_name_entrance：propagate_property 0=矮 / 1=高，2..5 无灯板），模型换成带深圳地铁 logo 的那一份。",
+  mtr_hk:
+    "与 wall_sign_xiamen.json 同一套（MTR 的 station_name_entrance：propagate_property 0=矮 / 1=高，2..5 无灯板），模型换成带香港地铁（MTR）logo 的那一份。",
 };
 
 const write = (rel, data) => {
@@ -59,46 +72,61 @@ const write = (rel, data) => {
   console.log("write", rel);
 };
 
-// ---------------------------------------------------------------- 1) 基础模型
+/** 已经手写排版好的 JSON 文本（模型子文件、基础模型），直接落盘。 */
+const writeText = (rel, text) => {
+  const p = path.join(ROOT, rel);
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  fs.writeFileSync(p, text);
+  console.log("write", rel);
+};
 
-for (const [, form, from, to, textPx] of STYLES) {
+// ---------------------------------------------------------------- 1) 基础模型
+//
+// 2026-11 之后两份基础模型改成「MTR 原样 + 用自己的 dark_blue 贴图」：几何只有一块零厚度灯板，
+// 品牌 logo 不再进模型（MTR 的 RenderStationNameTiled 把它画进生成的站名贴图，
+// 取图由 StationNameEntranceLogoMixin 按 brand 换成 mtrlte:block/<brand>_logo）。
+// 这两份是手工调过的，脚本只在缺失时写一份等价物，绝不覆盖。
+
+const BOARD_FILL = "\"textures\": {\n    \"particle\": \"mtrlte:block/dark_blue\"\n  }";
+
+const parentModel = (form, from, to, comment) => `{
+  "__comment": ${JSON.stringify(comment)},
+  ${BOARD_FILL},
+  "elements": [
+    {
+      "__comment": "Light",
+      "from": [${from.join(", ")}],
+      "to": [${to.join(", ")}],
+      "faces": {
+        "north": {
+          "texture": "#particle",
+          "cullface": "north"
+        },
+        "south": {
+          "texture": "#particle"
+        }
+      }
+    }
+  ]
+}
+`;
+
+for (const [, form, from, to] of STYLES) {
   const name = `station_name_entrance_${form}`;
-  const tall = form === "tall";
-  write(`assets/mtrlte/models/block/${name}.json`, {
-    __comment: tall
-      ? "站名出入口「高板」的几何：一块 16x16 的零厚度灯板 + 一块品牌 logo。贴图全部是自己的（station_name_background / *_logo），没有任何 MTR 命名空间的引用。站名本身不在这里 —— 由 WallSignRenderer 按 STYLE 在灯板正面 z≈0.15 px 处画，只占左边 0.5..10.0 px 那条，右边 10.5..15.5 px 留给 logo。"
-      : "站名出入口「矮板」的几何：一块 16x8 的零厚度灯板（y 4..12）+ 一块品牌 logo。贴图全部是自己的（station_name_background / *_logo），没有任何 MTR 命名空间的引用。站名由 WallSignRenderer 按 STYLE 画在灯板正面 z≈0.15 px 处，只占左边 0.5..10.0 px，右边 10.5..15.5 px 留给 logo。",
-    textures: {
-      particle: BOARD_TEX,
-      board: BOARD_TEX,
-      logo: "mtrlte:block/xiamen_logo", // 默认值，三个品牌的子模型各自覆盖
-    },
-    elements: [
-      {
-        __comment: tall
-          ? "灯板：z=0.05 px 两面（正面 south=+z 是牌面；背面 north 贴墙，带 cullface 让墙挡住时省一层）。"
-          : "灯板：y 4..12、z=0.05 px 两面（正面 south=+z；背面 north 带 cullface）。",
-        from,
-        to,
-        faces: {
-          north: { texture: "#board", cullface: "north" },
-          south: { texture: "#board" },
-        },
-      },
-      {
-        __comment: tall
-          ? "品牌 logo：z=0.1 px（在灯板 0.05 前面、站名 0.15 后面，且 x 不与站名那条重叠），右侧 5x5 px 竖直居中。挖空 PNG → 方块走 cutout。"
-          : "品牌 logo：z=0.1 px，右侧 5x5 px 竖直居中（矮板 8 px 高，5 px 的 logo 上下各留 1.5 px）。",
-        from: LOGO_FROM,
-        to: LOGO_TO,
-        faces: {
-          south: { texture: "#logo", shade: false },
-        },
-      },
-    ],
-  });
-  void textPx;
+  const rel = `assets/mtrlte/models/block/${name}.json`;
+  if (fs.existsSync(path.join(ROOT, rel))) {
+    console.log("skip (exists)", rel);
+    continue;
+  }
+  writeText(rel, parentModel(form, from, to,
+    `MTR 3.6.4.2 的 mtr:block/${name} 原样：一块 ${form === "tall" ? "16x16" : "16x8"} 的零厚度灯板`
+    + `（${form === "tall" ? "z=0.05" : "y 4..12，z=0.05"}），贴图 mtrlte:block/dark_blue。`
+    + "站名 / 品牌 logo 都由 MTR 的 RenderStationNameTiled(dispatcher, true) 画进生成贴图"
+    + "（logo 那张图由 StationNameEntranceLogoMixin 换成我们的），模型里没有任何 logo 元素。"));
+  void BOARD_TEX;
   void PLATE_Z;
+  void LOGO_FROM;
+  void LOGO_TO;
 }
 
 // ---------------------------------------------------------------- 2) 每个品牌
@@ -118,14 +146,15 @@ const DISPLAY = {
 for (const id of IDS) {
   const name = `wall_sign_${id}`;
 
-  // 子模型：几何全在父模型里，这里只覆盖 logo 贴图。
+  // 子模型：几何全在父模型里，这里一个 element 都不写 —— 只留一行注释 + parent
+  // （品牌 logo 不进模型：MTR 的渲染器把它画进站名贴图，取图由 mixin 按 brand 换）。
   for (const [, form] of STYLES) {
     const label = form === "tall" ? "高板" : "矮板";
-    write(`assets/mtrlte/models/block/${name}_${form}.json`, {
-      __comment: `站名出入口「${label}」+ ${BRAND_LABEL[id]} logo。几何在父模型里（照 MTR 的 station_name_entrance_${form}），这里只换 logo 贴图。`,
-      parent: `mtrlte:block/station_name_entrance_${form}`,
-      textures: { logo: `mtrlte:block/${id}_logo` },
-    });
+    writeText(`assets/mtrlte/models/block/${name}_${form}.json`,
+      `{\n  "__comment": ${JSON.stringify(
+        `站名出入口「${label}」：几何就是 MTR 的 station_name_entrance_${form}（零厚度灯板，无 logo 元素）。`
+        + `品牌 logo 由 MTR 的渲染器画进站名贴图，取图由 StationNameEntranceLogoMixin 按 brand 换成 `
+        + `mtrlte:block/${id}_logo。`)},\n  "parent": "mtrlte:block/station_name_entrance_${form}"\n}\n`);
   }
 
   // blockstate：multipart 8 条（2 形态 × 4 朝向）。2..5 是 MTR 的「无灯板」形态，照 MTR 一样不挂模型。
@@ -164,16 +193,13 @@ for (const id of IDS) {
   });
 }
 
-// ---------------------------------------------------------------- 3) 底图（只在缺失时生成）
+// ---------------------------------------------------------------- 3) 底图
+//
+// 早版本的灯板用过一张自绘的 station_name_background.png；现在两份基础模型直接用
+// mtrlte:block/dark_blue（MTR 原样），这张图已经不需要了 —— 脚本不再生成它。
 
-const bgPath = path.join(ROOT, "assets/mtrlte/textures/block/station_name_background.png");
-if (fs.existsSync(bgPath)) {
-  console.log("skip (exists) assets/mtrlte/textures/block/station_name_background.png");
-} else {
-  fs.mkdirSync(path.dirname(bgPath), { recursive: true });
-  fs.writeFileSync(bgPath, stationNameBackgroundPng(16));
-  console.log("write assets/mtrlte/textures/block/station_name_background.png");
-}
+void stationNameBackgroundPng;
+void BOARD_TEX;
 
 /** 16x16 的站名牌底：深藏青填充 + 顶面亮一档 / 底面暗一档 + 1 px 内框（多格并排时看得出是一块块面板）。 */
 function stationNameBackgroundPng(size) {

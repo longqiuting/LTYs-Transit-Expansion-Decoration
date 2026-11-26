@@ -26,7 +26,17 @@ public class XiamenTicketMachineBlock extends XiamenMachineBlock {
    private static final double[] UPPER_BOX = new double[]{0.0D, 16.0D, 0.0D, 14.31D};
 
    public XiamenTicketMachineBlock(BlockBehaviour.Properties settings) {
-      super(settings.lightLevel((state) -> state.hasProperty(UI) && ((XiamenTicketMachineBlock.TicketUi)state.getValue(UI)).poweredOff() ? 0 : screenGlowOf(state)), LOWER_BOX, UPPER_BOX, "tooltip.mtrlte.ticket_machine_xiamen");
+      this(settings, LOWER_BOX, UPPER_BOX, "tooltip.mtrlte.ticket_machine_xiamen");
+   }
+
+   // 同一条交互框架，但几何包围盒 / 物品提示换成子类自己的那份（港铁那台 z 只到 15.5）。
+   protected XiamenTicketMachineBlock(BlockBehaviour.Properties settings, double[] lowerBox, double[] upperBox, String tooltipKey) {
+      super(settings.lightLevel((state) -> state.hasProperty(UI) && ((XiamenTicketMachineBlock.TicketUi)state.getValue(UI)).poweredOff() ? 0 : screenGlowOf(state)), lowerBox, upperBox, tooltipKey);
+   }
+
+   // 方速界面标题：默认「厦门地铁售票机」，港铁那台覆写。
+   protected String screenTitleKey() {
+      return "screen.mtrlte.ticket_machine";
    }
 
    public static XiamenTicketMachineBlock.TicketUi defaultUi() {
@@ -71,7 +81,7 @@ public class XiamenTicketMachineBlock extends XiamenMachineBlock {
             return InteractionResult.SUCCESS;
          } else if (state.getValue(UI) == XiamenTicketMachineBlock.TicketUi.FANGSU) {
             if (world.isClientSide) {
-               if (FangsuTicketUi.open(Component.translatable("screen.mtrlte.ticket_machine"), base)) {
+               if (FangsuTicketUi.open(Component.translatable(this.screenTitleKey()), base)) {
                   return InteractionResult.SUCCESS;
                } else {
                   player.displayClientMessage(Component.translatable("message.mtrlte.ticket_machine.client_missing"), true);

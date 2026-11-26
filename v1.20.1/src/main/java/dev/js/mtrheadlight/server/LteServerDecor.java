@@ -11,8 +11,8 @@ import net.fabricmc.api.ModInitializer;
  * 与 B 侧两半。优化代码整体搬去 LTE 之后，壳和 A 侧都没了，本类直接就是 {@code main} 入口。
  *
  * <h2>顺序</h2>
- * 厦门物件页签 → 两个 logo → 贴墙标识 → 扶手 → 装饰 / RCC 站台 → PIDS / PSD-LCD
- * → 网络通道 → 发车倒数器 → 站外标志 → <b>厦门页签重排</b> → 售票机 / 充电宝 / 售卖机 / 安检 /
+ * 厦门物件页签 → 福州 / 深圳 / 香港三个地区页签与标志块 → 两个 logo → 贴墙标识 → 扶手 → 装饰 / RCC 站台 → PIDS / PSD-LCD
+ * → 网络通道 → 发车倒数器 → 站外标志 → <b>厦门页签重排</b> → <b>地区页签重排</b> → 售票机 / 港铁售票机 / 充电宝 / 售卖机 / 安检 /
  * 时钟 / 闸机 / eyecandy / 方速屏蔽门。页签重排必须在「往这一页加条目的模块都注册完」之后，
  * 之后注册的模块只会往末尾追加，排不回来。
  */
@@ -30,6 +30,14 @@ public final class LteServerDecor implements ModInitializer {
 
         // 厦门风格物件页签 + 屏蔽门方块（同样是两端都需要的 registry 条目）。
         blockModule("xiamen objects", dev.js.mtrheadlight.xiamen.XiamenObjects::register);
+
+        // 三个地区页签（福州 → 深圳 → 香港）：紧跟「厦门风格物件」，于是创造菜单里
+        // 厦门 / 福州 / 深圳 / 香港 四条地铁风格页签是连续的一段。
+        blockModule("regional tabs", dev.js.mtrheadlight.region.RegionalTabs::register);
+
+        // 三个地区标志块（fuzhou_logo / shenzhen_logo / mtr_hk_logo），各进自己的地区页签。
+        // 必须排在上面的页签之后 —— 往还没建的页签里加条目会抛异常。
+        blockModule("regional logo blocks", dev.js.mtrheadlight.region.RegionalLogos::register);
 
         // 标志方块：LTE logo + 角美地铁 logo（都进「厦门风格物件」页签）。
         // 必须排在上面两个页签之后 —— 往还没建的页签里加条目会抛异常。
@@ -89,6 +97,10 @@ public final class LteServerDecor implements ModInitializer {
         // 按注册顺序执行，重排的那一次得看得见它们；之后再注册的模块只会往末尾加，排不回来。
         module("core tab order", dev.js.mtrheadlight.logo.LogoObjects::pinCoreTabOrder);
 
+        // 三个地区页签的顺序：各自「标志块 → 贴墙标」（与厦门页签里 logo 在贴墙标识之前同一规矩）。
+        // 同样必须排在 LogoObjects / WallSignObjects 之后。
+        module("regional tab order", dev.js.mtrheadlight.region.RegionalLogos::pinRegionalTabOrder);
+
         // LTED 仪表板排进「LTE 工具」页签（本模组唯一一页「工具」页，只剩这一件）。
         module("lted dashboard tab", dev.js.mtrheadlight.decor.LtedCoreItems::pinToolsTabOrder);
 
@@ -96,6 +108,11 @@ public final class LteServerDecor implements ModInitializer {
         // 余额查询机服务端读记分板 mtr_balance 后用一句文字报余额。同样进「厦门风格物件」页签。
         blockModule("xiamen ticket / balance machines",
                 dev.js.mtrheadlight.xiamen.machine.XiamenMachines::register);
+
+        // 港铁新售票机（ticket_machine_mtr）：与厦门售票机同一套交互框架（继承同一个方块类），
+        // 只换模型 / 贴图 / 包围盒，进「香港地铁风格物件」页签。
+        blockModule("mtr hk ticket machine",
+                dev.js.mtrheadlight.region.RegionalMachines::register);
 
         // 共享充电宝租借机（上半 / 下半各自独立的两块方块）+ 充电宝物品 + 投掷实体。
         // 租借 / 归还都在这里注册的服务端逻辑里：余额读 MTR 的记分板 mtr_balance（bind.MtrBalance）。

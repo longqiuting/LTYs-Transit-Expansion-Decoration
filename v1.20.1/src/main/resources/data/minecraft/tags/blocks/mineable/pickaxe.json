@@ -31,6 +31,13 @@
     "mtrlte:drinks_machine_double_top",
     "mtrlte:drinks_machine_double_bottom",
     "mtrlte:lte_logo",
-    "mtrlte:jiaomei_logo"
+    "mtrlte:jiaomei_logo",
+    "mtrlte:fuzhou_logo",
+    "mtrlte:shenzhen_logo",
+    "mtrlte:mtr_hk_logo",
+    "mtrlte:wall_sign_fuzhou",
+    "mtrlte:wall_sign_shenzhen",
+    "mtrlte:wall_sign_mtr_hk",
+    "mtrlte:ticket_machine_mtr"
   ]
 }

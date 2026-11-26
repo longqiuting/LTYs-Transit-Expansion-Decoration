@@ -13,7 +13,7 @@ const path = require("path");
 const VER = process.argv[2] || "v1.20.1";
 const ROOT = path.join(VER, "src/main/resources");
 const JAVA = path.join(VER, "src/main/java/dev/js/mtrheadlight/xiamen/sign");
-const IDS = ["xiamen", "jiaomei", "lte"];
+const IDS = ["xiamen", "jiaomei", "lte", "fuzhou", "shenzhen", "mtr_hk"];
 
 // 灯板在模型里的 y 范围 —— 与 MTR 的 BlockStationNameEntrance#getOutlineShape 一一对应
 // （我们继承它、一行都不重写，所以模型必须和它的 4..12 / 0..16 对得上）。
@@ -88,22 +88,19 @@ const namePlaneZ = (0.00625 + 0.003125) * 16;
 
 const rendererSrc = readText(path.join(JAVA, "WallSignRenderer.java"));
 console.log("\n[Java: WallSignRenderer]");
-check(/extends RenderStationNameBase/.test(rendererSrc), "继承 MTR 的 RenderStationNameBase");
-check(/protected void drawStationName\(/.test(rendererSrc), "覆写 drawStationName");
-check(/getStationName\(/.test(rendererSrc), "站名用 getStationName(...)（透明底、不带 logo）");
+// 现在的实现（与 logo 的取法一起改过）：渲染器 = MTR 的 RenderStationNameTiled 原样（showLogo=true），
+// 只压/弹一个「这一帧画的是哪个品牌」的作用域；logo 那张图由 StationNameEntranceLogoMixin 从
+// mtr:textures/block/sign/logo.png 换成 mtrlte:textures/block/<brand>_logo.png。
+check(/extends RenderStationNameTiled</.test(rendererSrc), "继承 MTR 的 RenderStationNameTiled（不另写绘制）");
+check(/super\(dispatcher, true\)/.test(rendererSrc), "构造参数照 MTR 出入口款：showLogo = true");
+check(/WallSignLogos\.push\(/.test(rendererSrc) && /WallSignLogos\.pop\(/.test(rendererSrc),
+  "render 里压/弹 WallSignLogos 品牌作用域（push 与 pop 成对）");
 check(!/getStationNameEntrance\(/.test(rendererSrc),
   "不许用 getStationNameEntrance(...)（那张贴图左边烤着 MTR 的红底白 M logo）");
-check(/RenderTrains\.scheduleRender\(/.test(rendererSrc) && /QueuedRenderLayer\.INTERIOR/.test(rendererSrc),
-  "走 RenderTrains.scheduleRender(INTERIOR)（和 MTR 的站名同一条提交路径）");
-check(/BlockStationNameEntrance\.STYLE/.test(rendererSrc), "按 BlockStationNameEntrance.STYLE 选高矮");
-check(/private static int length\(/.test(rendererSrc), "自己数整条牌子的格数（照抄 MTR 的 getLength）");
 
-const TEXT_LEFT = num(rendererSrc, "TEXT_LEFT");
-const TEXT_RIGHT = num(rendererSrc, "TEXT_RIGHT");
-const TEXT_H_TALL = num(rendererSrc, "TEXT_HEIGHT_TALL");
-const TEXT_H_SHORT = num(rendererSrc, "TEXT_HEIGHT_SHORT");
-check(TEXT_LEFT !== null && TEXT_RIGHT !== null && TEXT_H_TALL !== null && TEXT_H_SHORT !== null,
-  `渲染器的版面常量可读：TEXT_LEFT=${TEXT_LEFT} TEXT_RIGHT=${TEXT_RIGHT} 高=${TEXT_H_TALL} 矮=${TEXT_H_SHORT}`);
+const mixinSrc = readText(path.join(VER, "src/main/java/dev/js/mtrheadlight/mixin/mtr/StationNameEntranceLogoMixin.java"));
+check(/sign\/logo\.png/.test(mixinSrc) && /textures\/block\//.test(mixinSrc),
+  "mixin 把 mtr 的 sign/logo.png 换成 mtrlte:textures/block/<brand>_logo.png");
 
 // ---------------------------------------------------------------- 每个方块
 
@@ -146,25 +143,12 @@ for (const id of IDS) {
       check(tex.startsWith("mtrlte:"), `${tag}: textures.${key} = ${tex} 没有跨模组引用`);
       check(exists(`assets/mtrlte/textures/${tex.split(":")[1]}.png`), `${tag}: textures.${key} 的文件存在（${tex}）`);
     }
-    check(model.data.textures.board === "mtrlte:block/station_name_background", `${tag}: 灯板底图 = station_name_background`);
-    check(model.data.textures.logo === `mtrlte:block/${id}_logo`, `${tag}: 品牌 logo = ${id}_logo`);
-
-    const board = model.data.elements.find((el) => el.faces && el.faces.north);
-    const logo = model.data.elements.find((el) => el.faces && !el.faces.north);
-    check(!!logo, `${tag}: 有 logo quad（只有 south 面的那一块）`);
-    if (board && logo) {
-      check(logo.from[2] > board.from[2], `${tag}: logo z=${logo.from[2]} 在灯板 z=${board.from[2]} 前面`);
-      check(logo.from[2] < namePlaneZ - 0.01, `${tag}: logo z=${logo.from[2]} 在站名平面 z=${namePlaneZ} 后面（不会盖住字）`);
-      const logoX1 = logo.from[0] / 16 - 0.5;
-      const logoX2 = logo.to[0] / 16 - 0.5;
-      check(logoX1 > TEXT_RIGHT + 1e-4,
-        `${tag}: logo x ${logoX1.toFixed(5)}..${logoX2.toFixed(5)} 在站名带右边界 ${TEXT_RIGHT} 之外（不重叠）`);
-      const halfH = (MODELS[style] === "tall" ? TEXT_H_TALL : TEXT_H_SHORT) / 2;
-      const logoY1 = 0.5 - logo.to[1] / 16; // 局部 +y 与模型 +y 反号
-      const logoY2 = 0.5 - logo.from[1] / 16;
-      check(logoY1 >= -halfH - 1e-4 && logoY2 <= halfH + 1e-4,
-        `${tag}: logo 竖直范围 ${logoY1.toFixed(3)}..${logoY2.toFixed(3)} 在站名带 ±${halfH} 之内（同一水平带）`);
-    }
+    // 品牌 logo 不在模型里：MTR 的渲染器把它画进生成的站名贴图（取图由 mixin 换成这张），
+    // 所以这里不查 logo quad，只查这张 png 真的存在、且模型里没有跨模组引用。
+    check(exists(`assets/mtrlte/textures/block/${id}_logo.png`),
+      `${tag}: 品牌 logo 贴图存在（textures/block/${id}_logo.png）`);
+    check(!model.data.textures || !("logo" in model.data.textures),
+      `${tag}: 模型里没有 logo 贴图引用（logo 由渲染器画进贴图）`);
   }
 
   // ---- item 模型
