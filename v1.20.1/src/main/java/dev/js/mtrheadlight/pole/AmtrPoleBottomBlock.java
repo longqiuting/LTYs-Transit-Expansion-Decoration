@@ -110,7 +110,7 @@ public final class AmtrPoleBottomBlock extends BlockWithEntity {
             return PoleColors.WHITE;
         }
         if (world.getBlockEntity(pos) instanceof AmtrPoleBottomBlockEntity pole) {
-            return pole.effectiveColor();
+            return pole.cacheOnlyColor();
         }
         return PoleColors.WHITE;
     }

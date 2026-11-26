@@ -57,6 +57,18 @@ function convert(file, outName) {
     }
   }
 
+  // 零厚度 element（素材里那 8 片 0 厚的贴面）在原版方块模型里会退化成零面积四边形，
+  // 实测整个模型的方块渲染直接不出几何（物品能画、方块画不出来）。这里把 0 厚度轴撑开
+  // 0.02 像素（1/800 格，肉眼无差别），几何体就正常了。数值改的是 to，from 保持不动。
+  for (const element of model.elements) {
+    for (let axis = 0; axis < 3; axis++) {
+      const delta = element.to[axis] - element.from[axis];
+      if (Math.abs(delta) < 1e-6) {
+        element.to[axis] = element.from[axis] + 0.02;
+      }
+    }
+  }
+
   const out = path.join(ASSETS, 'models/block', outName);
   fs.mkdirSync(path.dirname(out), { recursive: true });
   fs.writeFileSync(out, format(model), 'utf8');

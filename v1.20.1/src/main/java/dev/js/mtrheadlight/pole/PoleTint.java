@@ -12,8 +12,11 @@ import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry;
  * {@code ColorProviderRegistry.BLOCK}（Forge 侧对应 {@code RegisterColorHandlersEvent.Block}，
  * 见 {@code forge/.../pole/PoleTint.java}）。
  *
- * <p>取色只读方块实体里缓存好的字段（{@link AmtrPoleBottomBlockEntity#effectiveColor}）——
- * 这个方法是<b>每帧每面</b>都调的，绝不能在里面查 MTR 数据。
+ * <p>取色只读方块实体里缓存好的字段（{@code cacheOnlyColor()}）—— 这个方法是<b>每帧每面</b>
+ * 都调的，绝不能在里面查 MTR 数据，也不能触发「车站色解析」。
+ *
+ * <p>返回值必须是 <b>ARGB</b>（带 0xFF alpha）：两边加载器都把颜色直接乘进顶点色，
+ * alpha 为 0 会把整片面抹成完全透明。
  */
 public final class PoleTint {
 
@@ -27,7 +30,9 @@ public final class PoleTint {
                 return;
             }
             ColorProviderRegistry.BLOCK.register((state, world, pos, tintIndex) ->
-                    tintIndex == 0 ? AmtrPoleBottomBlock.effectiveTint(world, pos) : PoleColors.WHITE,
+                            tintIndex == 0
+                                    ? (0xFF000000 | (AmtrPoleBottomBlock.effectiveTint(world, pos) & 0xFFFFFF))
+                                    : PoleColors.WHITE,
                     block);
             LteLog.LOGGER.info("[lte] pole tint provider registered");
         } catch (final Throwable t) {

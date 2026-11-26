@@ -75,7 +75,18 @@ public class AmtrPoleBottomBlockEntity extends BlockEntity {
     }
 
     /**
-     * 这一帧要染的颜色 —— <b>染色 provider 唯一该调的读方法</b>。
+     * 染色 provider 用的**只读**版本：绝不触发车站色解析。区块网格化、每帧每面都会调，
+     * 一旦在这里摸 {@code ClientData} 就会把渲染线程拖进未知代价（甚至坏网格）。
+     */
+    public int cacheOnlyColor() {
+        if (this.mode == MODE_CUSTOM) {
+            return 0xFF000000 | (this.customColor & 0xFFFFFF);
+        }
+        return this.stationColor == 0 ? PoleColors.WHITE : (0xFF000000 | (this.stationColor & 0xFFFFFF));
+    }
+
+    /**
+     * 「当前该用的颜色」，必要时解析一次车站色 —— 供放置/交互路径用，<b>不要</b>在渲染路径上调。
      *
      * <p>顺序：CUSTOM → 玩家选的颜色；AUTO → 缓存的车站色；缓存里没有就试一次解析；
      * 还不行就是白色（{@link PoleColors#WHITE}）。
