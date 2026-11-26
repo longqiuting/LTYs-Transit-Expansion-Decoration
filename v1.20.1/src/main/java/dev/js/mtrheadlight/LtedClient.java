@@ -3,6 +3,7 @@ package dev.js.mtrheadlight;
 import dev.js.mtrheadlight.decor.DecorClient;
 import dev.js.mtrheadlight.decor.DecorConfig;
 import dev.js.mtrheadlight.logo.LogoClient;
+import dev.js.mtrheadlight.pole.PoleClient;
 import dev.js.mtrheadlight.railing.RailingGlassClient;
 import dev.js.mtrheadlight.security.SecurityClient;
 import dev.js.mtrheadlight.xiamen.XiamenClient;
@@ -50,6 +51,7 @@ public final class LtedClient implements ClientModInitializer {
         new WallSignClient().onInitializeClient();
         new RailingGlassClient().onInitializeClient();
         new DecorClient().onInitializeClient();
+        new PoleClient().onInitializeClient();
         new PidsXiamenClient().onInitializeClient();
         new PsdLcdClient().onInitializeClient();
         new DepOnWallClient().onInitializeClient();

@@ -32,6 +32,10 @@ public final class MtrMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(final String targetClassName, final String mixinClassName) {
+        if (mixinClassName.endsWith(".MinecraftClientPickMixin")) {
+            // ctrl+中键复制柱子属性：目标是原版 MC 的类，无条件应用（与 MTR 的版本 / 内容无关）。
+            return true;
+        }
         if (mixinClassName.endsWith(".RenderPIDSStationMixin")) {
             // 站外投影机顶渲染：只要渲染器在就应用（与列车注册表无关）。
             return HostProbe.mtrPidsRenderer();

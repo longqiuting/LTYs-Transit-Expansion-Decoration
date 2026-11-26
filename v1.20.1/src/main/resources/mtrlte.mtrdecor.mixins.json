@@ -9,6 +9,7 @@
     "BlockPlatformDoorTypeMixin"
   ],
   "client": [
+    "MinecraftClientPickMixin",
     "RenderPIDSStationMixin",
     "RenderPidsTianjinStationMixin",
     "RenderPsdDoorTextureMixin",

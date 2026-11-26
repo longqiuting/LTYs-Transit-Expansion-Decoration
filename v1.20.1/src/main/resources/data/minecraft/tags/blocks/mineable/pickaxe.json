@@ -4,6 +4,8 @@
     "mtrlte:liquid_scanner",
     "mtrlte:marble_floor",
     "mtrlte:marble_platform",
+    "mtrlte:amtr_pole_bottom",
+    "mtrlte:amtr_pole_middle",
     "mtrlte:platform",
     "mtrlte:platform_indented",
     "mtrlte:platform_type_quartz",

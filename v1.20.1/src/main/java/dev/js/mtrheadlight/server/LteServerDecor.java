@@ -51,6 +51,9 @@ public final class LteServerDecor implements ModInitializer {
         // 装饰方块（大理石地板 / 大理石站台）：站台继承 MTR 的 BlockPlatform，同样进「厦门风格物件」页签。
         blockModule("decor blocks", dev.js.mtrheadlight.decor.DecorBlocks::register);
 
+        // 厦门地铁柱子（柱底可染色 / 柱中）：颜色跟随 MTR 车站色，刷子改色，ctrl+中键复制属性。
+        blockModule("amtr pole blocks", dev.js.mtrheadlight.pole.PoleBlocks::register);
+
         // RCC 三种站台（平齐 / 内凹 / 石英）：独立页签 mtrlte:rcc_platform，同样继承 BlockPlatform。
         blockModule("rcc platforms", dev.js.mtrheadlight.decor.RccPlatforms::register);
 

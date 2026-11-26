@@ -45,6 +45,9 @@ final class ClientBootstrap {
         Net.installClientHooks();
         MinecraftForge.EVENT_BUS.addListener(Cmds::onRegisterClientCommands);
 
+        // 厦门地铁柱子：染色 provider（RegisterColorHandlersEvent.Block）+ ctrl+中键 + 颜色通道接收器。
+        dev.js.mtrheadlight.forge.client.PoleForgeClient.init(modBus);
+
         // Fabric ModMenu 的 Forge 等价物：模组列表 → 配置按钮。
         ModLoadingContext.get().registerExtensionPoint(
                 ConfigScreenHandler.ConfigScreenFactory.class,

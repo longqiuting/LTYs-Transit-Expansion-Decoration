@@ -95,6 +95,12 @@ public final class LtedForge {
         }
         registered = true;
         new LteServerDecor().onInitialize();
+        // 厦门地铁柱子（柱底 / 柱中）：在本回调里 new + 落表（同 LteServerDecor 里的其它模块）。
+        try {
+            dev.js.mtrheadlight.pole.PoleBlocks.register();
+        } catch (Throwable t) {
+            LteLog.LOGGER.error("[lte] amtr pole blocks registration aborted", t);
+        }
         Reg.item(new ResourceLocation(MOD_ID, "lte_tool"), new LtedTooltipItem(new Item.Properties()));
     }
 

@@ -1,5 +1,37 @@
 # 更新日志
 
+## 未发布 — 厦门地铁柱子（`amtr_pole_bottom` / `amtr_pole_middle`）
+
+素材 `素材/厦门地铁柱子`（Blockbench 原版模型格式 + 两张 16×16 混凝土贴图）落地成两个方块：
+
+- **`mtrlte:amtr_pole_bottom`（柱底）**：17 个 element —— 0..8 是本体（灰混凝土核心 + 白鳍片，
+  鳍片从 y=2 起），9..16 是 Blockbench 里的 `color` 分组（一圈 y 3..3.9、厚 0.9 的凸带）。
+  这 8 块的每个面在模型里带 `"tintindex": 0`，颜色由方块染色 provider 每帧给（**不是** BER 重画，
+  也**没有**把颜色烘进贴图）。
+- **`mtrlte:amtr_pole_middle`（柱中）**：9 个 element，没有状态、没有方块实体。
+- 两个都是**整格碰撞**（0..16），能上下叠、能站人；镐可挖（`mineable/pickaxe`）；
+  贴图是 MC 的白色 / 灰色混凝土原图（16×16，未缩放）。
+
+颜色：
+
+- **默认 = MTR 车站色**：方块实体在放下时解析一次并**缓存**（染色 provider 是每帧每面都调的，
+  那里只读字段）。判定链：`blockPosToStation.get(pos)` → ±24 格内最近的车站 →
+  `RailwayData.getStation(...)`（MTR 自己的「在车站区域内」）→ 白色。拿到车站后取
+  「站台属于该站的线路」里**线路 id 升序的第一条 `color != 0`**；一条都没有就白色。
+  服务端解析的写进 NBT（存档里带着），客户端那份缺失时（数据还没同步 / 旧存档）自己再算一次。
+- **刷子改色**：手持 `mtr.Items.BRUSH` 右键柱底 → 服务端把当前颜色推给玩家 → 客户端开
+  `ColorPickerScreen`（照搬仪表板那套面板，初值 = 当前颜色）→「完成」C2S 写回，服务端改方块实体
+  并同步（`updateListeners` + `toUpdatePacket` + `toInitialChunkDataNbt` 三件套 + 一条直接推送）。
+- **潜行 + 刷子右键** = 恢复「跟随车站色」。
+- **ctrl + 中键**：把这一格的属性（AUTO/CUSTOM + 颜色）复制进**手里的柱底物品**的 NBT；
+  之后放下的柱底沿用这份属性（= 批量放置）。不按 ctrl 的中键**保持原版拾取**。
+  Fabric 走 `MinecraftClient#doItemPick` 的 HEAD 注入（条件不满足就不取消）；
+  Forge 走 `InputEvent.InteractionKeyMappingTriggered`（`isPickBlock()` 时取消），不需要 mixin。
+- 挖掉柱底时自定义颜色跟着掉落物走（`afterBreak` / `playerDestroy`），跟随车站色的柱子挖下来仍是跟随。
+
+工具：`tools/gen-amtr-pole-models.js`（素材 → 模型，幂等）、`tools/check-pole-colors.sh`
+（车站色判定链的离线检查，9 条用例，不需要世界）。
+
 ## 未发布 — LTED 拆分（只做装饰，1.20.1）
 
 本仓库改成**纯装饰模组 LTED**（mod id 仍是 `mtrlte`，方块 id 一个不改）：
