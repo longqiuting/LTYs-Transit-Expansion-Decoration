@@ -5,21 +5,24 @@ import dev.js.mtrheadlight.LteLog;
 import dev.js.mtrheadlight.rawmodel.RawMesh;
 import dev.js.mtrheadlight.rawmodel.RawModelJson;
 import dev.js.mtrheadlight.rawmodel.RawModelRenderer;
+import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
-import net.minecraft.client.util.math.MatrixStack;
 
 /**
  * 柱底 = <b>运行时网格</b>（rawmodel）而不是方块烘焙模型。
  *
  * <h2>为什么不用 blockstate 模型</h2>
- * <p>柱底在部分客户端环境里整块不渲染（同一份 jar 在别的客户端正常，物品也正常），
- * 排查到方块模型烘焙这一环后改成和本模组其它装饰方块一样的路子：素材 JSON 直接转成
- * {@link RawMesh}，由 BER 逐面画。这样不经过方块模型烘焙、方块图集和染色管线，
- * 只要方块实体在就一定能画出来。
+ * <p>柱底这个方块（带方块实体）在方块烘焙路径下探针确认「模型有 102 个面、不是 builtin」，
+ * 但画面上一面都不画（同样的模型换到普通方块「柱中」上就正常）。改成和本模组其它装饰方块
+ * 一样的 BER 逐面画，只要方块实体在就一定能画出来。
  *
  * <h2>三段网格</h2>
  * <ul>
@@ -27,10 +30,12 @@ import net.minecraft.client.util.math.MatrixStack;
  *   <li>{@code pole_fins}：四周 8 片鳍片，白混凝土；</li>
  *   <li>{@code pole_band}：color 分组那一圈，白混凝土 + <b>乘方块实体的颜色</b>。</li>
  * </ul>
- * 三段分开是因为一个 rawmodel 只能绑一张贴图，而核心和鳍片贴图不同、色带要单独染色。
  *
- * <p>光照用方块位置的真实光照（{@link WorldRenderer#getLightmapCoordinates}），
- * 与别的装饰方块一致；天空光/方块光都吃。
+ * <h2>光照：逐面取对面那一格</h2>
+ * <p>原版方块渲染是「每个面取它朝向那一格的光」，所以柱子侧面用的是旁边空气的光。
+ * BER 如果只取方块自己那一格，那格是实心方块的内部（天光/方块光都是 0），整根会发黑——
+ * 这就是之前「BER 和普通渲染有色差、整体偏黑」的原因。这里按面法线取邻格光照，
+ * 并乘原版那套逐面 shade（0.5 / 0.6 / 0.8 / 1.0），观感与普通方块一致。
  */
 public final class PoleRawRenderer implements BlockEntityRenderer<AmtrPoleBottomBlockEntity> {
 
@@ -49,21 +54,11 @@ public final class PoleRawRenderer implements BlockEntityRenderer<AmtrPoleBottom
             return;
         }
         matrices.push();
-        matrices.translate(0.0, 0.0, 0.0);
-        // 取「自己 + 六邻」里最亮的那一格：柱子是细杆，自己那格常年被自身/半砖压暗，
-        // 直接用自己的光会偏黑（野外背光面尤其明显）。
-        int packedLight = net.minecraft.client.render.WorldRenderer.getLightmapCoordinates(entity.getWorld(), entity.getPos());
-        for (final net.minecraft.util.math.Direction direction : net.minecraft.util.math.Direction.values()) {
-            final int neighbour = net.minecraft.client.render.WorldRenderer.getLightmapCoordinates(entity.getWorld(), entity.getPos().offset(direction));
-            if (neighbour > packedLight) {
-                packedLight = neighbour;
-            }
-        }
         try {
-            draw(vertexConsumers, matrices, CORE, packedLight, 1.0F, 1.0F, 1.0F);
-            draw(vertexConsumers, matrices, FINS, packedLight, 1.0F, 1.0F, 1.0F);
+            draw(entity, vertexConsumers, matrices, CORE, 1.0F, 1.0F, 1.0F);
+            draw(entity, vertexConsumers, matrices, FINS, 1.0F, 1.0F, 1.0F);
             final int color = entity.cacheOnlyColor();
-            draw(vertexConsumers, matrices, BAND, packedLight,
+            draw(entity, vertexConsumers, matrices, BAND,
                     ((color >> 16) & 0xFF) / 255.0F,
                     ((color >> 8) & 0xFF) / 255.0F,
                     (color & 0xFF) / 255.0F);
@@ -73,14 +68,60 @@ public final class PoleRawRenderer implements BlockEntityRenderer<AmtrPoleBottom
         matrices.pop();
     }
 
-    private static void draw(final VertexConsumerProvider consumers, final MatrixStack matrices,
-                             final String name, final int light,
-                             final float r, final float g, final float b) {
+    private static void draw(final AmtrPoleBottomBlockEntity entity,
+                             final VertexConsumerProvider consumers, final MatrixStack matrices,
+                             final String name, final float r, final float g, final float b) {
         final RawMesh mesh = RawModelJson.get(RawModelJson.id(name));
         if (mesh == null || mesh.quads().length == 0) {
             return;
         }
         final VertexConsumer buffer = consumers.getBuffer(RawModelRenderer.solidLayer(mesh));
-        RawModelRenderer.render(matrices, buffer, mesh, light, OverlayTexture.DEFAULT_UV, false, r, g, b);
+        final MatrixStack.Entry entry = matrices.peek();
+        for (final RawMesh.Quad quad : mesh.quads()) {
+            final int quadLight = lightOf(entity, quad.normal());
+            final float shade = quad.fullBright() ? 1.0F : quad.shade();
+            final float[][] pos = quad.pos();
+            final float[][] uv = quad.uv();
+            final float[] n = quad.normal();
+            for (int i = 0; i < 4; i++) {
+                buffer.vertex(entry.getPositionMatrix(), pos[i][0] / 16.0F, pos[i][1] / 16.0F,
+                                pos[i][2] / 16.0F)
+                        .color(shade * r, shade * g, shade * b, 1.0F)
+                        .texture(uv[i][0], uv[i][1])
+                        .overlay(OverlayTexture.DEFAULT_UV)
+                        .light(quadLight)
+                        .normal(entry.getNormalMatrix(), n[0], n[1], n[2])
+                        .next();
+            }
+        }
+    }
+
+    /** 面朝向的那一格的光照（和原版方块渲染同一条取法）；朝下时取正下方。 */
+    private static int lightOf(final AmtrPoleBottomBlockEntity entity, final float[] normal) {
+        final Direction direction = dominantDirection(normal);
+        final BlockPos base = entity.getPos();
+        final BlockPos neighbour = direction == null ? base : base.offset(direction);
+        int light = WorldRenderer.getLightmapCoordinates(entity.getWorld(), neighbour);
+        if (light == 0) {
+            // 极端情况（邻格也没光数据）退到方块自己那格，至少不整面全黑。
+            light = WorldRenderer.getLightmapCoordinates(entity.getWorld(), base);
+        }
+        return light == 0 ? LightmapTextureManager.MAX_LIGHT_COORDINATE : light;
+    }
+
+    private static Direction dominantDirection(final float[] normal) {
+        if (normal == null) {
+            return null;
+        }
+        final float ax = Math.abs(normal[0]);
+        final float ay = Math.abs(normal[1]);
+        final float az = Math.abs(normal[2]);
+        if (ax >= ay && ax >= az) {
+            return normal[0] > 0 ? Direction.EAST : Direction.WEST;
+        }
+        if (ay >= az) {
+            return normal[1] > 0 ? Direction.UP : Direction.DOWN;
+        }
+        return normal[2] > 0 ? Direction.SOUTH : Direction.NORTH;
     }
 }

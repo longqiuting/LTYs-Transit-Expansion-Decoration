@@ -1,6 +1,8 @@
 // 贴墙标识的渲染器：就是 MTR 的那个，唯一多的动作是「这一帧画的是我们哪一张牌子」。
 package dev.js.mtrheadlight.xiamen.sign;
 
+import dev.js.mtrheadlight.LteLog;
+
 import mtr.render.RenderStationNameTiled;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -45,6 +47,9 @@ public class WallSignRenderer extends RenderStationNameTiled<WallSignBlockEntity
         }
     }
 
+    /** 一次性打印：每种牌子第一次渲染时报「方块 id → 用哪张 logo」，用来核对绑定。 */
+    private static final java.util.Set<String> SEEN = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
     /** 这张牌子属于哪个品牌（{@link WallSignBlock#logo()}：{@code xiamen} / {@code jiaomei} / {@code lte}）。 */
     private static String brandOf(final WallSignBlockEntity entity) {
         if (entity == null) {
@@ -52,7 +57,14 @@ public class WallSignRenderer extends RenderStationNameTiled<WallSignBlockEntity
         }
         try {
             final BlockState state = entity.getCachedState();
-            return state != null && state.getBlock() instanceof WallSignBlock sign ? sign.logo() : null;
+            if (state == null || !(state.getBlock() instanceof WallSignBlock sign)) {
+                return null;
+            }
+            final String key = state.getBlock().toString();
+            if (SEEN.add(key)) {
+                LteLog.LOGGER.info("[lte] wall sign: {} -> logo={}", key, sign.logo());
+            }
+            return sign.logo();
         } catch (Throwable t) {
             return null;
         }
