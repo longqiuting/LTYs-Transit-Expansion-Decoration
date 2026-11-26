@@ -4,6 +4,8 @@ package dev.js.mtrheadlight.pole;
 import dev.js.mtrheadlight.ColorPickerScreen;
 import dev.js.mtrheadlight.LteLog;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.item.ItemStack;
@@ -52,7 +54,23 @@ public final class PoleClient implements net.fabricmc.api.ClientModInitializer {
         }
         registered = true;
         PoleTint.register();
+        registerRenderer();
         registerReceiver();
+    }
+
+    // ------------------------------------------------------------------ 渲染
+
+    /** 柱底几何由 BER 画（见 {@link PoleRawRenderer}），不走方块模型烘焙。 */
+    private static void registerRenderer() {
+        try {
+            final BlockEntityType<AmtrPoleBottomBlockEntity> type = PoleBlocks.bottomEntityType();
+            if (type == null) {
+                return;
+            }
+            BlockEntityRendererRegistry.register(type, PoleRawRenderer::new);
+        } catch (final Throwable t) {
+            LteLog.LOGGER.warn("[lte] pole renderer unavailable", t);
+        }
     }
 
     // ------------------------------------------------------------------ 通道

@@ -52,6 +52,14 @@ public class AmtrPoleBottomBlockEntity extends BlockEntity {
         return this.customColor & 0xFFFFFF;
     }
 
+    /** 渲染用的只读颜色（不触发车站色解析）。 */
+    public int cacheOnlyColor() {
+        if (this.mode == MODE_CUSTOM) {
+            return 0xFF000000 | (this.customColor & 0xFFFFFF);
+        }
+        return this.stationColor == 0 ? PoleColors.WHITE : (0xFF000000 | (this.stationColor & 0xFFFFFF));
+    }
+
     /** 染色 provider 唯一该调的读方法：只读字段，必要时才解析一次车站色。 */
     public int effectiveColor() {
         if (this.mode == MODE_CUSTOM) {

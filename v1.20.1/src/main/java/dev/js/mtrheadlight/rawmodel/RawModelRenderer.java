@@ -44,6 +44,7 @@ public final class RawModelRenderer {
      * RenderLayer 引用的是「贴图 id」而不是某个 GL 纹理对象，资源包重载后照样有效。
      */
     private static final Map<Identifier, RenderLayer> CUTOUT_LAYERS = new ConcurrentHashMap<>();
+    private static final Map<Identifier, RenderLayer> SOLID_LAYERS = new ConcurrentHashMap<>();
 
     private RawModelRenderer() {
     }
@@ -51,6 +52,11 @@ public final class RawModelRenderer {
     /** 这份网格该用的渲染层：{@code entity_cutout}（贴图直绑、alpha 裁掉、背面剔除开着）。 */
     public static RenderLayer cutoutLayer(final RawMesh mesh) {
         return CUTOUT_LAYERS.computeIfAbsent(mesh.texture(), RenderLayer::getEntityCutout);
+    }
+
+    /** 不透明贴图用这一层（混凝土这类满不透明的材质），比 cutout 少一次 alpha 测试。 */
+    public static RenderLayer solidLayer(final RawMesh mesh) {
+        return SOLID_LAYERS.computeIfAbsent(mesh.texture(), RenderLayer::getEntitySolid);
     }
 
     /**
@@ -77,6 +83,19 @@ public final class RawModelRenderer {
     public static void render(final MatrixStack matrices, final VertexConsumer consumer,
                               final RawMesh mesh, final int light, final int overlay,
                               final boolean emissive) {
+        render(matrices, consumer, mesh, light, overlay, emissive, 1.0F, 1.0F, 1.0F);
+    }
+
+    /**
+     * 同 {@link #render(MatrixStack, VertexConsumer, RawMesh, int, int, boolean)}，但整份网格乘一个颜色。
+     *
+     * <p>给「贴图是白混凝土、颜色由方块实体决定」的方块用（厦门地铁柱子的色带）：几何不变，
+     * 只是把顶点色乘上 {@code (r,g,b)}，等价于原版模型里的染色，但不走方块染色管线。
+     */
+    public static void render(final MatrixStack matrices, final VertexConsumer consumer,
+                              final RawMesh mesh, final int light, final int overlay,
+                              final boolean emissive,
+                              final float red, final float green, final float blue) {
         if (mesh == null || consumer == null) {
             return;
         }
@@ -91,7 +110,7 @@ public final class RawModelRenderer {
             for (int i = 0; i < 4; i++) {
                 consumer.vertex(entry.getPositionMatrix(), pos[i][0] / 16.0F, pos[i][1] / 16.0F,
                                 pos[i][2] / 16.0F)
-                        .color(shade, shade, shade, 1.0F)
+                        .color(shade * red, shade * green, shade * blue, 1.0F)
                         .texture(uv[i][0], uv[i][1])
                         .overlay(overlay)
                         .light(quadLight)

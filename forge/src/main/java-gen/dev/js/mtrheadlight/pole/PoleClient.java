@@ -41,7 +41,17 @@ public final class PoleClient implements ClientInit {
             return;
         }
         registered = true;
+        registerRenderer();
         registerReceiver();
+    }
+
+    /** 柱底几何由 BER 画（见 PoleRawRenderer）。 */
+    private static void registerRenderer() {
+        try {
+            dev.js.mtrheadlight.forge.platform.Renderers.ber(PoleBlocks.bottomEntityType(), context -> new PoleRawRenderer(context.getBlockEntityRenderDispatcher()));
+        } catch (final Throwable t) {
+            LteLog.LOGGER.warn("[lte] pole renderer unavailable", t);
+        }
     }
 
     private static void registerReceiver() {

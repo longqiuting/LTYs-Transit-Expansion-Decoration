@@ -71,7 +71,47 @@ function convert(file, outName) {
 
   const out = path.join(ASSETS, 'models/block', outName);
   fs.mkdirSync(path.dirname(out), { recursive: true });
+
+  // 柱底：几何交给 BER（PoleRawRenderer）用 rawmodel 逐面画，方块模型留空，
+  // 免得同一份几何被烘焙模型和方块实体各画一遍。
+  if (file === TINT_RANGE.file) {
+    const groups = [
+      { name: 'pole_core', tex: 'textures/block/gray_concrete', from: 0, to: 0 },
+      { name: 'pole_fins', tex: 'textures/block/white_concrete', from: 1, to: 8 },
+      { name: 'pole_band', tex: 'textures/block/white_concrete', from: 9, to: 16 },
+    ];
+    for (const group of groups) {
+      const elements = model.elements.slice(group.from, group.to + 1).map((element) => {
+        const copy = JSON.parse(JSON.stringify(element));
+        for (const face of Object.values(copy.faces || {})) {
+          delete face.tintindex;
+        }
+        return copy;
+      });
+      const raw = {
+        textures: { 0: group.tex, particle: group.tex },
+        texture_size: [16, 16],
+        elements,
+      };
+      const outRaw = path.join(ASSETS, 'rawmodels', group.name + '.json');
+      fs.mkdirSync(path.dirname(outRaw), { recursive: true });
+      fs.writeFileSync(outRaw, format(raw), 'utf8');
+      console.log(`rawmodel ${group.name}.json  elements=${elements.length}  ${group.tex}`);
+    }
+    model.elements = [];
+  }
+
   fs.writeFileSync(out, format(model), 'utf8');
+
+  // 方块模型留空之后，物品栏需要一个自己的完整模型（否则物品是空的）。
+  const itemModel = {
+    parent: 'minecraft:block/block',
+    textures: { ...TEXTURES },
+    elements: raw.elements,
+  };
+  const itemOut = path.join(ASSETS, 'models/item', outName);
+  fs.mkdirSync(path.dirname(itemOut), { recursive: true });
+  fs.writeFileSync(itemOut, format(itemModel), 'utf8');
   const tinted = model.elements.reduce((sum, element) =>
     sum + Object.values(element.faces || {}).filter(face => face.tintindex !== undefined).length, 0);
   console.log(`model  ${outName}  elements=${model.elements.length} tintedFaces=${tinted}`);

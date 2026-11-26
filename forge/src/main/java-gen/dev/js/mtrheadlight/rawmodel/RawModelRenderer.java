@@ -9,6 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 
 public final class RawModelRenderer {
    private static final Map<ResourceLocation, RenderType> CUTOUT_LAYERS = new ConcurrentHashMap();
+   private static final Map<ResourceLocation, RenderType> SOLID_LAYERS = new ConcurrentHashMap();
 
    private RawModelRenderer() {
    }
@@ -17,11 +18,19 @@ public final class RawModelRenderer {
       return (RenderType)CUTOUT_LAYERS.computeIfAbsent(mesh.texture(), RenderType::entityCutout);
    }
 
+   public static RenderType solidLayer(RawMesh mesh) {
+      return (RenderType)SOLID_LAYERS.computeIfAbsent(mesh.texture(), RenderType::entitySolid);
+   }
+
    public static void render(PoseStack matrices, VertexConsumer consumer, RawMesh mesh, int light, int overlay) {
       render(matrices, consumer, mesh, light, overlay, false);
    }
 
    public static void render(PoseStack matrices, VertexConsumer consumer, RawMesh mesh, int light, int overlay, boolean emissive) {
+      render(matrices, consumer, mesh, light, overlay, emissive, 1.0F, 1.0F, 1.0F);
+   }
+
+   public static void render(PoseStack matrices, VertexConsumer consumer, RawMesh mesh, int light, int overlay, boolean emissive, float red, float green, float blue) {
       if (mesh != null && consumer != null) {
          PoseStack.Pose entry = matrices.last();
 
@@ -34,7 +43,7 @@ public final class RawModelRenderer {
             float[] n = quad.normal();
 
             for(int i = 0; i < 4; ++i) {
-               consumer.vertex(entry.pose(), pos[i][0] / 16.0F, pos[i][1] / 16.0F, pos[i][2] / 16.0F).color(shade, shade, shade, 1.0F).uv(uv[i][0], uv[i][1]).overlayCoords(overlay).uv2(quadLight).normal(entry.normal(), n[0], n[1], n[2]).endVertex();
+               consumer.vertex(entry.pose(), pos[i][0] / 16.0F, pos[i][1] / 16.0F, pos[i][2] / 16.0F).color(shade * red, shade * green, shade * blue, 1.0F).uv(uv[i][0], uv[i][1]).overlayCoords(overlay).uv2(quadLight).normal(entry.normal(), n[0], n[1], n[2]).endVertex();
             }
          }
 
