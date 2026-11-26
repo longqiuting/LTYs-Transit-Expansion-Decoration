@@ -45,7 +45,7 @@ function convert(file, outName) {
     elements: raw.elements,
   };
 
-  if (file === TINT_RANGE.file) {
+  if (file === TINT_RANGE.file && process.env.NOTINT !== '1') {
     for (let i = TINT_RANGE.from; i <= TINT_RANGE.to; i++) {
       const element = model.elements[i];
       if (!element || !element.faces) {
