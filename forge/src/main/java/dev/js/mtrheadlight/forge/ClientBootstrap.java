@@ -3,7 +3,6 @@ package dev.js.mtrheadlight.forge;
 
 import dev.js.mtrheadlight.LtedClient;
 import dev.js.mtrheadlight.ModMenuIntegration;
-import dev.js.mtrheadlight.forge.platform.BuiltinPacks;
 import dev.js.mtrheadlight.forge.platform.Cmds;
 import dev.js.mtrheadlight.forge.platform.Net;
 import dev.js.mtrheadlight.forge.platform.Renderers;
@@ -35,8 +34,6 @@ final class ClientBootstrap {
         modBus.addListener(ClientBootstrap::onClientSetup);
         modBus.addListener(Renderers::onRegisterRenderers);
         modBus.addListener(Resources::onRegisterClientReloadListeners);
-        // 内置高清资源包（mtrlte:lted_hd）：只在客户端资源包查找阶段登记，默认不启用。
-        modBus.addListener(BuiltinPacks::onAddPackFinders);
 
         // BER 注册的排队内容必须在 RegisterRenderers 之前就位；Forge 1.20.1 里那个事件
         // 反而早于 FMLClientSetupEvent，所以把初始化本身交给 Renderers 调度（谁先到谁跑）。
