@@ -82,12 +82,12 @@ public class AmtrPoleBottomBlockEntity extends BlockEntity {
      */
     public int effectiveColor() {
         if (this.mode == MODE_CUSTOM) {
-            return this.customColor & 0xFFFFFF;
+            return 0xFF000000 | (this.customColor & 0xFFFFFF);
         }
         if (this.stationColor == 0) {
             this.resolveStationColor(false);
         }
-        return this.stationColor == 0 ? PoleColors.WHITE : (this.stationColor & 0xFFFFFF);
+        return this.stationColor == 0 ? PoleColors.WHITE : (0xFF000000 | (this.stationColor & 0xFFFFFF));
     }
 
     // ------------------------------------------------------------------ tick

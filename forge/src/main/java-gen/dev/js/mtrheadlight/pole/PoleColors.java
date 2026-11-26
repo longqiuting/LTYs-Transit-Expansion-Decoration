@@ -26,7 +26,8 @@ import net.minecraft.world.level.Level;
  */
 public final class PoleColors {
 
-    public static final int WHITE = 0xFFFFFF;
+    /** 默认色（白）。<b>必须带不透明 alpha</b>：这个 int 被当作 ARGB 乘进顶点色，alpha=0 会让面全透明。 */
+    public static final int WHITE = 0xFFFFFFFF;
     public static final int SCAN_RADIUS = 24;
 
     private static boolean loggedFailure;

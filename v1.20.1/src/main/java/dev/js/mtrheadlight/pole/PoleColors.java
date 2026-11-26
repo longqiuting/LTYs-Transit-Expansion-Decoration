@@ -45,8 +45,12 @@ import net.minecraft.world.World;
  */
 public final class PoleColors {
 
-    /** 没解析出车站色时用白色（= 白色混凝土贴图原色，染成白色等于不染）。 */
-    public static final int WHITE = 0xFFFFFF;
+    /**
+     * 默认色（白）。<b>必须带不透明 alpha</b>：Fabric 的 {@code ColorProviderRegistry} 与 Forge 的
+     * {@code RegisterColorHandlersEvent.Block} 都把这个 int 当 <b>ARGB</b> 用，顶点颜色乘上去，
+     * alpha 为 0 会让整片面全透明 —— 柱子「完全看不见」就是这么来的。
+     */
+    public static final int WHITE = 0xFFFFFFFF;
 
     /** 就近扫车站的半径（格）。 */
     public static final int SCAN_RADIUS = 24;
