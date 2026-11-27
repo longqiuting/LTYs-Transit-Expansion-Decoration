@@ -63,7 +63,7 @@ public final class PoleClient implements net.fabricmc.api.ClientModInitializer {
 
     /** 柱底几何由 BER 画（见 {@link PoleRawRenderer}），不走方块模型烘焙。 */
     private static void registerRenderer() {
-        if (true) { return; } // 不再需要 BER：方块模型正常渲染（getRenderType 改回 MODEL）
+        // BER 只画凹槽色带四片平面（和 MTR 吊板同一个手法），方块模型照常渲染
         try {
             final BlockEntityType<AmtrPoleBottomBlockEntity> type = PoleBlocks.bottomEntityType();
             if (type == null) {

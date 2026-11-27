@@ -42,7 +42,11 @@ public final class PoleTint {
                 if (tintIndex != 0 || !(world instanceof World level) || pos == null) {
                     return 0xFFFFFFFF;
                 }
-                return 0xFF000000 | colorAt(level, pos);
+                final int rgb = colorAt(level, pos);
+                if (PROBES.incrementAndGet() <= 3) {
+                    LteLog.LOGGER.info("[lte] pole tint probe: pos={} rgb=#{}", pos, String.format("%06X", rgb));
+                }
+                return 0xFF000000 | rgb;
             }, block);
             LteLog.LOGGER.info("[lte] pole tint provider registered");
         } catch (final Throwable t) {
