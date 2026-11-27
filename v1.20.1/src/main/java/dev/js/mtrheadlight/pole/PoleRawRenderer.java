@@ -81,6 +81,25 @@ public final class PoleRawRenderer implements BlockEntityRenderer<AmtrPoleBottom
                     new float[]{p, y0, 1.0F}, new float[]{p, y0, 0.0F},
                     new float[]{p, y1, 0.0F}, new float[]{p, y1, 1.0F});
 
+            // 四个 45° 转角：把相邻两片主面的外沿连起来（否则转角只有 90° 折角、看着没有色带）。
+            final float dg = (float) (1.0D / Math.sqrt(2.0D));
+            // (x=1, z=1)
+            quad(entry, buffer, entity, r, g, b, dg, 0.0F, dg,
+                    new float[]{1.0F, y0, p}, new float[]{p, y0, 1.0F},
+                    new float[]{p, y1, 1.0F}, new float[]{1.0F, y1, p});
+            // (x=1, z=0)
+            quad(entry, buffer, entity, r, g, b, dg, 0.0F, -dg,
+                    new float[]{p, y0, 0.0F}, new float[]{1.0F, y0, n},
+                    new float[]{1.0F, y1, n}, new float[]{p, y1, 0.0F});
+            // (x=0, z=0)
+            quad(entry, buffer, entity, r, g, b, -dg, 0.0F, -dg,
+                    new float[]{n, y0, 0.0F}, new float[]{0.0F, y0, n},
+                    new float[]{0.0F, y1, n}, new float[]{n, y1, 0.0F});
+            // (x=0, z=1)
+            quad(entry, buffer, entity, r, g, b, -dg, 0.0F, dg,
+                    new float[]{0.0F, y0, p}, new float[]{n, y0, 1.0F},
+                    new float[]{n, y1, 1.0F}, new float[]{0.0F, y1, p});
+
         } catch (final Throwable t) {
             LteLog.LOGGER.warn("[lte] pole band render skipped", t);
         }
