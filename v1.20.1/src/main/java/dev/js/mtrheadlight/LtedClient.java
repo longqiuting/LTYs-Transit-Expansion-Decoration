@@ -3,6 +3,7 @@ package dev.js.mtrheadlight;
 import dev.js.mtrheadlight.decor.DecorClient;
 import dev.js.mtrheadlight.decor.DecorConfig;
 import dev.js.mtrheadlight.logo.LogoClient;
+import dev.js.mtrheadlight.region.RegionalLogosClient;
 import dev.js.mtrheadlight.pole.PoleClient;
 import dev.js.mtrheadlight.railing.RailingGlassClient;
 import dev.js.mtrheadlight.security.SecurityClient;
@@ -43,6 +44,7 @@ public final class LtedClient implements ClientModInitializer {
 
         // ④ 以下是装饰类，顺序不变。
         new XiamenClient().onInitializeClient();
+        new RegionalLogosClient().onInitializeClient();
         new WallSignClient().onInitializeClient();
         new RailingGlassClient().onInitializeClient();
         new DecorClient().onInitializeClient();

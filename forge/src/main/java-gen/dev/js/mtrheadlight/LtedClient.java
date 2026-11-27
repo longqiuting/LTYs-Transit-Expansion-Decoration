@@ -28,6 +28,7 @@ public final class LtedClient implements ClientInit {
       (new PsdLcdClient()).onInitializeClient();
       (new DepOnWallClient()).onInitializeClient();
       (new LogoClient()).onInitializeClient();
+      (new dev.js.mtrheadlight.region.RegionalLogosClient()).onInitializeClient();
       (new XiamenMachinesClient()).onInitializeClient();
       (new ChargerClient()).onInitializeClient();
       (new DrinksMachineClient()).onInitializeClient();

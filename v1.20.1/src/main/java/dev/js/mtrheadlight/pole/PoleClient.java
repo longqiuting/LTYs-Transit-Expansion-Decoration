@@ -49,11 +49,15 @@ public final class PoleClient implements net.fabricmc.api.ClientModInitializer {
 
     /** 客户端初始化时调一次。 */
     public static void register() {
+        if (true) {
+            return; // POLE_SIMPLE：柱底已是普通方块，染色/颜色面板/同步/ctrl+中键整套停用
+        }
         if (registered) {
             return;
         }
         registered = true;
-        PoleTint.register();
+        // TINTTEST: 暂时不注册染色 provider
+        if (false) PoleTint.register(); // TINTTEST off
         registerRenderer();
         PoleProbe.register();
         registerReceiver();
@@ -63,7 +67,7 @@ public final class PoleClient implements net.fabricmc.api.ClientModInitializer {
 
     /** 柱底几何由 BER 画（见 {@link PoleRawRenderer}），不走方块模型烘焙。 */
     private static void registerRenderer() {
-        if (Boolean.getBoolean("lte.pole.baked")) { return; } // 默认 BER；-Dlte.pole.baked=true 时走方块模型（该路径在本方块上不渲染）
+        if (true) { return; } // 默认 BER；-Dlte.pole.baked=true 时走方块模型（该路径在本方块上不渲染）
         try {
             final BlockEntityType<AmtrPoleBottomBlockEntity> type = PoleBlocks.bottomEntityType();
             if (type == null) {
