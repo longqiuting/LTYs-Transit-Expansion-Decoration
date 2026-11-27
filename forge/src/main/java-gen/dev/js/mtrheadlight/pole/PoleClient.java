@@ -37,9 +37,6 @@ public final class PoleClient implements ClientInit {
     }
 
     public static void register() {
-        if (true) {
-            return; // POLE_SIMPLE：柱底已是普通方块，染色/颜色面板/同步/ctrl+中键整套停用
-        }
         if (registered) {
             return;
         }

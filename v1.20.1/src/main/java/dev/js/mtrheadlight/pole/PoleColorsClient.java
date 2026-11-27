@@ -37,6 +37,16 @@ final class PoleColorsClient {
     private PoleColorsClient() {
     }
 
+    /** 一次性诊断：前 3 次解析失败/成功都说明是哪一条判据没过。 */
+    private static final java.util.concurrent.atomic.AtomicInteger PROBES =
+            new java.util.concurrent.atomic.AtomicInteger();
+
+    private static void probe(final String what) {
+        if (PROBES.incrementAndGet() <= 3) {
+            dev.js.mtrheadlight.LteLog.LOGGER.info("[lte] station colour probe: {}", what);
+        }
+    }
+
     /** @return {@code 0xRRGGBB}；{@code 0} = 没解析出来 */
     static int resolve(final BlockPos pos) {
         if (pos == null) {
@@ -44,15 +54,18 @@ final class PoleColorsClient {
         }
         final ClientCache cache = ClientData.DATA_CACHE;
         if (cache == null) {
+            probe("cache=null");
             return 0;
         }
         final Station station = PoleColors.findStation(cache, pos, ClientData.STATIONS);
         if (station == null) {
+            probe("no station near " + pos);
             return 0;
         }
         final Map<Integer, ClientCache.ColorNameTuple> all =
                 cache.stationIdToRoutes.get(Long.valueOf(station.id));
         if (all == null || all.isEmpty()) {
+            probe("station " + station.name + " has no route colour");
             return 0;
         }
         // 与 {@link PoleColors} 的判定保持一致：线路色升序，取第一条非 0。

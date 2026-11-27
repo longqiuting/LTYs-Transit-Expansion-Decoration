@@ -107,7 +107,11 @@ public final class PoleBlocks {
         middleItem = Registry.register(Registries.ITEM, MIDDLE_ID,
                 new BlockItem(middle, new Item.Settings()));
 
-        // 柱底已改成普通方块：没有方块实体、没有颜色通道、没有染色。
+        bottomEntityType = Registry.register(Registries.BLOCK_ENTITY_TYPE, BOTTOM_ID,
+                FabricBlockEntityTypeBuilder.create(AmtrPoleBottomBlockEntity::new, bottom).build());
+
+        // 颜色通道（刷子开面板 / 写颜色 / 复位）。
+        PoleNet.register();
 
         try {
             ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP,

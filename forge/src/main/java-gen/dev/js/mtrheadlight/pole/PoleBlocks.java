@@ -70,7 +70,9 @@ public final class PoleBlocks {
         bottomItem = Reg.item(BOTTOM_ID, new AmtrPoleBottomItem(bottom, new Item.Properties()));
         middleItem = Reg.item(MIDDLE_ID, new BlockItem(middle, new Item.Properties()));
 
-        // 柱底已改成普通方块：没有方块实体、没有颜色通道、没有染色。
+        bottomEntityType = Reg.blockEntityType(BOTTOM_ID, AmtrPoleBottomBlockEntity::new, bottom);
+
+        PoleNet.register();
 
         try {
             Reg.tabEntries(XiamenObjects.CORE_TAB_ID, (Reg.TabEntriesConsumer) entries -> {

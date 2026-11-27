@@ -1,63 +1,36 @@
-// 柱底凹槽色带的染色 provider（Forge 侧）。
 package dev.js.mtrheadlight.pole;
 
 import dev.js.mtrheadlight.LteLog;
 import net.minecraft.client.color.block.BlockColors;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import net.minecraft.world.level.block.Block;
 
 /**
- * 柱底凹槽色带的取色器（Forge 侧，和 Fabric 侧 {@code PoleTint} 同构）。
+ * 柱子那一圈的染色 provider（Forge 侧）。
  *
- * <p>方块是普通方块（没有方块实体），颜色按位置缓存，缓存每 100 tick 清一次；
- * 取不到车站/线路色就回白色。
+ * <p>Fabric 侧对应物是 {@code v1.20.1/.../pole/PoleTint.java}（{@code ColorProviderRegistry.BLOCK}），
+ * 这里换成 Forge 的 {@code RegisterColorHandlersEvent.Block}：两者都是「给某个方块挂一个
+ * {@code (state, world, pos, tintIndex) -> rgb} 的取色器」，模型里 {@code tintindex: 0} 的面每帧都会问。
+ *
+ * <p>由 {@code ClientBootstrap} 在 mod 事件总线上注册 {@link #onRegisterBlockColours}。
  */
 public final class PoleTint {
-
-    private static final int CACHE_TICKS = 100;
-
-    private static final Map<BlockPos, Integer> CACHE = new ConcurrentHashMap<>();
-    private static long cachedTick = Long.MIN_VALUE;
 
     private PoleTint() {
     }
 
-    public static void register() {
-        // Forge 侧走 RegisterColorHandlersEvent.Block（见 PoleForgeClient）。
-    }
-
-    /** {@code RegisterColorHandlersEvent.Block} 回调。 */
-    public static void onRegisterBlockColours(final BlockColors colors) {
+    /** {@code RegisterColorHandlersEvent.Block} 的监听体。 */
+    public static void onRegisterBlockColours(final BlockColors colours) {
         try {
-            final AmtrPoleBottomBlock block = PoleBlocks.bottom();
+            final Block block = PoleBlocks.bottom();
             if (block == null) {
                 return;
             }
-            colors.register((state, level, pos, tintIndex) -> {
-                if (tintIndex != 0 || level == null || pos == null) {
-                    return 0xFFFFFFFF;
-                }
-                return 0xFF000000 | colorAt(level, pos);
-            }, block);
+            colours.register((state, level, pos, tintIndex) ->
+                    tintIndex == 0 ? AmtrPoleBottomBlock.effectiveTint(level, pos) : PoleColors.WHITE,
+                    block);
             LteLog.LOGGER.info("[lte] pole tint provider registered");
-        } catch (final Throwable t) {
-            LteLog.LOGGER.warn("[lte] pole tint provider unavailable (the groove stays white)", t);
-        }
-    }
-
-    private static int colorAt(final Level level, final BlockPos pos) {
-        try {
-            if (level.getGameTime() - cachedTick > CACHE_TICKS) {
-                CACHE.clear();
-                cachedTick = level.getGameTime();
-            }
-            final int rgb = CACHE.computeIfAbsent(pos.immutable(), p -> PoleColors.resolve(level, p));
-            return rgb == 0 ? 0xFFFFFF : (rgb & 0xFFFFFF);
-        } catch (final Throwable t) {
-            return 0xFFFFFF;
+        } catch (Throwable t) {
+            LteLog.LOGGER.warn("[lte] pole tint provider unavailable (the colour band stays white)", t);
         }
     }
 }

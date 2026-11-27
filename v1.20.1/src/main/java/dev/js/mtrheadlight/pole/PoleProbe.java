@@ -75,7 +75,7 @@ public final class PoleProbe {
         } catch (final Throwable t) {
             LteLog.LOGGER.warn("[lte] pole probe: model lookup failed", t);
         }
-        LteLog.LOGGER.info("[lte] pole probe: pos={} state={} block={} be={} builtin={} quads={}",
-                pos, state, block, entity == null ? "none" : entity.getClass().getSimpleName(), builtin, quads);
+        LteLog.LOGGER.info("[lte] pole probe: pos={} state={} renderType={} block={} be={} builtin={} quads={}",
+                pos, state, state.getRenderType(), block, entity == null ? "none" : entity.getClass().getSimpleName(), builtin, quads);
     }
 }
