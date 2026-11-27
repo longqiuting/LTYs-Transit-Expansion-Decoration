@@ -50,7 +50,8 @@ public final class PoleClient implements net.fabricmc.api.ClientModInitializer {
     /** 客户端初始化时调一次。 */
     public static void register() {
         if (true) {
-            return; // POLE_SIMPLE：柱底已是普通方块，染色/颜色面板/同步/ctrl+中键整套停用
+            PoleTint.register(); // 凹槽色带：只有染色 provider，其它面板/同步/复制全部停用
+            return;
         }
         if (registered) {
             return;

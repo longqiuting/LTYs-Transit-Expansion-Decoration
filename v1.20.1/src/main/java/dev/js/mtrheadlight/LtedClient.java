@@ -52,6 +52,11 @@ public final class LtedClient implements ClientModInitializer {
         new PidsXiamenClient().onInitializeClient();
         new PsdLcdClient().onInitializeClient();
         new DepOnWallClient().onInitializeClient();
+        dev.js.mtrheadlight.LteLog.LOGGER.info("[lte] host probe: routeMap={} pids={} psd={} platform={}",
+                dev.js.mtrheadlight.mixin.HostProbe.mtrRouteMap(),
+                dev.js.mtrheadlight.mixin.HostProbe.mtrPidsRenderer(),
+                dev.js.mtrheadlight.mixin.HostProbe.mtrPsdDoorRenderer(),
+                dev.js.mtrheadlight.mixin.HostProbe.mtrBlockPlatform());
         new LogoClient().onInitializeClient();
         new XiamenMachinesClient().onInitializeClient();
         new ChargerClient().onInitializeClient();

@@ -47,6 +47,10 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 @Mixin(value = RouteMapGenerator.class, remap = false)
 public abstract class StationNameEntranceLogoMixin {
 
+    /** 一次性日志：确认这条注入真的生效（贴墙标 logo 换成我们自己的图）。 */
+    private static final java.util.Set<String> ONCE = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+
     /** {@code new Identifier("mtr", path)} 的<b>命名空间</b>：我们的牌子换成 {@code mtrlte}。 */
     @ModifyArg(
             method = "drawResource",
