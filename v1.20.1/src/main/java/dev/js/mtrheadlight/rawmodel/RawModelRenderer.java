@@ -110,6 +110,20 @@ public final class RawModelRenderer {
                               final boolean emissive,
                               final float red, final float green, final float blue,
                               final float alpha) {
+        render(matrices, consumer, mesh, light, overlay, emissive, red, green, blue, alpha, 0.0F);
+    }
+
+    /**
+     * 再加一个「沿面法线外扩」：{@code inflate} 以 1/16 格为单位，把每个顶点沿它所在面的法线推开。
+     *
+     * <p>给「发光层压在方块表面之上」用：只放大整份网格（绕中心缩放）对薄几何几乎没用 ——
+     * 离中心越近位移越小，2px 厚的灯带推不开，照样闪面。按法线逐个顶点推才是稳的。
+     */
+    public static void render(final MatrixStack matrices, final VertexConsumer consumer,
+                              final RawMesh mesh, final int light, final int overlay,
+                              final boolean emissive,
+                              final float red, final float green, final float blue,
+                              final float alpha, final float inflate) {
         if (mesh == null || consumer == null) {
             return;
         }
@@ -122,8 +136,10 @@ public final class RawModelRenderer {
             final float[][] uv = quad.uv();
             final float[] n = quad.normal();
             for (int i = 0; i < 4; i++) {
-                consumer.vertex(entry.getPositionMatrix(), pos[i][0] / 16.0F, pos[i][1] / 16.0F,
-                                pos[i][2] / 16.0F)
+                consumer.vertex(entry.getPositionMatrix(),
+                                (pos[i][0] + n[0] * inflate) / 16.0F,
+                                (pos[i][1] + n[1] * inflate) / 16.0F,
+                                (pos[i][2] + n[2] * inflate) / 16.0F)
                         .color(shade * red, shade * green, shade * blue, alpha)
                         .texture(uv[i][0], uv[i][1])
                         .overlay(overlay)

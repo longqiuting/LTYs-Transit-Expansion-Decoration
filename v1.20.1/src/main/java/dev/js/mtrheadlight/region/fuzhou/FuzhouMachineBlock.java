@@ -118,6 +118,14 @@ public final class FuzhouMachineBlock extends BlockWithEntity {
     public void onPlaced(final World world, final BlockPos pos, final BlockState state,
                          @Nullable final LivingEntity placer, final ItemStack itemStack) {
         world.setBlockState(pos.up(), state.with(HALF, DoubleBlockHalf.UPPER), Block.NOTIFY_ALL);
+        // 默认界面：装了方速就用方速（和厦门 / 港铁那两台一致），没装就是原版
+        if (world.getBlockEntity(pos.up()) instanceof final FuzhouMachineBlockEntity machine) {
+            machine.applyConfig(dev.js.mtrheadlight.xiamen.machine.FangsuTicketUi.loaded()
+                            ? FuzhouMachineBlockEntity.MODE_FANGSU
+                            : FuzhouMachineBlockEntity.MODE_VANILLA,
+                    machine.colorSource(), machine.customColor(), machine.lineColor(),
+                    machine.ledText(), machine.ledScroll());
+        }
     }
 
     /** 拆任一半，另一半一起掉（与原版双高方块一致）。 */
@@ -154,9 +162,8 @@ public final class FuzhouMachineBlock extends BlockWithEntity {
     @Override
     public ActionResult onUse(final BlockState state, final World world, final BlockPos pos,
                               final PlayerEntity player, final Hand hand, final BlockHitResult hit) {
-        if (!isUpper(state)) {
-            return ActionResult.PASS;
-        }
+        // 上下两格是同一台机器：点下半段也照上半段处理（配置存在上半段的方块实体里）
+        final BlockPos machinePos = isUpper(state) ? pos : pos.up();
 
         // ① 刷子：打开配置面板（模式 / 面板颜色 / LED 文字）
         if (player.getStackInHand(hand).isOf(mtr.Items.BRUSH.get())) {
@@ -164,13 +171,13 @@ public final class FuzhouMachineBlock extends BlockWithEntity {
                 return ActionResult.SUCCESS;
             }
             if (player instanceof final net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
-                dev.js.mtrheadlight.machine.MachineConfigNet.open(serverPlayer, pos);
+                dev.js.mtrheadlight.machine.MachineConfigNet.open(serverPlayer, machinePos);
             }
             return ActionResult.SUCCESS;
         }
 
         // ② 普通右键：按配置好的模式开售票界面（和厦门 / 港铁那两台同一套行为）
-        final int mode = world.getBlockEntity(pos) instanceof final FuzhouMachineBlockEntity machine
+        final int mode = world.getBlockEntity(machinePos) instanceof final FuzhouMachineBlockEntity machine
                 ? machine.mode() : FuzhouMachineBlockEntity.MODE_FANGSU;
 
         if (mode == FuzhouMachineBlockEntity.MODE_OFF) {

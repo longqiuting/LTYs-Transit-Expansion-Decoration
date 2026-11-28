@@ -41,8 +41,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class HkDestinationLightRenderer implements BlockEntityRenderer<HkDestinationLightBlockEntity> {
 
-    /** 发光层相对本体外扩的比例（绕方块中心缩放，约 0.6mm / 格）。 */
-    private static final float OUTSET = 1.004F;
+    /** 发光层沿面法线外扩多少（1/16 格）：0.6 ≈ 0.04 格，足够压过深度精度又看不出来。 */
+    private static final float OUTSET_PX = 0.6F;
     /** 淡入时长（秒）。 */
     private static final float FADE_IN_SECONDS = 0.45F;
     /** 淡出时长（秒）。 */
@@ -83,12 +83,10 @@ public final class HkDestinationLightRenderer implements BlockEntityRenderer<HkD
         }
 
         matrices.push();
-        // 绕方块中心外扩一点：发光面离开灯体表面，避免深度冲突
-        matrices.translate(0.5D, 0.5D, 0.5D);
-        matrices.scale(OUTSET, OUTSET, OUTSET);
         // 方块模型的 y 旋转与 POSITIVE_Y 反向，这里取负才对得上
+        matrices.translate(0.5D, 0.0D, 0.5D);
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-yaw(entity.getCachedState())));
-        matrices.translate(-0.5D, -0.5D, -0.5D);
+        matrices.translate(-0.5D, 0.0D, -0.5D);
 
         final VertexConsumer consumer = vertexConsumers.getBuffer(
                 TRANSLUCENT.computeIfAbsent(mesh.texture(), RenderLayer::getEntityTranslucent));
@@ -97,7 +95,7 @@ public final class HkDestinationLightRenderer implements BlockEntityRenderer<HkD
         final float g = ((rgb >> 8) & 0xFF) / 255.0F;
         final float b = (rgb & 0xFF) / 255.0F;
         RawModelRenderer.render(matrices, consumer, mesh, LightmapTextureManager.MAX_LIGHT_COORDINATE,
-                OverlayTexture.DEFAULT_UV, true, r, g, b, alpha);
+                OverlayTexture.DEFAULT_UV, true, r, g, b, alpha, OUTSET_PX);
         matrices.pop();
     }
 
