@@ -76,6 +76,7 @@ public final class LtedClient implements ClientModInitializer {
                     dev.js.mtrheadlight.xiamen.pids.PsdLcdTextures.clear();
                     dev.js.mtrheadlight.xiamen.pids.PidsXiamenConsistTextures.clear();
                     dev.js.mtrheadlight.region.hk.DestinationColors.clear();
+                    dev.js.mtrheadlight.region.hk.HkDestinationLightRenderer.clear();
                     dev.js.mtrheadlight.bind.PidsStationResolver.resetCaches();
                 });
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK

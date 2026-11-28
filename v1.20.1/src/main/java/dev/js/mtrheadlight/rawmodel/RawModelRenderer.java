@@ -96,6 +96,20 @@ public final class RawModelRenderer {
                               final RawMesh mesh, final int light, final int overlay,
                               final boolean emissive,
                               final float red, final float green, final float blue) {
+        render(matrices, consumer, mesh, light, overlay, emissive, red, green, blue, 1.0F);
+    }
+
+    /**
+     * 同 {@link #render(MatrixStack, VertexConsumer, RawMesh, int, int, boolean, float, float, float)}，
+     * 但整份网格乘一个 **alpha**。
+     *
+     * <p>给「渐变亮起 / 熄灭」用：配合半透明图层，alpha 从 0 到 1 就是灯带淡入，反过来就是淡出。
+     */
+    public static void render(final MatrixStack matrices, final VertexConsumer consumer,
+                              final RawMesh mesh, final int light, final int overlay,
+                              final boolean emissive,
+                              final float red, final float green, final float blue,
+                              final float alpha) {
         if (mesh == null || consumer == null) {
             return;
         }
@@ -110,7 +124,7 @@ public final class RawModelRenderer {
             for (int i = 0; i < 4; i++) {
                 consumer.vertex(entry.getPositionMatrix(), pos[i][0] / 16.0F, pos[i][1] / 16.0F,
                                 pos[i][2] / 16.0F)
-                        .color(shade * red, shade * green, shade * blue, 1.0F)
+                        .color(shade * red, shade * green, shade * blue, alpha)
                         .texture(uv[i][0], uv[i][1])
                         .overlay(overlay)
                         .light(quadLight)
