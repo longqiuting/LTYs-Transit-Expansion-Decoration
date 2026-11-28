@@ -62,10 +62,7 @@ public final class FuzhouMachineRenderer implements BlockEntityRenderer<FuzhouMa
                 final float g = ((rgb >> 8) & 0xFF) / 255.0F;
                 final float b = (rgb & 0xFF) / 255.0F;
                 final RawMesh color = RawModelJson.get(RawModelJson.id(block.colorModel()));
-                if (color != null) {
-                    final VertexConsumer consumer = vertexConsumers.getBuffer(RawModelRenderer.solidLayer(color));
-                    RawModelRenderer.render(matrices, consumer, color, light, OverlayTexture.DEFAULT_UV, false, r, g, b);
-                }
+                drawFlat(matrices, vertexConsumers, color, light, r, g, b);
             }
 
             // 3) LED 屏底（文字在下一轮加；先铺一块暗绿，方便确认位置）
@@ -82,6 +79,33 @@ public final class FuzhouMachineRenderer implements BlockEntityRenderer<FuzhouMa
             matrices.pop();
         } catch (final Throwable t) {
             LteLog.LOGGER.warn("[lte] fuzhou machine render skipped", t);
+        }
+    }
+
+    /**
+     * 纯色块：不走贴图（否则会采样到图集里的像素，浅色块里掺黑），用 1×1 纯白贴图 + 顶点色。
+     */
+    private static void drawFlat(final MatrixStack matrices, final VertexConsumerProvider vertexConsumers,
+                                 final RawMesh mesh, final int light, final float r, final float g, final float b) {
+        if (mesh == null) {
+            return;
+        }
+        final VertexConsumer consumer = vertexConsumers.getBuffer(
+                RenderLayer.getEntitySolid(new net.minecraft.util.Identifier("mtrlte", "textures/block/flat_white.png")));
+        final MatrixStack.Entry entry = matrices.peek();
+        for (final RawMesh.Quad quad : mesh.quads()) {
+            final float shade = quad.fullBright() ? 1.0F : quad.shade();
+            final float[][] pos = quad.pos();
+            final float[] n = quad.normal();
+            for (int i = 0; i < 4; i++) {
+                consumer.vertex(entry.getPositionMatrix(), pos[i][0] / 16.0F, pos[i][1] / 16.0F, pos[i][2] / 16.0F)
+                        .color(shade * r, shade * g, shade * b, 1.0F)
+                        .texture(0.5F, 0.5F)
+                        .overlay(OverlayTexture.DEFAULT_UV)
+                        .light(light)
+                        .normal(entry.getNormalMatrix(), n[0], n[1], n[2])
+                        .next();
+            }
         }
     }
 
