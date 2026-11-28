@@ -144,6 +144,13 @@ public final class PidsStationResolver {
         return Collections.emptySet();
     }
 
+    /** 断线 / 换存档时直接清干净（不等下一次渲染才发现世界变了）。 */
+    public static void resetCaches() {
+        lastWorld = null;
+        PidsStationIndex.reset();
+        LAST_LINE.clear();
+    }
+
     private static void lte$resetIfWorldChanged() {
         try {
             final ClientWorld world = MinecraftClient.getInstance().world;

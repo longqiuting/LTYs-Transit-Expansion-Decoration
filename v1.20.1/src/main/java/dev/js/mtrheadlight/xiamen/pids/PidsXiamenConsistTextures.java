@@ -42,7 +42,7 @@ import net.minecraft.util.Identifier;
  * <p><b>采样</b>：注册完显式 {@code setFilter(false, false)}（NEAREST / 无 mipmap）。
  * 叠加层本身就是 4× 直接绘制的，NEAREST 上屏不会再把边缘抹糊。
  */
-final class PidsXiamenConsistTextures {
+public final class PidsXiamenConsistTextures {
 
     /** 多久没人渲染就注销（ms）。 */
     private static final long TTL_MS = 30_000L;
@@ -217,7 +217,7 @@ final class PidsXiamenConsistTextures {
     }
 
     /** 回收长时间没人用的贴图（渲染器每帧调一次，很便宜）。 */
-    static void sweep() {
+    public static void sweep() {
         if (ENTRIES.isEmpty()) {
             return;
         }
@@ -230,6 +230,11 @@ final class PidsXiamenConsistTextures {
                 destroy(entry);
             }
         }
+    }
+
+    /** 断线 / 换存档：整表清空（和 invalidate 一样，但连素材缓存一起丢掉）。 */
+    public static void clear() {
+        invalidate();
     }
 
     /** 资源重载（F3+T / 换包）：素材缓存作废、代数 +1，下一帧按新素材重画。 */

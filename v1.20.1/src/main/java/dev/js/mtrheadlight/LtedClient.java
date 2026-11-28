@@ -64,5 +64,21 @@ public final class LtedClient implements ClientModInitializer {
         new DrinksMachineClient().onInitializeClient();
         new SecurityClient().onInitializeClient();
         new FangsuPsdClient().onInitializeClient();
+
+        // ⑤ 动态贴图的生命周期：断线/换存档整表释放，每 tick 顺手回收过期的那几张。
+        //    不挂这个的话，静态 map 会一直钉住 NativeImage + GL 贴图（换存档也赖着不走）。
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT
+                .register((handler, client) -> {
+                    dev.js.mtrheadlight.region.fuzhou.FuzhouLedTextures.clear();
+                    dev.js.mtrheadlight.xiamen.pids.PsdLcdTextures.clear();
+                    dev.js.mtrheadlight.xiamen.pids.PidsXiamenConsistTextures.clear();
+                    dev.js.mtrheadlight.bind.PidsStationResolver.resetCaches();
+                });
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK
+                .register(client -> {
+                    dev.js.mtrheadlight.region.fuzhou.FuzhouLedTextures.sweep();
+                    dev.js.mtrheadlight.xiamen.pids.PsdLcdTextures.sweep();
+                    dev.js.mtrheadlight.xiamen.pids.PidsXiamenConsistTextures.sweep();
+                });
     }
 }

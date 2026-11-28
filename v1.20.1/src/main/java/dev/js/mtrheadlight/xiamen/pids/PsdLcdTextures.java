@@ -19,7 +19,7 @@ import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
 
 /** 方块实体 ↔ 动态贴图。键是「维度 + 锚点坐标 + 段数」。 */
-final class PsdLcdTextures {
+public final class PsdLcdTextures {
 
     /** 多久没人渲染就注销（ms）。拆屏 / 走远之后贴图自然回收。 */
     private static final long TTL_MS = 30_000L;
@@ -143,7 +143,7 @@ final class PsdLcdTextures {
     }
 
     /** 回收长时间没人用的贴图（每帧调一次也没关系，很便宜）。 */
-    static void sweep() {
+    public static void sweep() {
         if (ENTRIES.isEmpty()) {
             return;
         }
@@ -177,7 +177,7 @@ final class PsdLcdTextures {
     }
 
     /** 断线 / 切世界时清干净（渲染器在客户端初始化时挂一次）。 */
-    static void clear() {
+    public static void clear() {
         for (final Entry entry : ENTRIES.values()) {
             destroy(entry);
         }

@@ -23,8 +23,14 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class PoleTint {
 
-    /** 客户端兜底算出来的颜色，按位置缓存；{@code 0} = 算过但没结果。 */
-    private static final Map<BlockPos, Integer> CLIENT_COLORS = new ConcurrentHashMap<>();
+    /**
+     * 客户端兜底算出来的颜色；{@code 0} = 算过但没结果。
+     *
+     * <p>key 是「维度 + 坐标」—— 只按 BlockPos 的话，主世界和地狱同一个坐标会互相串色；
+     * 条目数也封了顶（超了就整表清空），跑长途线路不会一直涨。
+     */
+    private static final Map<String, Integer> CLIENT_COLORS = new ConcurrentHashMap<>();
+    private static final int CLIENT_CACHE_LIMIT = 4096;
 
     private static final java.util.concurrent.atomic.AtomicInteger PROBES =
             new java.util.concurrent.atomic.AtomicInteger();
@@ -61,7 +67,11 @@ public final class PoleTint {
             if (fromEntity != 0xFFFFFF) {
                 return fromEntity;
             }
-            final int cached = CLIENT_COLORS.computeIfAbsent(pos.toImmutable(), p -> PoleColors.resolve(world, p));
+            if (CLIENT_COLORS.size() > CLIENT_CACHE_LIMIT) {
+                CLIENT_COLORS.clear();
+            }
+            final String key = world.getRegistryKey().getValue() + "#" + pos.asLong();
+            final int cached = CLIENT_COLORS.computeIfAbsent(key, k -> PoleColors.resolve(world, pos));
             if (PROBES.incrementAndGet() <= 3) {
                 LteLog.LOGGER.info("[lte] pole tint probe: pos={} clientFallback=#{}{}", pos,
                         String.format("%06X", cached & 0xFFFFFF), cached == 0 ? " (no station colour)" : "");
