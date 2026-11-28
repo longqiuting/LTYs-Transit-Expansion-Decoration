@@ -1,13 +1,11 @@
-// 福州地铁售票机的注册：上下两个方块 + 物品 + 方块实体类型 + 创造页签条目。
+// 福州地铁售票机的注册：一个方块 id（HALF 双段）+ 一个物品 + 方块实体类型。
 package dev.js.mtrheadlight.region.fuzhou;
 
 import dev.js.mtrheadlight.LteLog;
 import dev.js.mtrheadlight.region.RegionalTabs;
-import dev.js.mtrheadlight.xiamen.XiamenObjects;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
 import net.minecraft.block.MapColor;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.item.BlockItem;
@@ -19,31 +17,32 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.util.Identifier;
 
-/** 福州地铁售票机的方块 / 物品 / 方块实体。幂等。 */
+/**
+ * 福州地铁售票机：<b>一个</b>方块 id（{@code mtrlte:fuzhou_ticket_machine}）+ 一个物品。
+ *
+ * <p>上下两段靠 {@code HALF} 属性区分（和 {@code mtrlte:ticket_machine_xiamen} 完全一致），
+ * 所以创造页签里只有一个条目，不会有「(Bottom)」「(Top)」两个。
+ */
 public final class FuzhouMachines {
 
     public static final String NAMESPACE = "mtrlte";
-
-    public static final Identifier BOTTOM_ID = new Identifier(NAMESPACE, "fuzhou_ticket_machine_bottom");
-    public static final Identifier TOP_ID = new Identifier(NAMESPACE, "fuzhou_ticket_machine_top");
+    public static final Identifier ID = new Identifier(NAMESPACE, "fuzhou_ticket_machine");
 
     private static boolean registered;
 
-    private static FuzhouMachineBlock bottom;
-    private static FuzhouMachineBlock top;
-    private static Item bottomItem;
-    private static Item topItem;
+    private static FuzhouMachineBlock block;
+    private static Item item;
     private static BlockEntityType<FuzhouMachineBlockEntity> entityType;
 
     private FuzhouMachines() {
     }
 
-    public static FuzhouMachineBlock bottom() {
-        return bottom;
+    public static FuzhouMachineBlock block() {
+        return block;
     }
 
-    public static FuzhouMachineBlock top() {
-        return top;
+    public static Item item() {
+        return item;
     }
 
     public static BlockEntityType<FuzhouMachineBlockEntity> entityType() {
@@ -56,33 +55,21 @@ public final class FuzhouMachines {
         }
         registered = true;
 
-        bottom = Registry.register(Registries.BLOCK, BOTTOM_ID,
-                new FuzhouMachineBlock(machineSettings(), false,
-                        "fuzhou_machine_bottom", "fuzhou_machine_bottom_color"));
-        top = Registry.register(Registries.BLOCK, TOP_ID,
-                new FuzhouMachineBlock(machineSettings(), true,
-                        "fuzhou_machine_top", "fuzhou_machine_top_color"));
+        block = Registry.register(Registries.BLOCK, ID, new FuzhouMachineBlock(machineSettings()));
+        item = Registry.register(Registries.ITEM, ID, new BlockItem(block, new Item.Settings()));
 
-        bottomItem = Registry.register(Registries.ITEM, BOTTOM_ID,
-                new BlockItem(bottom, new Item.Settings()));
-        topItem = Registry.register(Registries.ITEM, TOP_ID,
-                new BlockItem(top, new Item.Settings()));
-
-        entityType = Registry.register(Registries.BLOCK_ENTITY_TYPE, TOP_ID,
-                FabricBlockEntityTypeBuilder.create(FuzhouMachineBlockEntity::new, top, bottom).build());
+        entityType = Registry.register(Registries.BLOCK_ENTITY_TYPE, ID,
+                FabricBlockEntityTypeBuilder.create(FuzhouMachineBlockEntity::new, block).build());
 
         try {
             ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP,
                             RegionalTabs.FUZHOU_TAB_ID))
-                    .register(entries -> {
-                        entries.add(bottomItem);
-                        entries.add(topItem);
-                    });
+                    .register(entries -> entries.add(item));
         } catch (final Throwable t) {
             LteLog.LOGGER.warn("[lte] fuzhou machine could not be added to its tab", t);
         }
 
-        LteLog.LOGGER.info("[lte] fuzhou machine: {} / {}", BOTTOM_ID, TOP_ID);
+        LteLog.LOGGER.info("[lte] fuzhou machine: {} (single block, HALF lower/upper)", ID);
     }
 
     private static AbstractBlock.Settings machineSettings() {
@@ -92,10 +79,5 @@ public final class FuzhouMachines {
                 .strength(2.0F, 6.0F)
                 .nonOpaque()
                 .sounds(BlockSoundGroup.METAL);
-    }
-
-    /** 未使用的引用，避免 IDE 警告（页签 id 由 RegionalTabs 提供）。 */
-    static RegistryKey<net.minecraft.item.ItemGroup> coreTab() {
-        return RegistryKey.of(RegistryKeys.ITEM_GROUP, XiamenObjects.CORE_TAB_ID);
     }
 }

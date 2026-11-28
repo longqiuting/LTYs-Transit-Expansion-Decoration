@@ -1,4 +1,4 @@
-// 福州地铁售票机：上下两块，几何全部走运行时网格（素材不是原版模型格式）。
+// 福州地铁售票机：一个方块 id + HALF（下/上两段），几何走运行时网格。
 package dev.js.mtrheadlight.region.fuzhou;
 
 import dev.js.mtrheadlight.rawmodel.RawModelJson;
@@ -10,10 +10,15 @@ import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.enums.DoubleBlockHalf;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.item.ItemStack;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.DirectionProperty;
+import net.minecraft.state.property.EnumProperty;
+import net.minecraft.state.property.Properties;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -22,65 +27,70 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldAccess;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * {@code mtrlte:fuzhou_ticket_machine_top} / {@code _bottom} —— 福州地铁售票机。
+ * {@code mtrlte:fuzhou_ticket_machine} —— 福州地铁售票机。
+ *
+ * <h2>一个 id + HALF（跟厦门售票机同一套做法）</h2>
+ * <p>不是一个 id 上下两块、也不是两个物品：和 {@code mtrlte:ticket_machine_xiamen} 一样，
+ * 一个方块 id 带 {@code FACING} + {@code HALF}，放置时自动补上上半段、拆任一半两段一起掉，
+ * 所以创造页签里只有<b>一个</b>物品。
  *
  * <h2>为什么整台走 BER</h2>
- * <p>素材是 Blockbench 自由格式（UV/元素都不在原版模型的能力范围内），烘焙模型吃不下，
- * 所以方块本身没有 blockstate 模型，几何全部由 {@link FuzhouMachineRenderer} 用 rawmodels
- * 在运行时画（{@code fuzhou_machine_bottom} / {@code _top} / {@code _bottom_color} /
- * {@code _top_color} / {@code _screen}）。
- *
- * <h2>交互</h2>
- * <p>只有上半块（{@code _top}）有交互：手持 MTR 刷子右键打开配置面板（
- * {@link FuzhouMachineConfigScreen}）。下半块右键直接放行。
+ * <p>素材是 Blockbench 自由格式（元素 / UV / 旋转不在原版方块模型的能力范围内），烘焙模型吃不下，
+ * 所以方块本身没有模型几何，由 {@link FuzhouMachineRenderer} 按 {@code HALF} 选
+ * {@code fuzhou_machine_bottom} / {@code fuzhou_machine_top} 在运行时画。
  */
 public final class FuzhouMachineBlock extends BlockWithEntity {
 
-    /** 四向（与 {@code HorizontalFacingBlock.FACING} 同一个属性实例）。 */
     public static final DirectionProperty FACING = HorizontalFacingBlock.FACING;
+    public static final EnumProperty<DoubleBlockHalf> HALF = Properties.DOUBLE_BLOCK_HALF;
 
-    /** 模型读不到时的兜底包围盒（模型空间 0..16）。 */
     private static final float[] FALLBACK_BOX = {0.0F, 0.0F, 0.0F, 16.0F, 16.0F, 16.0F};
 
-    private final boolean top;
-    private final String rawModel;
-    private final String colorModel;
-    private final VoxelShape[] shapes = new VoxelShape[4];
+    private final VoxelShape[] lowerShapes = new VoxelShape[4];
+    private final VoxelShape[] upperShapes = new VoxelShape[4];
 
-    public FuzhouMachineBlock(final AbstractBlock.Settings settings, final boolean top,
-                              final String rawModel, final String colorModel) {
+    public FuzhouMachineBlock(final AbstractBlock.Settings settings) {
         super(settings);
-        this.top = top;
-        this.rawModel = rawModel;
-        this.colorModel = colorModel;
-        this.setDefaultState(this.stateManager.getDefaultState().with(FACING, Direction.NORTH));
+        this.setDefaultState(this.stateManager.getDefaultState()
+                .with(FACING, Direction.NORTH)
+                .with(HALF, DoubleBlockHalf.LOWER));
 
-        final float[] bounds = RawModelJson.bounds(RawModelJson.id(rawModel));
-        final float[] box = bounds == null ? FALLBACK_BOX : bounds;
+        final float[] lower = boxOf("fuzhou_machine_bottom", 0.0F);
+        final float[] upper = boxOf("fuzhou_machine_top", 0.0F);
         for (int i = 0; i < 4; i++) {
-            this.shapes[i] = rotatedBox(box, i);
+            this.lowerShapes[i] = rotatedBox(lower, i);
+            this.upperShapes[i] = rotatedBox(upper, i);
         }
     }
 
-    public boolean isTop() {
-        return this.top;
+    private static float[] boxOf(final String rawModel, final float dy) {
+        final float[] b = RawModelJson.bounds(RawModelJson.id(rawModel));
+        if (b == null) {
+            return FALLBACK_BOX;
+        }
+        return new float[]{b[0], b[1] + dy, b[2], b[3], b[4] + dy, b[5]};
     }
 
-    public String rawModel() {
-        return this.rawModel;
+    /** 上段才有交互（配置面板）。 */
+    public static boolean isUpper(final BlockState state) {
+        return state.contains(HALF) && state.get(HALF) == DoubleBlockHalf.UPPER;
     }
 
-    public String colorModel() {
-        return this.colorModel;
+    /** 该半段用哪份原始模型（渲染器用）。 */
+    public String rawModel(final BlockState state) {
+        return isUpper(state) ? "fuzhou_machine_top" : "fuzhou_machine_bottom";
     }
 
-    /**
-     * 渲染类型：这里<b>故意</b>保持 {@code INVISIBLE} —— 方块没有任何方块模型，
-     * 全部几何由 BER 画；如果改成 MODEL，原版会去找一个不存在的烘焙模型。
-     */
+    /** 该半段的 color 组模型（渲染器用）。 */
+    public String colorModel(final BlockState state) {
+        return isUpper(state) ? "fuzhou_machine_top_color" : "fuzhou_machine_bottom_color";
+    }
+
+    /** 方块本身没有烘焙模型：全部几何由 BER 画。 */
     @Override
     public BlockRenderType getRenderType(final BlockState state) {
         return BlockRenderType.INVISIBLE;
@@ -88,13 +98,40 @@ public final class FuzhouMachineBlock extends BlockWithEntity {
 
     @Override
     protected void appendProperties(final StateManager.Builder<Block, BlockState> builder) {
-        builder.add(FACING);
+        builder.add(FACING, HALF);
     }
 
     @Nullable
     @Override
     public BlockState getPlacementState(final ItemPlacementContext ctx) {
-        return this.getDefaultState().with(FACING, ctx.getHorizontalPlayerFacing());
+        return this.getDefaultState()
+                .with(FACING, ctx.getHorizontalPlayerFacing())
+                .with(HALF, DoubleBlockHalf.LOWER);
+    }
+
+    @Override
+    public void onPlaced(final World world, final BlockPos pos, final BlockState state,
+                         @Nullable final LivingEntity placer, final ItemStack itemStack) {
+        world.setBlockState(pos.up(), state.with(HALF, DoubleBlockHalf.UPPER), Block.NOTIFY_ALL);
+    }
+
+    /** 拆任一半，另一半一起掉（与原版双高方块一致）。 */
+    @Override
+    public void onStateReplaced(final BlockState state, final World world, final BlockPos pos,
+                                final BlockState newState, final boolean moved) {
+        if (!state.isOf(newState.getBlock()) && state.contains(HALF)) {
+            final BlockPos other = state.get(HALF) == DoubleBlockHalf.UPPER ? pos.down() : pos.up();
+            final BlockState otherState = world.getBlockState(other);
+            if (otherState.isOf(this)) {
+                world.setBlockState(other, net.minecraft.block.Blocks.AIR.getDefaultState(), Block.NOTIFY_ALL);
+            }
+        }
+        super.onStateReplaced(state, world, pos, newState, moved);
+    }
+
+    @Override
+    public ItemStack getPickStack(final BlockView world, final BlockPos pos, final BlockState state) {
+        return new ItemStack(FuzhouMachines.item());
     }
 
     @Override
@@ -103,9 +140,16 @@ public final class FuzhouMachineBlock extends BlockWithEntity {
     }
 
     @Override
+    public VoxelShape getOutlineShape(final BlockState state, final BlockView world,
+                                      final BlockPos pos, final ShapeContext context) {
+        final int index = state.get(FACING).getHorizontal();
+        return isUpper(state) ? this.upperShapes[index] : this.lowerShapes[index];
+    }
+
+    @Override
     public ActionResult onUse(final BlockState state, final World world, final BlockPos pos,
                               final PlayerEntity player, final Hand hand, final BlockHitResult hit) {
-        if (!this.top || !player.getStackInHand(hand).isOf(mtr.Items.BRUSH.get())) {
+        if (!isUpper(state) || !player.getStackInHand(hand).isOf(mtr.Items.BRUSH.get())) {
             return ActionResult.PASS;
         }
         if (world.isClient) {
@@ -116,14 +160,6 @@ public final class FuzhouMachineBlock extends BlockWithEntity {
             FuzhouMachineNet.sendOpen(serverPlayer, pos, machine);
         }
         return ActionResult.SUCCESS;
-    }
-
-    // ------------------------------------------------------------------ 形状
-
-    @Override
-    public VoxelShape getOutlineShape(final BlockState state, final BlockView world,
-                                      final BlockPos pos, final ShapeContext context) {
-        return this.shapes[state.get(FACING).getHorizontal()];
     }
 
     private static VoxelShape rotatedBox(final float[] b, final int quarterTurns) {

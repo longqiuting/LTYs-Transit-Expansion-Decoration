@@ -692,6 +692,5 @@
   "tooltip.mtrlte.texture_source": "Textures: Xiamen Line 1",
   "tooltip.mtrlte.ticket_machine_mtr": "Right-click to buy tickets; right-click with MTR's brush to cycle: fangsu UI → vanilla UI → eco power-off",
   "tooltip.mtrlte.ticket_machine_xiamen": "Right-click to buy tickets; right-click with MTR's brush to cycle: fangsu UI → vanilla UI → eco power-off",
-  "block.mtrlte.fuzhou_ticket_machine_bottom": "Fuzhou Ticket Machine (Bottom)",
-  "block.mtrlte.fuzhou_ticket_machine_top": "Fuzhou Ticket Machine (Top)"
+  "block.mtrlte.fuzhou_ticket_machine": "Fuzhou Ticket Machine"
 }

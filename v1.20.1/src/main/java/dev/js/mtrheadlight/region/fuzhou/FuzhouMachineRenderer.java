@@ -38,6 +38,7 @@ public final class FuzhouMachineRenderer implements BlockEntityRenderer<FuzhouMa
         if (entity.getWorld() == null || !(entity.getCachedState().getBlock() instanceof final FuzhouMachineBlock block)) {
             return;
         }
+        final FuzhouMachineBlockEntity config = configOf(entity);
         try {
             final float[] facing = rotationOf(entity.getCachedState().get(FuzhouMachineBlock.FACING));
             matrices.push();
@@ -45,10 +46,10 @@ public final class FuzhouMachineRenderer implements BlockEntityRenderer<FuzhouMa
             matrices.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Y.rotationDegrees(facing[0]));
             matrices.translate(-0.5D, 0.0D, -0.5D);
 
-            final boolean off = entity.mode() == FuzhouMachineBlockEntity.MODE_OFF;
+            final boolean off = config.mode() == FuzhouMachineBlockEntity.MODE_OFF;
 
             // 1) 本体
-            final RawMesh body = RawModelJson.get(RawModelJson.id(block.rawModel()));
+            final RawMesh body = RawModelJson.get(RawModelJson.id(block.rawModel(entity.getCachedState())));
             if (body != null) {
                 final VertexConsumer consumer = vertexConsumers.getBuffer(
                         off ? cutoutLayerOf(body, OFF_TEXTURE) : RawModelRenderer.cutoutLayer(body));
@@ -57,16 +58,16 @@ public final class FuzhouMachineRenderer implements BlockEntityRenderer<FuzhouMa
 
             // 2) 面板颜色区（纯顶点色；关机时不画）
             if (!off) {
-                final int rgb = resolveColor(entity);
+                final int rgb = resolveColor(config);
                 final float r = ((rgb >> 16) & 0xFF) / 255.0F;
                 final float g = ((rgb >> 8) & 0xFF) / 255.0F;
                 final float b = (rgb & 0xFF) / 255.0F;
-                final RawMesh color = RawModelJson.get(RawModelJson.id(block.colorModel()));
+                final RawMesh color = RawModelJson.get(RawModelJson.id(block.colorModel(entity.getCachedState())));
                 drawFlat(matrices, vertexConsumers, color, light, r, g, b);
             }
 
             // 3) LED 屏底（文字在下一轮加；先铺一块暗绿，方便确认位置）
-            if (!off && block.isTop()) {
+            if (!off && FuzhouMachineBlock.isUpper(entity.getCachedState())) {
                 final RawMesh screen = RawModelJson.get(RawModelJson.id("fuzhou_machine_screen"));
                 if (screen != null) {
                     final VertexConsumer consumer = vertexConsumers.getBuffer(RawModelRenderer.solidLayer(screen));
@@ -110,6 +111,15 @@ public final class FuzhouMachineRenderer implements BlockEntityRenderer<FuzhouMa
     }
 
     /** 面板颜色：车站色 / 线路色 / 玩家自选。 */
+    /** 配置统一存在上半段的方块实体里；下段渲染时去上段取。 */
+    private static FuzhouMachineBlockEntity configOf(final FuzhouMachineBlockEntity entity) {
+        if (FuzhouMachineBlock.isUpper(entity.getCachedState()) || entity.getWorld() == null) {
+            return entity;
+        }
+        final net.minecraft.block.entity.BlockEntity up = entity.getWorld().getBlockEntity(entity.getPos().up());
+        return up instanceof final FuzhouMachineBlockEntity upper ? upper : entity;
+    }
+
     private static int resolveColor(final FuzhouMachineBlockEntity entity) {
         return switch (entity.colorSource()) {
             case FuzhouMachineBlockEntity.COLOR_CUSTOM -> entity.customColor();
