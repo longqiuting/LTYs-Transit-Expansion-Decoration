@@ -44,9 +44,11 @@ public final class DestinationColors {
     /** 提前多久亮（毫秒）：到站时刻前这段时间开始亮。 */
     private static final long WINDOW_BEFORE_MS = 15_000L;
     /** 到站时刻之后还能亮多久（毫秒）：覆盖停站 + 开关门。 */
-    private static final long WINDOW_AFTER_MS = 90_000L;
+    private static final long WINDOW_AFTER_MS = 300_000L;
     /** 车门关闭后多久淡出（毫秒）。 */
     private static final long DOOR_CLOSE_HOLD_MS = 10_000L;
+    /** 调度窗口没覆盖到时，按「真要停本站台的车已进入这么多格」补亮（格）。 */
+    private static final double BRIDGE_RADIUS = 40.0D;
 
     /** 找站台的横向半径（格）—— 比 PIDS 自己的检测范围宽一格。 */
     private static final int PLATFORM_SEARCH = 4;
@@ -64,6 +66,8 @@ public final class DestinationColors {
     private static final Map<Long, Stamp> CACHE = new HashMap<>();
     /** 每趟车「车门刚刚关上」的时刻（毫秒），用来做关灯延迟。 */
     private static final Map<String, DoorState> DOORS = new HashMap<>();
+    /** 每个站台「上一次算出来的终点站色」—— 停站/延时期间沿用，不退回线路色。 */
+    private static final Map<Long, Integer> LAST_COLOR = new HashMap<>();
 
     private DestinationColors() {
     }
@@ -93,6 +97,7 @@ public final class DestinationColors {
     public static void clear() {
         CACHE.clear();
         DOORS.clear();
+        LAST_COLOR.clear();
     }
 
     private static int resolve(final BlockPos pos, final long now) {
@@ -127,8 +132,18 @@ public final class DestinationColors {
         final int rgb = colorOfPlatform(platformId, null, now);
         if (rgb != 0) {
             debug(pos, "platform " + platformId + " scheduled -> " + hex(rgb));
+            return rgb;
         }
-        return rgb;
+        // 车早到 / 时刻表还没翻到这一班：光靠调度窗口会漏亮，这里用「确实要停本站台的车」
+        // 补位 —— 只看 path 里的下一停靠站台，通过车不会被算进来；颜色仍沿用上次的终点站色。
+        if (nextStopTrain(platformId) != null) {
+            final Integer last = LAST_COLOR.get(platformId);
+            if (last != null) {
+                debug(pos, "platform " + platformId + " train closing in -> " + hex(last));
+                return last;
+            }
+        }
+        return 0;
     }
 
     /**
@@ -143,13 +158,16 @@ public final class DestinationColors {
         if (entry != null) {
             final int rgb = colorOfEntry(entry, platformId);
             if (rgb != 0) {
+                LAST_COLOR.put(platformId, rgb);
                 return rgb;
             }
         }
+        // 调度条目翻页 / 车晚点：沿用这个站台上一次的终点站色。
+        // 绝不退回线路色 —— 那样出站瞬间颜色会从终点站色跳成线路色。
         if (stopping != null) {
-            final Route route = stopping.getThisRoute();
-            if (route != null && route.color != 0) {
-                return route.color & 0xFFFFFF;
+            final Integer last = LAST_COLOR.get(platformId);
+            if (last != null) {
+                return last;
             }
         }
         return 0;
@@ -236,6 +254,29 @@ public final class DestinationColors {
             }
         }
         return 0L;
+    }
+
+    /** 下一停靠站台就是本站台、且已经进入 {@value #BRIDGE_RADIUS} 格的车（补调度窗口的漏）。 */
+    private static TrainClient nextStopTrain(final long platformId) {
+        for (final TrainClient train : ClientData.TRAINS) {
+            if (train == null || train.isRemoved || train.path == null) {
+                continue;
+            }
+            final int from = Math.max(0, Math.min(train.path.size() - 1, train.getCurrentStationIndex()));
+            for (int i = from; i < train.path.size(); i++) {
+                final mtr.path.PathData stop = train.path.get(i);
+                if (stop == null || stop.dwellTime <= 0 || stop.savedRailBaseId == 0L) {
+                    continue;
+                }
+                if (stop.savedRailBaseId == platformId
+                        && train.getDistanceToNextStop() > 0.0D
+                        && train.getDistanceToNextStop() <= BRIDGE_RADIUS) {
+                    return train;
+                }
+                break;
+            }
+        }
+        return null;
     }
 
     /** 正停靠在本站台所属车站的车。 */
