@@ -1,64 +1,60 @@
-// 「这个站台现在该显示什么颜色」——正在停靠/即将到站的车开往哪个终点站，灯带就什么色。
+// 「这个站台现在该亮什么颜色」——按 MZYC 的路子：站台的调度条目 + 线路终点站，而不是逐趟车去猜。
 package dev.js.mtrheadlight.region.hk;
 
 import dev.js.mtrheadlight.LteLog;
 import mtr.client.ClientData;
+import mtr.data.Route;
+import mtr.data.ScheduleEntry;
 import mtr.data.Station;
 import mtr.data.TrainClient;
-import mtr.path.PathData;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 /**
- * 终点站颜色解析：颜色 = <b>该站台正在停靠（或即将到站）列车所开往的终点站的车站色</b>，
- * 没有车就是 {@code 0}（灭）。
+ * 终点站颜色解析（参考 MZYC 的取数方式）。
  *
- * <h2>怎么认出「这趟车是要停这个站台的」</h2>
- * 不看 {@code getNextStation()}（车站级，同站多台、通过车都会混进来），而是看列车的
- * {@code path}：从当前位置往后找第一条 {@code dwellTime > 0} 的停站，它的
- * {@code savedRailBaseId} 必须就是 <b>这个站台</b>。于是：
+ * <h2>数据从哪来</h2>
+ * MZYC 的进站广播不是逐趟列车去猜的：它按 <b>站台的调度条目</b>
+ * （{@code ClientData.SCHEDULES_FOR_PLATFORM}）+ <b>线路的终点站</b>
+ * （{@code Route.platformIds} / {@code getFormattedRouteDestination}）算出来。这里照同一套：
+ * <ol>
+ *   <li>灯带位置 → 站台 id；</li>
+ *   <li>该站台最近的一条调度条目（{@code arrivalMillis} 距离现在最近的那条）；</li>
+ *   <li>条目给 {@code routeId + currentStationIndex}：按索引和本站台在线路里的位置判断行车方向，
+ *       方向的最后一个站台就是<b>终点站</b>；</li>
+ *   <li>终点站的 {@code Station.color} 就是灯的颜色（取不到退线路色）。</li>
+ * </ol>
+ * 全程不碰列车对象，所以不会出现「同一时刻两趟车各说各色」的颜色乱跳，也不会把通过车算进来。
+ *
+ * <h2>什么时候亮 / 灭</h2>
  * <ul>
- *   <li><b>哪条线</b>：path 是这趟车自己的，天然只可能是它那条线；</li>
- *   <li><b>经而不停</b>：通过车的下一个停站不是本站台（或根本没有停站），<b>永远不亮</b>。</li>
+ *   <li><b>亮</b>：最近一条调度条目的到站时刻在 {@value #WINDOW_BEFORE}ms 之后到
+ *       {@value #WINDOW_AFTER}ms 之前（也就是快要进站、正在停站、刚发车这一整段）；</li>
+ *   <li><b>灭</b>：该站台有车停靠时，<b>车门关闭后 {@value #DOOR_CLOSE_HOLD_MS}ms</b> 淡出
+ *       —— 不再看车的位置；没有车停靠时由调度窗口决定。</li>
  * </ul>
  *
- * <h2>什么时候开始亮（两条结合）</h2>
- * <ol>
- *   <li>车头进入 {@value #ARRIVE_RADIUS} 格 —— 和 MZYC 的进站广播同一个半径
- *       （它的默认值就是 {@code trainArriveAnnounceRoundXz = 10}）；</li>
- *   <li>或者：<b>进站方向那一段轨道的信号区段已占用</b>，且车头还在
- *       {@value #SIGNAL_AHEAD_RADIUS} 格以内。区段占用是「车已经进入闭塞区间」的强信号，
- *       比距离更早、更符合真实联锁；但闭塞区间长度不一致，所以再压一道
- *       {@value #SIGNAL_AHEAD_RADIUS} 格的距离闸门 —— 站前区间再长也不会提前几十秒亮。</li>
- * </ol>
- *
- * <h2>什么时候灭</h2>
- * 停靠中的车整列解除站台占用（{@code getThisStation()} 不再是本站）之后才灭；此时如果
- * 后方已经有车满足上面的条件，直接换成后一趟车的终点站色，<b>中间不灭灯</b>。
- *
- * <h2>为什么在客户端算</h2>
- * MTR 的列车只在客户端模拟（{@code ClientData.TRAINS}；服务端没有 TrainServer），所以这件事
- * 在服务端拿不到。好处是整条灯带没有任何服务端状态，不用同步、不会因为车来了就刷方块更新。
- *
- * <p>结果按方块位置缓存 {@value #TTL_MS}ms，几百段灯带每帧只真正算一次。
+ * <p>结果按方块位置缓存 {@value #TTL_MS}ms。
  */
 public final class DestinationColors {
 
-    /** 亮的距离（格）：对齐 MZYC 进站广播默认半径 {@code trainArriveAnnounceRoundXz = 10}。 */
-    private static final double ARRIVE_RADIUS = 10.0D;
-    /** 靠「信号区段占用」提前亮时，车头最多还能离站台这么远（格）—— 挡住超长闭塞区间。 */
-    private static final double SIGNAL_AHEAD_RADIUS = 40.0D;
-    /** 灯带找不到自己站台时，往周围找站台方块的半径（格）。 */
-    private static final int PLATFORM_SEARCH = 8;
-    /** 灯带通常比站台方块高 2~4 格，往下找得更深一点。 */
-    private static final int PLATFORM_SEARCH_DOWN = 8;
+    /** 提前多久亮（毫秒）：到站时刻前这段时间开始亮。 */
+    private static final long WINDOW_BEFORE_MS = 15_000L;
+    /** 到站时刻之后还能亮多久（毫秒）：覆盖停站 + 开关门。 */
+    private static final long WINDOW_AFTER_MS = 90_000L;
+    /** 车门关闭后多久淡出（毫秒）。 */
+    private static final long DOOR_CLOSE_HOLD_MS = 5_000L;
+
+    /** 找站台的横向半径（格）—— 比 PIDS 自己的检测范围宽一格。 */
+    private static final int PLATFORM_SEARCH = 4;
+    /** 往下找的深度（格）：灯带在门顶，比站台方块高 2~4 格。 */
+    private static final int PLATFORM_SEARCH_DOWN = 5;
+
     /** 每个方块位置的颜色缓存时长（毫秒）。 */
     private static final long TTL_MS = 400L;
-    /** 缓存上限，超了整表清空。 */
     private static final int LIMIT = 1024;
 
     /** {@code -Dlte.debug.destlight=true} 才打解析日志（默认关）。 */
@@ -66,11 +62,13 @@ public final class DestinationColors {
     private static final Map<Long, Long> DEBUG_AT = new HashMap<>();
 
     private static final Map<Long, Stamp> CACHE = new HashMap<>();
+    /** 每趟车「车门刚刚关上」的时刻（毫秒），用来做关灯延迟。 */
+    private static final Map<String, DoorState> DOORS = new HashMap<>();
 
     private DestinationColors() {
     }
 
-    /** @return {@code 0xRRGGBB}；{@code 0} = 灭（没有要停本站台的车 / 拿不到终点站色）。 */
+    /** @return {@code 0xRRGGBB}；{@code 0} = 灭。 */
     public static int colorAt(final World world, final BlockPos pos) {
         final long key = pos.asLong();
         final long now = System.currentTimeMillis();
@@ -80,7 +78,7 @@ public final class DestinationColors {
         }
         int rgb = 0;
         try {
-            rgb = resolve(pos);
+            rgb = resolve(pos, now);
         } catch (final Throwable t) {
             LteLog.LOGGER.debug("[lte] destination light: colour lookup failed", t);
         }
@@ -94,67 +92,124 @@ public final class DestinationColors {
     /** 断线 / 换存档：缓存整表丢掉。 */
     public static void clear() {
         CACHE.clear();
+        DOORS.clear();
     }
 
-    private static int resolve(final BlockPos pos) {
+    private static int resolve(final BlockPos pos, final long now) {
         final long platformId = platformAt(pos);
         if (platformId == 0L) {
             debug(pos, "no platform within " + PLATFORM_SEARCH);
             return 0;
         }
         final Station here = ClientData.DATA_CACHE.platformIdToStation.get(platformId);
-        if (here == null) {
-            debug(pos, "platform " + platformId + " has no station");
-            return 0;
-        }
 
-        // ① 已经停靠在本站台的车优先：它没解除占用之前不换色、不灭灯
-        final TrainClient stopping = trainAtPlatform(here.id);
+        // ① 停靠中的车：门开着 → 亮；门关了 → 再撑 DOOR_CLOSE_HOLD_MS 就灭
+        final TrainClient stopping = here == null ? null : trainAtPlatform(here.id);
         if (stopping != null) {
-            final int rgb = colorOf(stopping);
-            debug(pos, "platform " + platformId + " stopping " + stopping.trainId + " -> " + hex(rgb));
-            return rgb;
-        }
-
-        // ② 下一停靠点就是本站台的车（通过车天然被排除）
-        final TrainClient next = nextStopTrain(platformId);
-        if (next != null) {
-            final double distance = next.getDistanceToNextStop();
-            final boolean closeEnough = distance > 0.0D && distance <= ARRIVE_RADIUS;
-            final boolean signalAhead = distance > 0.0D && distance <= SIGNAL_AHEAD_RADIUS
-                    && enteringSegmentOccupied(next, platformId);
-            if (closeEnough || signalAhead) {
-                final int rgb = colorOf(next);
-                debug(pos, "platform " + platformId + " train " + next.trainId
-                        + (signalAhead ? " (signal ahead)" : " (close)")
-                        + " d=" + Math.round(distance) + " -> " + hex(rgb));
+            final boolean justClosed = doorJustClosed(stopping, now);
+            final long closedAt = closedAt(stopping);
+            final boolean holding = stopping.isDoorOpening()
+                    || (closedAt != 0L && now - closedAt <= DOOR_CLOSE_HOLD_MS);
+            if (holding || justClosed) {
+                final int rgb = colorOfPlatform(platformId, stopping, now);
+                debug(pos, "platform " + platformId + " doors "
+                        + (stopping.isDoorOpening() ? "open" : "closing/hold") + " -> " + hex(rgb));
                 return rgb;
             }
-            debug(pos, "platform " + platformId + " train " + next.trainId
-                    + " far d=" + Math.round(distance));
+            debug(pos, "platform " + platformId + " train left the doors, off");
             return 0;
         }
 
-        debug(pos, "platform " + platformId + " station " + here.id + " idle");
-        return 0;
-    }
-
-    /** 终点站色；取不到就退到该车的线路色。 */
-    private static int colorOf(final TrainClient train) {
-        final int destination = destinationColor(train);
-        if (destination != 0) {
-            return destination;
+        // ② 没有车停靠：看调度窗口（快到站 / 正在来的路上）
+        final int rgb = colorOfPlatform(platformId, null, now);
+        if (rgb != 0) {
+            debug(pos, "platform " + platformId + " scheduled -> " + hex(rgb));
         }
-        final mtr.data.Route route = train.getThisRoute();
-        return route == null ? 0 : route.color & 0xFFFFFF;
+        return rgb;
     }
 
     /**
-     * 灯带所在位置对应哪个站台。
+     * 该站台当前应该显示的颜色。
      *
-     * <p>灯带贴在屏蔽门顶上，坐标本身通常不是站台方块，所以先按 {@code blockPosToPlatformId} 在周围
-     * 一小片区域里找（横向逐层外扩、往下找得深一点），找到就够 —— 每段灯带结果会进缓存。
+     * <p>优先用调度条目的终点站色；调度窗口内没有条目时（比如刚发车、时刻表已经翻页），
+     * 用停靠车的线路色兜底。
      */
+    private static int colorOfPlatform(final long platformId, final TrainClient stopping,
+                                       final long now) {
+        final ScheduleEntry entry = nearestEntry(platformId, now);
+        if (entry != null) {
+            final int rgb = colorOfEntry(entry, platformId);
+            if (rgb != 0) {
+                return rgb;
+            }
+        }
+        if (stopping != null) {
+            final Route route = stopping.getThisRoute();
+            if (route != null && route.color != 0) {
+                return route.color & 0xFFFFFF;
+            }
+        }
+        return 0;
+    }
+
+    /** 该站台里离现在最近、且落在窗口内的调度条目。 */
+    private static ScheduleEntry nearestEntry(final long platformId, final long now) {
+        final java.util.Set<ScheduleEntry> entries = ClientData.SCHEDULES_FOR_PLATFORM.get(platformId);
+        if (entries == null || entries.isEmpty()) {
+            return null;
+        }
+        ScheduleEntry best = null;
+        long bestDelta = Long.MAX_VALUE;
+        for (final ScheduleEntry entry : entries) {
+            final long delta = entry.arrivalMillis - now;
+            if (delta > WINDOW_BEFORE_MS || delta < -WINDOW_AFTER_MS) {
+                continue;
+            }
+            final long abs = Math.abs(delta);
+            if (abs < bestDelta) {
+                bestDelta = abs;
+                best = entry;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * 调度条目 → 终点站色。
+     *
+     * <p>方向判定：条目里的 {@code currentStationIndex} 是这趟车在线路上走到第几个站台；
+     * 和本站台的索引比较，往哪个方向走，那个方向的最后一个站台就是终点站。
+     */
+    private static int colorOfEntry(final ScheduleEntry entry, final long platformId) {
+        final Route route = routeById(entry.routeId);
+        if (route == null) {
+            return 0;
+        }
+        final int hereIndex = route.getPlatformIdIndex(platformId);
+        if (hereIndex < 0 || route.platformIds.isEmpty()) {
+            return route.color & 0xFFFFFF;
+        }
+        final boolean forward = entry.currentStationIndex <= hereIndex;
+        final long terminusId = forward
+                ? route.platformIds.get(route.platformIds.size() - 1).platformId
+                : route.platformIds.get(0).platformId;
+        final Station terminus = ClientData.DATA_CACHE.platformIdToStation.get(terminusId);
+        if (terminus != null && terminus.color != 0) {
+            return terminus.color & 0xFFFFFF;
+        }
+        return route.color & 0xFFFFFF;
+    }
+
+    private static Route routeById(final long routeId) {
+        for (final Route route : ClientData.ROUTES) {
+            if (route.id == routeId) {
+                return route;
+            }
+        }
+        return null;
+    }
+
+    /** 灯带所在位置对应哪个站台（先精确查，再在很小的范围内找）。 */
     private static long platformAt(final BlockPos pos) {
         final var map = ClientData.DATA_CACHE.blockPosToPlatformId;
         final long direct = map.get(pos.asLong());
@@ -165,7 +220,7 @@ public final class DestinationColors {
             for (int dx = -radius; dx <= radius; dx++) {
                 for (int dz = -radius; dz <= radius; dz++) {
                     if (Math.abs(dx) != radius && Math.abs(dz) != radius) {
-                        continue; // 只看这一层的外圈
+                        continue;
                     }
                     for (int dy = -PLATFORM_SEARCH_DOWN; dy <= 2; dy++) {
                         final long hit = map.get(new BlockPos(pos.getX() + dx, pos.getY() + dy,
@@ -180,7 +235,7 @@ public final class DestinationColors {
         return 0L;
     }
 
-    /** 正停靠在本站台所属车站的车（还没解除占用）。 */
+    /** 正停靠在本站台所属车站的车。 */
     private static TrainClient trainAtPlatform(final long stationId) {
         for (final TrainClient train : ClientData.TRAINS) {
             if (train == null || train.isRemoved) {
@@ -194,91 +249,27 @@ public final class DestinationColors {
         return null;
     }
 
-    /**
-     * 下一停靠点就是这个站台的车里最近的那趟。
-     *
-     * <p>用 {@code path} 判断而不是 {@code getNextStation()}：只有真的要在这里停的车才算，
-     * 通过车 / 邻线车的下一停站是别的站台，因此不会误亮。
-     */
-    private static TrainClient nextStopTrain(final long platformId) {
-        TrainClient best = null;
-        double bestDistance = Double.MAX_VALUE;
-        for (final TrainClient train : ClientData.TRAINS) {
-            if (train == null || train.isRemoved) {
-                continue;
-            }
-            final int stopIndex = nextStopIndex(train);
-            if (stopIndex < 0 || train.path.get(stopIndex).savedRailBaseId != platformId) {
-                continue;
-            }
-            final double distance = train.getDistanceToNextStop();
-            if (distance <= 0.0D) {
-                continue;
-            }
-            if (distance < bestDistance) {
-                bestDistance = distance;
-                best = train;
-            }
+    /** 记录车门「由开变关」的那一刻；返回这次调用是否刚刚关上。 */
+    private static boolean doorJustClosed(final TrainClient train, final long now) {
+        final DoorState state = DOORS.computeIfAbsent(train.trainId, id -> new DoorState());
+        final boolean open = train.isDoorOpening();
+        final boolean justClosed = state.open && !open;
+        if (justClosed) {
+            state.closedAt = now;
         }
-        return best;
+        if (open) {
+            state.closedAt = 0L;
+        }
+        state.open = open;
+        if (DOORS.size() > 512) {
+            DOORS.clear();
+        }
+        return justClosed;
     }
 
-    /** 列车 path 里「下一个要停的站」的下标；没有（比如一直不停）返回 -1。 */
-    private static int nextStopIndex(final TrainClient train) {
-        if (train.path == null || train.path.isEmpty()) {
-            return -1;
-        }
-        final int from = Math.max(0, Math.min(train.path.size() - 1, train.getCurrentStationIndex()));
-        for (int i = from; i < train.path.size(); i++) {
-            final PathData stop = train.path.get(i);
-            if (stop != null && stop.dwellTime > 0 && stop.savedRailBaseId != 0L) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    /**
-     * 进站方向那一段轨道的信号区段是否已占用。
-     *
-     * <p>{@code PathData.getRailProduct()} 就是 MTR 给这一段轨道分配的 UUID，
-     * 信号区段（{@code SignalBlocks}）和 {@code OCCUPIED_RAILS} 都是按这个 UUID 记的。
-     */
-    private static boolean enteringSegmentOccupied(final TrainClient train, final long platformId) {
-        final int stopIndex = nextStopIndex(train);
-        if (stopIndex < 0 || train.path.get(stopIndex).savedRailBaseId != platformId) {
-            return false;
-        }
-        final UUID track = train.path.get(stopIndex).getRailProduct();
-        if (track == null) {
-            return false;
-        }
-        try {
-            if (Boolean.TRUE.equals(ClientData.OCCUPIED_RAILS.get(track))) {
-                return true;
-            }
-            return ClientData.SIGNAL_BLOCKS != null && ClientData.SIGNAL_BLOCKS.isOccupied(track);
-        } catch (final Throwable t) {
-            return false;
-        }
-    }
-
-    /** 终点站颜色：从线路末尾往前找最后一个真正停站的站台。 */
-    private static int destinationColor(final TrainClient train) {
-        if (train.path == null) {
-            return 0;
-        }
-        for (int i = train.path.size() - 1; i >= 0; i--) {
-            final PathData stop = train.path.get(i);
-            if (stop == null || stop.dwellTime <= 0 || stop.savedRailBaseId == 0L) {
-                continue;
-            }
-            final Station station = ClientData.DATA_CACHE.platformIdToStation.get(stop.savedRailBaseId);
-            if (station != null && station.color != 0) {
-                return station.color & 0xFFFFFF;
-            }
-        }
-        return 0;
+    private static long closedAt(final TrainClient train) {
+        final DoorState state = DOORS.get(train.trainId);
+        return state == null ? 0L : state.closedAt;
     }
 
     private static String hex(final int rgb) {
@@ -299,7 +290,11 @@ public final class DestinationColors {
         LteLog.LOGGER.info("[lte] destlight @{}: {}", pos, message);
     }
 
-    /** 一个位置的颜色 + 算出来的时刻。 */
+    private static final class DoorState {
+        private boolean open;
+        private long closedAt;
+    }
+
     private record Stamp(int rgb, long at) {
     }
 }
