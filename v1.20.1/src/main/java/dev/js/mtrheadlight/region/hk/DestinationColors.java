@@ -36,13 +36,24 @@ import java.util.Map;
 public final class DestinationColors {
 
     /** 进站判定的最远距离（格）：再远就不算「正在进站」，灯还是灭的。 */
-    private static final double APPROACH_DISTANCE = 240.0D;
+    private static final double APPROACH_DISTANCE = 400.0D;
     /** 灯带找不到自己站台时，往周围找站台方块的半径（格）。 */
-    private static final int PLATFORM_SEARCH = 12;
+    private static final int PLATFORM_SEARCH = 8;
+    /** 灯带通常比站台方块高 2~4 格，往下找得更深一点。 */
+    private static final int PLATFORM_SEARCH_DOWN = 8;
     /** 每个方块位置的颜色缓存时长（毫秒）。 */
     private static final long TTL_MS = 400L;
     /** 缓存上限，超了整表清空（灯带很多也不会一直涨）。 */
     private static final int LIMIT = 1024;
+
+    /** 时刻表提前量：下一班到站还差这么久就先亮（毫秒）。 */
+    private static final long SCHEDULE_LEAD_MS = 60_000L;
+    /** 时刻表尾巴：到点之后还能亮这么久（车已经停稳时由列车本身接管）。 */
+    private static final long SCHEDULE_TAIL_MS = 20_000L;
+
+    /** {@code -Dlte.debug.destlight=true} 才打解析日志（默认关）。 */
+    private static final boolean DEBUG = Boolean.getBoolean("lte.debug.destlight");
+    private static final Map<Long, Long> DEBUG_AT = new HashMap<>();
 
     private static final Map<Long, Stamp> CACHE = new HashMap<>();
 
@@ -78,22 +89,77 @@ public final class DestinationColors {
     private static int resolve(final World world, final BlockPos pos) {
         final long platformId = platformAt(pos);
         if (platformId == 0L) {
+            debug(pos, "no platform within " + PLATFORM_SEARCH);
             return 0;
         }
         final Station here = ClientData.DATA_CACHE.platformIdToStation.get(platformId);
         if (here == null) {
+            debug(pos, "platform " + platformId + " has no station");
             return 0;
         }
+
+        // ① 有车在「进站途中」：用它的终点站色（车还远也亮，靠 APPROACH_DISTANCE 控制提前量）
         final TrainClient train = approachingTrain(here.id);
-        if (train == null) {
+        if (train != null) {
+            final int destination = destinationColor(train);
+            if (destination != 0) {
+                debug(pos, "platform " + platformId + " train " + train.trainId + " -> #"
+                        + String.format("%06X", destination));
+                return destination;
+            }
+            final mtr.data.Route route = train.getThisRoute();
+            if (route != null && route.color != 0) {
+                debug(pos, "platform " + platformId + " train " + train.trainId + " route colour");
+                return route.color & 0xFFFFFF;
+            }
+        }
+
+        // ② 车还没出现（时刻表里已经在来的路上）：按时刻表提前亮，颜色用那条线路的线路色
+        final int scheduled = scheduledColor(platformId);
+        debug(pos, "platform " + platformId + " station " + here.id + " scheduled="
+                + (scheduled == 0 ? "none" : String.format("#%06X", scheduled)));
+        return scheduled;
+    }
+
+    /**
+     * 时刻表提前量：下一班到站还差 {@value #SCHEDULE_LEAD_MS}ms 以内就先亮起来（颜色取线路色）。
+     *
+     * <p>列车在客户端要等它真的被创建出来才会出现在 {@code TRAINS} 里，而玩家希望的观感是
+     * 「车还没到、灯先亮」—— 这段时间只能靠时刻表。
+     */
+    private static int scheduledColor(final long platformId) {
+        final java.util.Set<mtr.data.ScheduleEntry> entries =
+                ClientData.SCHEDULES_FOR_PLATFORM.get(platformId);
+        if (entries == null || entries.isEmpty()) {
             return 0;
         }
-        final int destination = destinationColor(train);
-        if (destination != 0) {
-            return destination;
+        final long now = System.currentTimeMillis();
+        for (final mtr.data.ScheduleEntry entry : entries) {
+            final long delta = entry.arrivalMillis - now;
+            if (delta < -SCHEDULE_TAIL_MS || delta > SCHEDULE_LEAD_MS) {
+                continue;
+            }
+            for (final mtr.data.Route route : ClientData.ROUTES) {
+                if (route.id == entry.routeId && route.color != 0) {
+                    return route.color & 0xFFFFFF;
+                }
+            }
         }
-        final mtr.data.Route route = train.getThisRoute();
-        return route == null ? 0 : route.color & 0xFFFFFF;
+        return 0;
+    }
+
+    /** 只在 {@code -Dlte.debug.destlight=true} 时打，且每个方块 5 秒最多一行。 */
+    private static void debug(final BlockPos pos, final String message) {
+        if (!DEBUG) {
+            return;
+        }
+        final long now = System.currentTimeMillis();
+        final long last = DEBUG_AT.getOrDefault(pos.asLong(), 0L);
+        if (now - last < 5000L) {
+            return;
+        }
+        DEBUG_AT.put(pos.asLong(), now);
+        LteLog.LOGGER.info("[lte] destlight @{}: {}", pos, message);
     }
 
     /**
@@ -115,7 +181,7 @@ public final class DestinationColors {
                     if (Math.abs(dx) != radius && Math.abs(dz) != radius) {
                         continue; // 只看这一层的外圈
                     }
-                    for (int dy = -3; dy <= 3; dy++) {
+                    for (int dy = -PLATFORM_SEARCH_DOWN; dy <= 2; dy++) {
                         final long hit = map.get(new BlockPos(pos.getX() + dx, pos.getY() + dy,
                                 pos.getZ() + dz).asLong());
                         if (hit != 0L) {

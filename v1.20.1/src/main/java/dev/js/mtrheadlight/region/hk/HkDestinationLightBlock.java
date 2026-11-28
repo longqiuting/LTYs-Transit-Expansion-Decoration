@@ -56,7 +56,7 @@ public class HkDestinationLightBlock extends HorizontalFacingBlock implements Bl
     @Override
     public BlockState getPlacementState(final ItemPlacementContext ctx) {
         // 面朝玩家（玩家看的那一面就是灯带贴的那面），和贴墙标识同一个约定
-        return this.getDefaultState().with(FACING, ctx.getHorizontalPlayerFacing().getOpposite());
+        return this.getDefaultState().with(FACING, ctx.getHorizontalPlayerFacing());
     }
 
     @Override
@@ -69,6 +69,15 @@ public class HkDestinationLightBlock extends HorizontalFacingBlock implements Bl
     public VoxelShape getCollisionShape(final BlockState state, final BlockView world,
                                         final BlockPos pos, final ShapeContext context) {
         return VoxelShapes.empty();
+    }
+
+    /**
+     * 必须显式返回 {@code MODEL}：带方块实体的方块默认是 {@code INVISIBLE}（原版以为由 BER 画整块），
+     * 那样深色灯体会整块不渲染，只剩 BER 那一层 —— 这也是之前柱底「模型在却看不见」的同一个坑。
+     */
+    @Override
+    public net.minecraft.block.BlockRenderType getRenderType(final BlockState state) {
+        return net.minecraft.block.BlockRenderType.MODEL;
     }
 
     @Nullable

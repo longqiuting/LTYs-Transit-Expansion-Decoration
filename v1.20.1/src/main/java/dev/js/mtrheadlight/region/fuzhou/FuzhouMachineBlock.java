@@ -29,6 +29,11 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldAccess;
 import org.jetbrains.annotations.Nullable;
+import java.util.List;
+import net.minecraft.client.item.TooltipContext;
+import net.minecraft.item.ItemStack;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 /**
  * {@code mtrlte:fuzhou_ticket_machine} —— 福州地铁售票机。
@@ -149,17 +154,70 @@ public final class FuzhouMachineBlock extends BlockWithEntity {
     @Override
     public ActionResult onUse(final BlockState state, final World world, final BlockPos pos,
                               final PlayerEntity player, final Hand hand, final BlockHitResult hit) {
-        if (!isUpper(state) || !player.getStackInHand(hand).isOf(mtr.Items.BRUSH.get())) {
+        if (!isUpper(state)) {
             return ActionResult.PASS;
         }
+
+        // ① 刷子：打开配置面板（模式 / 面板颜色 / LED 文字）
+        if (player.getStackInHand(hand).isOf(mtr.Items.BRUSH.get())) {
+            if (world.isClient) {
+                return ActionResult.SUCCESS;
+            }
+            if (player instanceof final net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+                dev.js.mtrheadlight.machine.MachineConfigNet.open(serverPlayer, pos);
+            }
+            return ActionResult.SUCCESS;
+        }
+
+        // ② 普通右键：按配置好的模式开售票界面（和厦门 / 港铁那两台同一套行为）
+        final int mode = world.getBlockEntity(pos) instanceof final FuzhouMachineBlockEntity machine
+                ? machine.mode() : FuzhouMachineBlockEntity.MODE_FANGSU;
+
+        if (mode == FuzhouMachineBlockEntity.MODE_OFF) {
+            if (!world.isClient) {
+                player.sendMessage(net.minecraft.text.Text.translatable(
+                        "message.mtrlte.ticket_machine.powered_off"), true);
+            }
+            return ActionResult.SUCCESS;
+        }
+
+        if (mode == FuzhouMachineBlockEntity.MODE_FANGSU) {
+            if (world.isClient) {
+                if (dev.js.mtrheadlight.xiamen.machine.FangsuTicketUi.open(
+                        net.minecraft.text.Text.translatable("screen.mtrlte.ticket_machine_fuzhou"), pos)) {
+                    return ActionResult.SUCCESS;
+                }
+                // 客户端没装方速：提示一次，不要把方块顺手放上去
+                player.sendMessage(net.minecraft.text.Text.translatable(
+                        "message.mtrlte.ticket_machine.client_missing"), true);
+                return ActionResult.SUCCESS;
+            }
+            // 服务端没装方速（客户端装了）：退回原版界面，免得点了没反应
+            if (!dev.js.mtrheadlight.xiamen.machine.FangsuTicketUi.loaded()) {
+                openVanilla(world, player);
+            }
+            return ActionResult.SUCCESS;
+        }
+
+        // ③ 原版 MTR 界面：服务端发包
         if (world.isClient) {
             return ActionResult.SUCCESS;
         }
-        if (world.getBlockEntity(pos) instanceof final FuzhouMachineBlockEntity machine
-                && player instanceof final net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
-            dev.js.mtrheadlight.machine.MachineConfigNet.open(serverPlayer, pos);
-        }
+        openVanilla(world, player);
         return ActionResult.SUCCESS;
+    }
+
+    /** 原版（MTR）售票界面：服务端把「开界面」的包发给点方块的玩家。 */
+    private static void openVanilla(final World world, final PlayerEntity player) {
+        if (player instanceof final net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+            mtr.packet.PacketTrainDataGuiServer.openTicketMachineScreenS2C(world, serverPlayer);
+        }
+    }
+
+    @Override
+    public void appendTooltip(final ItemStack stack, final net.minecraft.world.BlockView world,
+                              final List<Text> tooltip, final TooltipContext context) {
+        tooltip.add(Text.translatable("tooltip.mtrlte.fuzhou_ticket_machine").formatted(Formatting.GRAY));
     }
 
     private static VoxelShape rotatedBox(final float[] b, final int quarterTurns) {
