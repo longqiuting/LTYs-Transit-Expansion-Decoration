@@ -137,9 +137,9 @@ public final class FuzhouMachineRenderer implements BlockEntityRenderer<FuzhouMa
     /** 朝向 → 绕 Y 的旋转角度（模型默认朝北）。 */
     private static float[] rotationOf(final Direction facing) {
         return switch (facing) {
-            case EAST -> new float[]{90.0F};
+            case EAST -> new float[]{270.0F};
             case SOUTH -> new float[]{180.0F};
-            case WEST -> new float[]{270.0F};
+            case WEST -> new float[]{90.0F};
             default -> new float[]{0.0F};
         };
     }
