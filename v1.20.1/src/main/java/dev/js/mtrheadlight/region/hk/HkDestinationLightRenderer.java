@@ -72,6 +72,10 @@ public final class HkDestinationLightRenderer implements BlockEntityRenderer<HkD
     }
 
     private static float yaw(final BlockState state) {
+        // 满方块款没有 facing 属性 —— 直接读会抛 IllegalArgumentException（放置即崩）
+        if (!state.contains(HkDestinationLightBlock.FACING)) {
+            return 0.0F;
+        }
         final Direction facing = state.get(HkDestinationLightBlock.FACING);
         return switch (facing) {
             case EAST -> 90.0F;

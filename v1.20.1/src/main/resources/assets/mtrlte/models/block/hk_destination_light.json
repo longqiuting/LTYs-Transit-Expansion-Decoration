@@ -1,7 +1,7 @@
 {
   "textures": {
-    "0": "mtrlte:block/hk_destination_light",
-    "particle": "mtrlte:block/hk_destination_light"
+    "0": "mtrlte:block/hk_dest_light_white",
+    "particle": "mtrlte:block/hk_dest_light_white"
   },
   "elements": [
     {
