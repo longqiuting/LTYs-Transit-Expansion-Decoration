@@ -46,6 +46,9 @@ public final class LtedClient implements ClientModInitializer {
         new XiamenClient().onInitializeClient();
         new RegionalLogosClient().onInitializeClient();
         new dev.js.mtrheadlight.region.fuzhou.FuzhouMachinesClient().onInitializeClient();
+        net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+                dev.js.mtrheadlight.region.hk.HkDestinationLights.entityType(),
+                context -> new dev.js.mtrheadlight.region.hk.HkDestinationLightRenderer());
         new WallSignClient().onInitializeClient();
         new RailingGlassClient().onInitializeClient();
         new DecorClient().onInitializeClient();

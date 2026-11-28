@@ -40,6 +40,9 @@ public final class LteServerDecor implements ModInitializer {
         blockModule("regional logo blocks", dev.js.mtrheadlight.region.RegionalLogos::register);
         blockModule("fuzhou ticket machine", dev.js.mtrheadlight.region.fuzhou.FuzhouMachines::register);
 
+        // 港铁终点站指示灯（贴屏蔽门顶的一条灯带，整格平铺）：颜色跟正在进站车的终点站。
+        blockModule("hk destination light", dev.js.mtrheadlight.region.hk.HkDestinationLights::register);
+
         // 标志方块：LTE logo + 角美地铁 logo（都进「厦门风格物件」页签）。
         // 必须排在上面两个页签之后 —— 往还没建的页签里加条目会抛异常。
         blockModule("logo blocks", dev.js.mtrheadlight.logo.LogoObjects::register);
