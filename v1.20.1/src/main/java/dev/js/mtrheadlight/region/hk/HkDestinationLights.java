@@ -79,9 +79,9 @@ public final class HkDestinationLights {
                 .mapColor(MapColor.BLACK)
                 .strength(1.0F, 3.0F)
                 .nonOpaque()
-                // 灯体本身不发亮：亮不亮由 BER 决定（没有进站车就是灭的），
-                // 这样也不会为了「灭灯」去改方块状态、刷方块更新。
-                .luminance(state -> 0)
+                // 微光：方块光由服务端烘焙，而「有没有车」只有客户端知道，所以这里给一个恒定的
+                // 低亮度（9 级）—— 灯带自己照亮一小圈；颜色 / 亮灭仍由 BER 的发光层决定。
+                .luminance(state -> 9)
                 .sounds(BlockSoundGroup.METAL);
     }
 }

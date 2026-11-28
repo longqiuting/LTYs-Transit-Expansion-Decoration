@@ -46,7 +46,7 @@ public final class DestinationColors {
     /** 到站时刻之后还能亮多久（毫秒）：覆盖停站 + 开关门。 */
     private static final long WINDOW_AFTER_MS = 90_000L;
     /** 车门关闭后多久淡出（毫秒）。 */
-    private static final long DOOR_CLOSE_HOLD_MS = 5_000L;
+    private static final long DOOR_CLOSE_HOLD_MS = 10_000L;
 
     /** 找站台的横向半径（格）—— 比 PIDS 自己的检测范围宽一格。 */
     private static final int PLATFORM_SEARCH = 4;
@@ -108,7 +108,10 @@ public final class DestinationColors {
         if (stopping != null) {
             final boolean justClosed = doorJustClosed(stopping, now);
             final long closedAt = closedAt(stopping);
-            final boolean holding = stopping.isDoorOpening()
+            // 车还在站台、门还一次没开过（进站减速/刚停稳）也算亮 —— 否则会出现
+            // 「广播响了灯亮 → 车快停时又灭 → 开门才亮」这种闪断
+            final boolean notYetOpened = closedAt == 0L;
+            final boolean holding = stopping.isDoorOpening() || notYetOpened
                     || (closedAt != 0L && now - closedAt <= DOOR_CLOSE_HOLD_MS);
             if (holding || justClosed) {
                 final int rgb = colorOfPlatform(platformId, stopping, now);

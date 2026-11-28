@@ -42,7 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class HkDestinationLightRenderer implements BlockEntityRenderer<HkDestinationLightBlockEntity> {
 
     /** 发光层沿面法线外扩多少（1/16 格）：0.6 ≈ 0.04 格，足够压过深度精度又看不出来。 */
-    private static final float OUTSET_PX = 0.6F;
+    private static final float OUTSET_PX = 0.15F;
     /** 淡入时长（秒）。 */
     private static final float FADE_IN_SECONDS = 0.45F;
     /** 淡出时长（秒）。 */
