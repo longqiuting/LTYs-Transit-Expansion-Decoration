@@ -116,7 +116,8 @@ public final class FuzhouMachineRenderer implements BlockEntityRenderer<FuzhouMa
         if (led == null) {
             return;
         }
-        final VertexConsumer consumer = vertexConsumers.getBuffer(RenderLayer.getEntitySolid(led.id));
+        // cutout：透明像素直接丢弃，文字才没有黑底
+        final VertexConsumer consumer = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(led.id));
         final MatrixStack.Entry entry = matrices.peek();
         final float x1 = 1.0F / 16.0F;
         final float x2 = 15.0F / 16.0F;
@@ -128,22 +129,26 @@ public final class FuzhouMachineRenderer implements BlockEntityRenderer<FuzhouMa
         final float span = Math.min(1.0F, screenAspect / led.aspect);
 
         if (!config.ledScroll()) {
-            // 固定：居中整段不滚
+            // 固定：整段居中
             final float u0 = (1.0F - span) * 0.5F;
             ledQuad(entry, consumer, x1, x2, y0, y1, z, u0, u0 + span);
             return;
         }
-        // 滚动（和 PIDS 一样）：整段从右往左走完、再空一段，才轮到下一段，绝不重叠
+        // 滚动（跑马灯）：整段从右边进、往左移、从左边出去，之后空一段再来下一段
         final long time = config.getWorld() == null ? 0L : config.getWorld().getTime();
-        final float cycle = 1.0F + SCROLL_GAP;
-        final float pos = (time * SCROLL_SPEED) % cycle;
-        if (pos >= 1.0F) {
-            return; // 空白间隔
+        final float cycle = span + 1.0F + SCROLL_GAP;
+        final float travelled = (time * SCROLL_SPEED) % cycle;
+        final float left = 1.0F - travelled; // 文字左边缘在屏幕上的位置（1 = 右侧外面）
+        final float visibleStart = Math.max(0.0F, left);
+        final float visibleEnd = Math.min(1.0F, left + span);
+        if (visibleEnd <= visibleStart) {
+            return; // 整段都在屏幕外
         }
-        final float u1 = Math.min(1.0F, pos + span);
-        final float covered = (u1 - pos) / span; // 屏幕上还有多少比例有字
-        final float xe = x1 + (x2 - x1) * covered;
-        ledQuad(entry, consumer, x1, xe, y0, y1, z, pos, u1);
+        final float xa = x1 + (x2 - x1) * visibleStart;
+        final float xb = x1 + (x2 - x1) * visibleEnd;
+        final float ua = (visibleStart - left) / span;
+        final float ub = (visibleEnd - left) / span;
+        ledQuad(entry, consumer, xa, xb, y0, y1, z, ua, ub);
     }
 
     private static void ledQuad(final MatrixStack.Entry entry, final VertexConsumer consumer,
