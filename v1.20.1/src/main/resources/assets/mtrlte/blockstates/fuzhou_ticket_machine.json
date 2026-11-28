@@ -1,28 +1,28 @@
 {
   "variants": {
     "facing=north,half=lower": {
-      "model": "mtrlte:block/empty"
+      "model": "mtrlte:block/fuzhou_machine_particle"
     },
     "facing=north,half=upper": {
-      "model": "mtrlte:block/empty"
+      "model": "mtrlte:block/fuzhou_machine_particle"
     },
     "facing=east,half=lower": {
-      "model": "mtrlte:block/empty"
+      "model": "mtrlte:block/fuzhou_machine_particle"
     },
     "facing=east,half=upper": {
-      "model": "mtrlte:block/empty"
+      "model": "mtrlte:block/fuzhou_machine_particle"
     },
     "facing=south,half=lower": {
-      "model": "mtrlte:block/empty"
+      "model": "mtrlte:block/fuzhou_machine_particle"
     },
     "facing=south,half=upper": {
-      "model": "mtrlte:block/empty"
+      "model": "mtrlte:block/fuzhou_machine_particle"
     },
     "facing=west,half=lower": {
-      "model": "mtrlte:block/empty"
+      "model": "mtrlte:block/fuzhou_machine_particle"
     },
     "facing=west,half=upper": {
-      "model": "mtrlte:block/empty"
+      "model": "mtrlte:block/fuzhou_machine_particle"
     }
   }
 }
