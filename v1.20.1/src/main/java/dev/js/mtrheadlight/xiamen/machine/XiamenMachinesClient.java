@@ -31,6 +31,7 @@ public final class XiamenMachinesClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        dev.js.mtrheadlight.machine.MachineConfigClient.init();
         // 余额查询机的渲染器：失败只记日志，不影响方速那条懒加载路径。
         try {
             BlockEntityRendererRegistry.register(XiamenMachines.balanceEntityType(),

@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
  *   <li>{@code ledScroll}：{@code true} = 像 PIDS 那样滚动，{@code false} = 居中固定。</li>
  * </ul>
  */
-public class FuzhouMachineBlockEntity extends BlockEntity {
+public class FuzhouMachineBlockEntity extends BlockEntity implements dev.js.mtrheadlight.machine.MachineConfigurable {
 
     public static final int MODE_FANGSU = 0;
     public static final int MODE_VANILLA = 1;
@@ -135,5 +135,23 @@ public class FuzhouMachineBlockEntity extends BlockEntity {
     @Override
     public NbtCompound toInitialChunkDataNbt() {
         return this.createNbt();
+    }
+
+    // ── 统一配置面板（MachineConfigurable）────────────────────────────────
+
+    /** 这台机器三项全支持：模式 / 颜色数据源 / LED 文字。 */
+    @Override
+    public dev.js.mtrheadlight.machine.MachineConfig machineConfig() {
+        return new dev.js.mtrheadlight.machine.MachineConfig(this.mode, this.colorSource,
+                this.customColor, this.lineColor, this.ledText, this.ledScroll,
+                dev.js.mtrheadlight.machine.MachineConfig.CAP_MODE
+                        | dev.js.mtrheadlight.machine.MachineConfig.CAP_COLOR
+                        | dev.js.mtrheadlight.machine.MachineConfig.CAP_LED);
+    }
+
+    @Override
+    public void applyMachineConfig(final dev.js.mtrheadlight.machine.MachineConfig config) {
+        applyConfig(config.mode(), config.colorSource(), config.custom(), config.line(),
+                config.text(), config.scroll());
     }
 }

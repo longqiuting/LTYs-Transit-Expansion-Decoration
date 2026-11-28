@@ -87,6 +87,7 @@ public final class XiamenMachines {
             return;
         }
         registered = true;
+        dev.js.mtrheadlight.machine.MachineConfigNet.register();
 
         ticket = Registry.register(Registries.BLOCK, TICKET_ID, new XiamenTicketMachineBlock(settings()));
         ticketItem = Registry.register(Registries.ITEM, TICKET_ID, new BlockItem(ticket, new Item.Settings()));

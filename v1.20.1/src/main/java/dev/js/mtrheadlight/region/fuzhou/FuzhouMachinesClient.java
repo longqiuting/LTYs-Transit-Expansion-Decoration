@@ -3,7 +3,6 @@ package dev.js.mtrheadlight.region.fuzhou;
 
 import dev.js.mtrheadlight.LteLog;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 import net.minecraft.client.MinecraftClient;
 
@@ -26,22 +25,7 @@ public final class FuzhouMachinesClient implements ClientModInitializer {
         } catch (final Throwable t) {
             LteLog.LOGGER.warn("[lte] fuzhou machine renderer unavailable", t);
         }
-        try {
-            ClientPlayNetworking.registerGlobalReceiver(FuzhouMachineNet.CHANNEL_OPEN,
-                    (client, handler, buf, responseSender) -> {
-                        final net.minecraft.util.math.BlockPos pos = buf.readBlockPos();
-                        final int mode = buf.readVarInt();
-                        final int source = buf.readVarInt();
-                        final int custom = buf.readInt();
-                        final int line = buf.readInt();
-                        final String text = buf.readString(128);
-                        final boolean scroll = buf.readBoolean();
-                        client.execute(() -> client.setScreen(new FuzhouMachineConfigScreen(
-                                pos, mode, source, custom, line, text, scroll, lineColors())));
-                    });
-        } catch (final Throwable t) {
-            LteLog.LOGGER.warn("[lte] fuzhou machine config panel unavailable", t);
-        }
+        dev.js.mtrheadlight.machine.MachineConfigClient.init();
     }
 
     /** 该世界里所有线路的颜色（去重，最多 8 个）——面板上的「线路色」色块就是它。 */

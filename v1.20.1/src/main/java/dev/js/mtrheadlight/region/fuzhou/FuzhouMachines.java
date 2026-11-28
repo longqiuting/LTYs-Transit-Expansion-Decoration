@@ -69,7 +69,7 @@ public final class FuzhouMachines {
             LteLog.LOGGER.warn("[lte] fuzhou machine could not be added to its tab", t);
         }
 
-        FuzhouMachineNet.register();
+        dev.js.mtrheadlight.machine.MachineConfigNet.register();
 
         LteLog.LOGGER.info("[lte] fuzhou machine: {} (single block, HALF lower/upper)", ID);
     }

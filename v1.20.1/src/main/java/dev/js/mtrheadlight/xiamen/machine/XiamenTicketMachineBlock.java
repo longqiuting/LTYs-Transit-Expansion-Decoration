@@ -163,6 +163,11 @@ public class XiamenTicketMachineBlock extends XiamenMachineBlock {
 
     // ------------------------------------------------------------------ 右键
 
+    /** 这台机器当前的界面档（渲染 / 面板都读它）。 */
+    public TicketUi uiOf(final BlockState state) {
+        return state.contains(UI) ? state.get(UI) : TicketUi.VANILLA;
+    }
+
     @Override
     public ActionResult onUse(final BlockState state, final World world, final BlockPos pos,
                               final PlayerEntity player, final Hand hand, final BlockHitResult hit) {
@@ -171,23 +176,14 @@ public class XiamenTicketMachineBlock extends XiamenMachineBlock {
         }
         final BlockPos base = lowerPos(state, pos);
 
-        // ① 刷子：循环 方速 → 原版 → 节能关机 → 方速。服务端权威，客户端只做挥手。
+        // ① 刷子：打开统一配置面板（模式 方速/原版/关机 在这里选，不再循环）
         if (player.isHolding(mtr.Items.BRUSH.get())) {
             if (world.isClient) {
                 return ActionResult.SUCCESS;
             }
-            final TicketUi next = state.get(UI).next();
-            if (next == TicketUi.FANGSU && !FangsuTicketUi.loaded()) {
-                // 这一档要回到方速，但服务端没装方速：跳过它落回原版，免得刷子「点到没变化」。
-                setUi(world, base, TicketUi.VANILLA);
-                player.sendMessage(Text.translatable("message.mtrlte.ticket_machine.no_fangsu"), true);
-                return ActionResult.SUCCESS;
+            if (player instanceof final net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+                dev.js.mtrheadlight.machine.MachineConfigNet.open(serverPlayer, pos);
             }
-            setUi(world, base, next);
-            player.sendMessage(next.poweredOff()
-                    ? Text.translatable("message.mtrlte.ticket_machine.eco")
-                    : Text.translatable("message.mtrlte.ticket_machine.ui",
-                            Text.translatable("message.mtrlte.ticket_machine.ui." + next.asString())), true);
             return ActionResult.SUCCESS;
         }
 

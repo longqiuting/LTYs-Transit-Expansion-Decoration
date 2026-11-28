@@ -157,7 +157,7 @@ public final class FuzhouMachineBlock extends BlockWithEntity {
         }
         if (world.getBlockEntity(pos) instanceof final FuzhouMachineBlockEntity machine
                 && player instanceof final net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
-            FuzhouMachineNet.sendOpen(serverPlayer, pos, machine);
+            dev.js.mtrheadlight.machine.MachineConfigNet.open(serverPlayer, pos);
         }
         return ActionResult.SUCCESS;
     }
