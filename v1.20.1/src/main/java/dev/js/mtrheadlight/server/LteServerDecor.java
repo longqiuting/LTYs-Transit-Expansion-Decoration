@@ -38,6 +38,7 @@ public final class LteServerDecor implements ModInitializer {
         // 三个地区标志块（fuzhou_logo / shenzhen_logo / mtr_hk_logo），各进自己的地区页签。
         // 必须排在上面的页签之后 —— 往还没建的页签里加条目会抛异常。
         blockModule("regional logo blocks", dev.js.mtrheadlight.region.RegionalLogos::register);
+        blockModule("fuzhou ticket machine", dev.js.mtrheadlight.region.fuzhou.FuzhouMachines::register);
 
         // 标志方块：LTE logo + 角美地铁 logo（都进「厦门风格物件」页签）。
         // 必须排在上面两个页签之后 —— 往还没建的页签里加条目会抛异常。

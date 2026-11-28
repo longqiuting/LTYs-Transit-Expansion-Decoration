@@ -99,6 +99,32 @@ public final class PoleColors {
     }
 
     /**
+     * 这一格的<b>线路色</b>（不管车站自带色，只按「服务该站的第一条线路」算）。
+     *
+     * <p>售票机那边「线路色 / 车站色」是两个不同的数据源，所以这里单独给一条。
+     *
+     * @return {@code 0xRRGGBB}；{@code 0} = 没解析出来
+     */
+    public static int resolveLine(final World world, final BlockPos pos) {
+        if (world == null || pos == null) {
+            return 0;
+        }
+        try {
+            if (world.isClient) {
+                return PoleColorsClient.resolveLine(pos);
+            }
+            final RailwayData data = RailwayData.getInstance(world);
+            if (data == null || data.dataCache == null) {
+                return 0;
+            }
+            final Station station = findStation(data.dataCache, pos, data.stations);
+            return station == null ? 0 : routeColor(data.routes, data.dataCache, station);
+        } catch (final Throwable t) {
+            return 0;
+        }
+    }
+
+    /**
      * 「这一格属于哪个车站」—— 上面判定链的第 1–3 步。两端共用（客户端传的是 {@code ClientCache}，
      * 它继承 {@link DataCache}，字段名一样）。
      */

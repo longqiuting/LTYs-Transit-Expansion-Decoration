@@ -1,0 +1,89 @@
+{
+  "textures": {
+    "0": "textures/block/fuzhou_ticket_machine",
+    "particle": "textures/block/fuzhou_ticket_machine"
+  },
+  "texture_size": [
+    16,
+    16
+  ],
+  "elements": [
+    {
+      "from": [
+        1,
+        13,
+        9
+      ],
+      "to": [
+        15,
+        15,
+        9.8
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            9.125,
+            6,
+            10.875,
+            6.25
+          ],
+          "texture": "#0"
+        },
+        "east": {
+          "uv": [
+            7.625,
+            10.5,
+            7.72656,
+            10.75
+          ],
+          "texture": "#0"
+        },
+        "south": {
+          "uv": [
+            7.125,
+            9.125,
+            8.875,
+            9.375
+          ],
+          "texture": "#0"
+        },
+        "west": {
+          "uv": [
+            7.75,
+            10.5,
+            7.85156,
+            10.75
+          ],
+          "texture": "#0"
+        },
+        "up": {
+          "uv": [
+            9.375,
+            10,
+            11.125,
+            10.10156
+          ],
+          "texture": "#0"
+        },
+        "down": {
+          "uv": [
+            3.875,
+            10.125,
+            5.625,
+            10.22656
+          ],
+          "texture": "#0"
+        }
+      },
+      "rotation": {
+        "angle": 0,
+        "axis": "y",
+        "origin": [
+          14,
+          -1,
+          1
+        ]
+      }
+    }
+  ]
+}

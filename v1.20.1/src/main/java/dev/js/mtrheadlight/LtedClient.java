@@ -45,6 +45,7 @@ public final class LtedClient implements ClientModInitializer {
         // ④ 以下是装饰类，顺序不变。
         new XiamenClient().onInitializeClient();
         new RegionalLogosClient().onInitializeClient();
+        new dev.js.mtrheadlight.region.fuzhou.FuzhouMachinesClient().onInitializeClient();
         new WallSignClient().onInitializeClient();
         new RailingGlassClient().onInitializeClient();
         new DecorClient().onInitializeClient();
