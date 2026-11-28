@@ -26,7 +26,7 @@ public final class FuzhouMachineRenderer implements BlockEntityRenderer<FuzhouMa
     private static final String OFF_TEXTURE = "textures/block/fuzhou_ticket_machine_off";
     /** 滚动速度（每秒多少个字宽）与两段之间的空白间隔（字宽倍数）。 */
     private static final float SCROLL_SPEED = 0.012F;
-    private static final float SCROLL_GAP = 0.6F;
+    private static final float SCROLL_GAP = 0.25F;
 
     private static final Identifier FLAT_WHITE = new Identifier("mtrlte", "textures/block/flat_white.png");
 

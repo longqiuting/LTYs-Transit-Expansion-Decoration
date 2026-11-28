@@ -80,6 +80,8 @@ public final class FuzhouLedTextures {
         final BufferedImage mask = new BufferedImage(textWidth, textHeight, BufferedImage.TYPE_INT_ARGB);
         final Graphics2D g = mask.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+        // 横向压一下：观感上字不要被拉宽（0.72 = 字宽缩到七成，字距跟着变紧）
+        g.scale(0.72D, 1.0D);
         g.setFont(font);
         g.setColor(java.awt.Color.WHITE);
         g.drawString(text, 0, pg.getFontMetrics(font).getAscent());

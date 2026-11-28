@@ -78,6 +78,8 @@ public final class FuzhouMachines {
                 .requiresTool()
                 .strength(2.0F, 6.0F)
                 .nonOpaque()
+                // 微发光：上段（屏那半）7 级、下段 6 级，和厦门售票机一致；夜里机器自己照亮一小圈
+                .luminance(state -> dev.js.mtrheadlight.region.fuzhou.FuzhouMachineBlock.isUpper(state) ? 7 : 6)
                 .sounds(BlockSoundGroup.METAL);
     }
 }
