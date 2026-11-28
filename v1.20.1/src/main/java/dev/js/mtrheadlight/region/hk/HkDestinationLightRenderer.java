@@ -48,7 +48,10 @@ public final class HkDestinationLightRenderer implements BlockEntityRenderer<HkD
         if (rgb == 0) {
             return;
         }
-        final RawMesh mesh = RawModelJson.get(RawModelJson.id("hk_destination_light"));
+        // 满方块款和灯带款共用这一套渲染，只是模型不同
+        final boolean full = entity.getCachedState().getBlock() instanceof HkDestinationLightFullBlock;
+        final RawMesh mesh = RawModelJson.get(RawModelJson.id(full
+                ? "hk_destination_light_full" : "hk_destination_light"));
         if (mesh == null) {
             return;
         }

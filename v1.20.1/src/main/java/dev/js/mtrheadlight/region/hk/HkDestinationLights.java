@@ -22,10 +22,12 @@ public final class HkDestinationLights {
 
     public static final String NAMESPACE = "mtrlte";
     public static final Identifier ID = new Identifier(NAMESPACE, "hk_destination_light");
+    public static final Identifier FULL_ID = new Identifier(NAMESPACE, "hk_destination_light_full");
 
     private static boolean registered;
 
     private static HkDestinationLightBlock block;
+    private static HkDestinationLightFullBlock fullBlock;
     private static Item item;
     private static BlockEntityType<HkDestinationLightBlockEntity> entityType;
 
@@ -48,18 +50,28 @@ public final class HkDestinationLights {
 
         block = Registry.register(Registries.BLOCK, ID, new HkDestinationLightBlock(settings()));
         item = Registry.register(Registries.ITEM, ID, new BlockItem(block, new Item.Settings()));
+        fullBlock = Registry.register(Registries.BLOCK, FULL_ID,
+                new HkDestinationLightFullBlock(settings()));
+        final Item fullItem = Registry.register(Registries.ITEM, FULL_ID,
+                new BlockItem(fullBlock, new Item.Settings()));
+
+        // 两种外形共用一个方块实体类型（渲染逻辑完全一样，只是模型不同）
         entityType = Registry.register(Registries.BLOCK_ENTITY_TYPE, ID,
-                FabricBlockEntityTypeBuilder.create(HkDestinationLightBlockEntity::new, block).build());
+                FabricBlockEntityTypeBuilder.create(HkDestinationLightBlockEntity::new, block, fullBlock)
+                        .build());
 
         try {
             ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP,
                             RegionalTabs.MTR_HK_TAB_ID))
                     .register(entries -> entries.add(item));
+            ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP,
+                            RegionalTabs.MTR_HK_TAB_ID))
+                    .register(entries -> entries.add(fullItem));
         } catch (final Throwable t) {
             LteLog.LOGGER.warn("[lte] destination light could not be added to the MTR HK tab", t);
         }
 
-        LteLog.LOGGER.info("[lte] hk destination light: {}", ID);
+        LteLog.LOGGER.info("[lte] hk destination light: {} + {} (strip / full block)", ID, FULL_ID);
     }
 
     private static AbstractBlock.Settings settings() {

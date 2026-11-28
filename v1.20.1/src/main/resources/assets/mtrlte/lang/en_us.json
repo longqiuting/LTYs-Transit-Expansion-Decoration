@@ -697,5 +697,8 @@
   "item.mtrlte.hk_destination_light": "MTR Destination Light",
   "tooltip.mtrlte.hk_destination_light": "A light strip for the top of platform screen doors; place one block per segment. Lights up about a minute before a train arrives, in the colour of the destination station it is bound for, and goes dark when no train is due.",
   "screen.mtrlte.ticket_machine_fuzhou": "Fuzhou Metro Ticket Machine",
-  "tooltip.mtrlte.fuzhou_ticket_machine": "A full ticket machine: placing it adds the upper half. Right-click to buy a ticket; right-click with the MTR brush to open its settings (ticket UI, panel colour, LED text)."
+  "tooltip.mtrlte.fuzhou_ticket_machine": "A full ticket machine: placing it adds the upper half. Right-click to buy a ticket; right-click with the MTR brush to open its settings (ticket UI, panel colour, LED text).",
+  "block.mtrlte.hk_destination_light_full": "MTR Destination Light (Full Block)",
+  "item.mtrlte.hk_destination_light_full": "MTR Destination Light (Full Block)",
+  "tooltip.mtrlte.hk_destination_light_full": "A full-cube destination light for embedding in walls or ceilings; the whole block glows in the destination colour, and it goes dark when no train is due."
 }

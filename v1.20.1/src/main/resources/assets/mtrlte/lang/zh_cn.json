@@ -699,5 +699,8 @@
   "tooltip.mtrlte.hk_destination_light": "贴在屏蔽门顶上的一条灯带，整格平铺（要几格长就放几段）。列车进站前约 1 分钟开始亮，颜色跟随该车开往终点站的车站色；站台没有车时熄灭。",
   "screen.mtrlte.ticket_machine_fuzhou": "福州地铁售票机",
   "tooltip.mtrlte.fuzhou_ticket_machine": "一整台售票机：放下自动补上半段。空手右键售票；拿刷子右键打开配置（售票界面、面板颜色、LED 文字）。",
-  "message.mtrlte.ticket_machine.ui.off": "关机"
+  "message.mtrlte.ticket_machine.ui.off": "关机",
+  "block.mtrlte.hk_destination_light_full": "港铁终点站指示灯（满方块）",
+  "item.mtrlte.hk_destination_light_full": "港铁终点站指示灯（满方块）",
+  "tooltip.mtrlte.hk_destination_light_full": "一整格立方体的终点站指示灯：埋进墙体 / 吊顶里用，整块按终点站色发光。规则和灯带款一样，没有车时熄灭。"
 }
