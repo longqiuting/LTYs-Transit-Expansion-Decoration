@@ -62,6 +62,11 @@ final class PoleColorsClient {
             probe("no station near " + pos);
             return 0;
         }
+        // 车站自己的专属色优先（Station 继承 NameColorDataBase.color）。
+        final int stationRgb = station.color & 0xFFFFFF;
+        if (stationRgb != 0) {
+            return stationRgb;
+        }
         final Map<Integer, ClientCache.ColorNameTuple> all =
                 cache.stationIdToRoutes.get(Long.valueOf(station.id));
         if (all == null || all.isEmpty()) {

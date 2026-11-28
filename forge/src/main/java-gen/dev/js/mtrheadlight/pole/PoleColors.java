@@ -51,6 +51,12 @@ public final class PoleColors {
             if (station == null) {
                 return 0;
             }
+            // MTR 每个车站自己有专属色（Station 继承 NameColorDataBase.color），优先用车站色；
+            // 车站色为 0 时才退回「服务该站的第一条线路色」。
+            final int stationRgb = station.color & 0xFFFFFF;
+            if (stationRgb != 0) {
+                return stationRgb;
+            }
             return routeColor(data.routes, data.dataCache, station);
         } catch (final Throwable t) {
             if (!loggedFailure) {
